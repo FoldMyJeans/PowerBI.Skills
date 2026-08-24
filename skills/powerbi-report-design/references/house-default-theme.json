@@ -1,0 +1,118 @@
+{
+  "name": "ABC House Default",
+  "dataColors": [
+    "#0072B2",
+    "#E69F00",
+    "#009E73",
+    "#D55E00",
+    "#56B4E9",
+    "#CC79A7",
+    "#F0E442",
+    "#000000"
+  ],
+  "good": "#009E73",
+  "neutral": "#8A8886",
+  "bad": "#D55E00",
+  "minimum": "#0072B2",
+  "center": "#F0F0F0",
+  "maximum": "#D55E00",
+  "null": "#CCCCCC",
+  "background": "#FFFFFF",
+  "secondaryBackground": "#F3F2F1",
+  "foreground": "#252423",
+  "foregroundNeutralSecondary": "#605E5C",
+  "tableAccent": "#0072B2",
+  "textClasses": {
+    "callout": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 28,
+      "color": "#252423"
+    },
+    "title": {
+      "fontFace": "Segoe UI",
+      "fontSize": 12,
+      "color": "#252423"
+    },
+    "header": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 11,
+      "color": "#252423"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 10,
+      "color": "#252423"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [
+          {
+            "fontFace": "Segoe UI",
+            "fontSize": 12,
+            "bold": true,
+            "alignment": "left",
+            "fontColor": { "solid": { "color": "#252423" } },
+            "background": { "solid": { "color": "#F3F2F1" } }
+          }
+        ],
+        "subTitle": [
+          {
+            "fontFace": "Segoe UI",
+            "fontSize": 9,
+            "alignment": "left",
+            "fontColor": { "solid": { "color": "#605E5C" } }
+          }
+        ],
+        "divider": [{ "show": true }],
+        "spacing": [{ "verticalSpacing": 3 }],
+        "dropShadow": [{ "show": true }],
+        "border": [
+          {
+            "show": true,
+            "radius": 8,
+            "color": { "solid": { "color": "#E1DFDD" } }
+          }
+        ],
+        "padding": [{ "top": 2, "right": 2, "bottom": 2, "left": 2 }],
+        "categoryAxis": [{ "fontSize": 8, "showAxisTitle": false }],
+        "valueAxis": [
+          {
+            "fontSize": 8,
+            "titleFontSize": 10,
+            "gridlineStyle": "dotted",
+            "gridlineThickness": 2
+          }
+        ],
+        "legend": [{ "fontSize": 8, "position": "BottomRight", "showTitle": false }],
+        "labels": [{ "fontSize": 10 }]
+      }
+    },
+    "image": {
+      "*": {
+        "border": [{ "show": false }]
+      }
+    },
+    "slicer": {
+      "*": {
+        "title": [{ "show": false }],
+        "header": [{ "textSize": 8 }],
+        "items": [{ "textSize": 8 }]
+      }
+    },
+    "pivotTable": {
+      "*": {
+        "columnHeaders": [{ "fontSize": 8, "bold": true, "alignment": "Center" }],
+        "rowHeaders": [{ "fontSize": 8, "alignment": "Left" }],
+        "values": [{ "fontSize": 8 }]
+      }
+    },
+    "tableEx": {
+      "*": {
+        "columnHeaders": [{ "fontSize": 8, "bold": true }],
+        "values": [{ "fontSize": 8 }]
+      }
+    }
+  }
+}

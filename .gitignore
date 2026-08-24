@@ -1,0 +1,18 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor and IDE
+.vs/
+.idea/
+*.suo
+*.user
+
+# Local scratch
+scratch/
+*.local
+*.local.txt
+
+# Note: CLAUDE.md is committed on purpose in this repo, because the repo is the
+# operating instructions for building Power BI with Claude. Do not ignore it.

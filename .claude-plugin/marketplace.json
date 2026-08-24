@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "powerbi-skills",
+  "description": "Power BI Pro build skills as code. Modeling, DAX, data and refresh, report design, PBIR authoring, project and tools, and doc repos. No Fabric, no Premium.",
+  "owner": {
+    "name": "FoldMyJeans",
+    "url": "https://github.com/FoldMyJeans"
+  },
+  "plugins": [
+    {
+      "name": "powerbi-skills",
+      "description": "Power BI Pro skills that auto trigger on build planning, modeling, DAX, refresh, report design, PBIR, tools, and documentation work.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
