@@ -35,7 +35,7 @@ ABCSales.SemanticModel/            the model
     roles/                         one file per row level security role, present only with RLS
     perspectives/                  one file per perspective
   .pbi/                            local only, git ignored: localSettings.json and cache.abf
-  diagramLayout.json               model diagram positions, do not hand edit
+  diagramLayout.json               model diagram positions, see model-diagram-layout.md
   .platform                        item metadata, Desktop generates
 ABCSales.Report/                   the report
   .platform                        item metadata, Desktop generates
@@ -172,7 +172,8 @@ reuses the same id across visuals when you duplicate a visual, so duplicates the
 - Restart to see external edits. Newer builds prompt to apply changes they detect on disk, but
   a close and reopen after editing TMDL in VS Code is the path that cannot go wrong.
 - Do not hand edit `diagramLayout.json` or the report layout files during preview. Those files
-  are not documented for external editing.
+  are not documented for external editing. The one exception is box positions in
+  `diagramLayout.json`, which `references/model-diagram-layout.md` covers along with its limits.
 
 ## See also
 
