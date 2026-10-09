@@ -94,6 +94,9 @@ because it is a holder table with no rows.
   Date table. See `references/relationships.md` and `powerbi-dax`.
 - Relationship columns must be clean keys. No blanks, no duplicates on the "one" side, one data
   type on both ends. A dirty key is the usual cause of a blank or doubled number.
+- Keep the model view readable, facts in one column and dimensions in one row, so shared
+  dimensions, stray joins, and inactive relationships can be seen. The
+  `powerbi-project-and-tools` skill owns the layout and a script that applies it.
 - Never name a table exactly `Measures`. That literal name is reserved and a model with it can
   fail to open. Use `_Measures`. See `references/naming-and-measures.md`.
 - Compute columns upstream in M or at the source when you can. DAX calculated columns compress

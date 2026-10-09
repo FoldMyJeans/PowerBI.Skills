@@ -43,7 +43,9 @@ nothing here should be applied to a user's report, code, or writing unless they 
 
 ## How the skills are structured
 
-- One folder per skill under `skills/`, each with a `SKILL.md` and a `references/` folder.
+- One folder per skill under `skills/`, each with a `SKILL.md` and a `references/` folder. A
+  skill that ships a runnable helper keeps it in its own `scripts/` folder, and a reference in
+  that skill says when and how to run it.
 - `SKILL.md` has YAML frontmatter with two keys, `name` (matching the folder name) and
   `description`. The description is the trigger, so make it pushy: say what the skill does
   and when to use it, packed with trigger phrases and synonyms. Keep it under 1024

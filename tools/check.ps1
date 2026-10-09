@@ -118,7 +118,7 @@ if (Test-Path $localTerms) {
         }
     }
 }
-Get-ChildItem $root -Recurse -Include *.md, *.json, *.ps1 |
+Get-ChildItem $root -Recurse -Include *.md, *.json, *.ps1, *.py |
     Where-Object { $_.FullName -notlike '*\.git\*' } | ForEach-Object {
         $file = $_.FullName
         $n = 0

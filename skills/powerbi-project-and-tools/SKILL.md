@@ -7,8 +7,8 @@ description: >-
   license line, what runs on Pro versus what needs Premium or Fabric. Use whenever the user
   wants to edit the model files directly, open a pbip or TMDL folder, run the Best Practice
   Analyzer, check model size, find unused measures or columns, connect an external tool over
-  XMLA, or asks what needs Premium. Trigger on phrases like "pbip", "TMDL", "edit the model
-  files", "Tabular Editor", "DAX Studio", "VertiPaq Analyzer", "Bravo", "Measure Killer",
+  XMLA, tidy a tangled model view, or asks what needs Premium. Trigger on phrases like "pbip",
+  "TMDL", "edit the model files", "model view", "arrange the model diagram", "diagramLayout", "Tabular Editor", "DAX Studio", "VertiPaq Analyzer", "Bravo", "Measure Killer",
   "Best Practice Analyzer", "model size", "external tools", "XMLA", "what needs Premium",
   "licensing". Assumes Power BI Pro only, no Fabric or Premium.
 ---
@@ -27,6 +27,7 @@ Use this when the user wants to:
 - Understand or hand edit the pbip and TMDL files that define a model.
 - Pick or use a free tool: Tabular Editor 2, DAX Studio, VertiPaq Analyzer, Bravo, Measure Killer.
 - Run the Best Practice Analyzer, check model size, or find unused measures and columns.
+- Untangle the model view so the relationships can be read and reviewed.
 - Know what is Pro versus Premium versus Fabric, or whether an XMLA tool edit will work.
 
 For M and refresh use `powerbi-data-and-refresh`. For star schema use `powerbi-modeling`. For
@@ -75,6 +76,9 @@ republish from Power BI Desktop. See `references/licensing-cheatsheet.md`.
   Editor 2. Model size and query timings go to DAX Studio with VertiPaq Analyzer. Quick size
   check, DAX formatting, and a Date table go to Bravo. Unused measures and columns go to
   Measure Killer. See `references/external-tools.md`.
+- A model view nobody can read is a model nobody reviews. Put facts in one column and
+  dimensions in one row. `scripts/arrange_model_diagram.py` does it for a pbip project by
+  rewriting box positions only. See `references/model-diagram-layout.md`.
 - On Pro these tools edit the LOCAL file, then you republish. Connecting a tool to WRITE to a
   published dataset over XMLA is Premium.
 
@@ -86,6 +90,8 @@ republish from Power BI Desktop. See `references/licensing-cheatsheet.md`.
 - `references/calculated-table-conversion.md`: the full procedure for flipping a table from an M
   partition to a calculated one to kill refresh fan out, with the cache deletion step and the two
   column lineage traps that stop the model opening.
+- `references/model-diagram-layout.md`: the facts in a column, dimensions in a row layout for
+  the model view, what it makes visible, and the script that applies it to `diagramLayout.json`.
 - `references/external-tools.md`: the free Pro friendly tools, what each is for, and the XMLA
   write boundary repeated clearly.
 - `references/licensing-cheatsheet.md`: a compact Pro versus Premium versus Fabric table.
