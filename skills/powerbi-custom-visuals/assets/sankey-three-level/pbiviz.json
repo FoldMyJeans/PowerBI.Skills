@@ -1,0 +1,26 @@
+{
+  "visual": {
+    "name": "effortSankey",
+    "displayName": "Three Level Sankey",
+    "guid": "effortSankeyB2096F27",
+    "visualClassName": "Visual",
+    "version": "1.0.1.0",
+    "description": "Sankey of hours across three columns. Pick items in the first column on the chart and narrow to any later block.",
+    "supportUrl": "https://example.com",
+    "gitHubUrl": ""
+  },
+  "apiVersion": "5.11.1",
+  "author": {
+    "name": "Your name",
+    "email": "you@example.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "externalJS": null,
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "dependencies": null,
+  "stringResources": [],
+  "version": "1.0.1.0"
+}

@@ -58,6 +58,7 @@ end of one.
 | `powerbi-modeling` | Star schema, dimensions vs facts, grain, relationships, and naming including the `_Measures` table. | "how should I model this", "star schema" |
 | `powerbi-dax` | Measures vs calculated columns and tables, context, and reusable DAX patterns. | "write a year over year measure", "running total" |
 | `powerbi-pbir-builder` | Write real report pages and visuals into an existing PBIP by authoring PBIR JSON directly. | "add a page to the report", "build a KPI card in code" |
+| `powerbi-custom-visuals` | Build a private pbiviz visual and embed it in a PBIP, decide if you need one at all, and make a Sankey readable. Includes a working Sankey. | "custom visual", "pbiviz", "Sankey", "animated chart" |
 | `powerbi-report-design` | Layout, chart selection, color and theme JSON, fonts, slicers, navigation, and accessibility. | "design this report", "pick colors", "which chart" |
 | `powerbi-project-and-tools` | The pbip and TMDL project format, safe hand editing, free external tools, and the Pro vs Premium boundary. | "edit the TMDL", "what needs Premium", "Tabular Editor" |
 | `powerbi-doc-repo` | Document a finished model into a redacted, shareable git repo. | "document this pbi", "I have another PBI I want to do the same with" |

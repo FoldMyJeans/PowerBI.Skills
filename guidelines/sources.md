@@ -160,9 +160,9 @@ an agent rewrites the content.
 ### Skills and tools to read
 
 - data-goblin/power-bi-agentic-development, see the section above. Read `release-notes/` rather
-  than the whole repo, since it ships weekly and warns of renames. This repo has no custom visual
-  coverage yet, so its `custom-visuals` plugin is the one worth a project scoped trial. It carries
-  no hooks and one MCP server, the `pbiviz` one. Several of its other plugins do ship hooks.
+  than the whole repo, since it ships weekly and warns of renames. Its `custom-visuals` plugin
+  carries no hooks and one MCP server, the `pbiviz` one, and is the one worth a project scoped trial
+  if `powerbi-custom-visuals` here falls short. Several of its other plugins do ship hooks.
 - MinaSaad1/pbi-cli, a CLI plus skills, including a custom visual workflow from scaffold to PBIR
   import. MIT: https://github.com/MinaSaad1/pbi-cli
 - Mofaji/Agentic-PBIP-Template, a `pbiviz` skill that embeds the visual in the PBIP so the report

@@ -1,0 +1,33 @@
+{
+    "dataRoles": [
+        { "displayName": "Team (first column)", "name": "team", "kind": "Grouping" },
+        { "displayName": "Service (middle column)", "name": "service", "kind": "Grouping" },
+        { "displayName": "Activity (last column)", "name": "activity", "kind": "Grouping" },
+        { "displayName": "Hours", "name": "hours", "kind": "Measure" }
+    ],
+    "objects": {},
+    "dataViewMappings": [
+        {
+            "conditions": [
+                { "team": { "max": 1 }, "service": { "max": 1 }, "activity": { "max": 1 }, "hours": { "max": 1 } }
+            ],
+            "table": {
+                "rows": {
+                    "select": [
+                        { "for": { "in": "team" } },
+                        { "for": { "in": "service" } },
+                        { "for": { "in": "activity" } },
+                        { "for": { "in": "hours" } }
+                    ],
+                    "dataReductionAlgorithm": { "top": { "count": 5000 } }
+                }
+            }
+        }
+    ],
+    "tooltips": {
+        "supportedTypes": { "default": true, "canvas": false },
+        "roles": []
+    },
+    "supportsKeyboardFocus": true,
+    "privileges": []
+}

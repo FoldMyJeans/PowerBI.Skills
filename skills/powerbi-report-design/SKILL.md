@@ -94,7 +94,8 @@ themselves use `powerbi-dax`. For the pbip and TMDL file format and external the
   versus bad.
 - Name every object. In the Selection and Bookmarks panes, so future you can maintain it.
 - Native visuals first. Stock visuals plus DAX cover most reports. Treat a third-party visual as
-  a deliberate, governed exception, exactly one, with its source and license noted.
+  a deliberate, governed exception, exactly one, with its source and license noted. For building
+  your own, use `powerbi-custom-visuals`.
 - The full list of rules and when to bend them is in `references/design-principles.md`. A dense
   export page for one analyst is allowed to break the 5 second rule.
 
@@ -125,5 +126,7 @@ bibb.pro) are Pro safe. The Q&A visual is Pro safe but is on a retirement path
   column width, and the scrollable table performance trap.
 - `references/conditional-formatting.md`: the opt-in rule, the three modes, the field value color
   pattern, data bars and icons, and why the theme cannot store the rules.
+- `references/visual-decisions.md`: what the report owner liked and rejected when shown real
+  examples, and why. Check it before proposing a visual, and add to it after each decision.
 - `references/analytical-visuals.md`: the Pro safe native analytical and AI visuals, the
   decomposition tree, key influencers, small multiples, and the new card and KPI visuals.

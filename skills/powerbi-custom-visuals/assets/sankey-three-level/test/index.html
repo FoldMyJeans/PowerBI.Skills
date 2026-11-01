@@ -1,0 +1,50 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sankey test page</title>
+<link rel="stylesheet" href="visual.prod.css">
+<style>html,body{margin:0;background:#fff}#host{position:relative;width:1256px;height:576px;border:1px solid #e0e0e0}</style></head>
+<body><div id="host"></div>
+<script src="visual.js"></script>
+<script>
+const COLORS = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#56B4E9"], seen = new Map();
+const calls = { started: 0, finished: 0, failed: 0 };
+const host = {
+    locale: "en-US",
+    eventService: { renderingStarted() { calls.started++; }, renderingFinished() { calls.finished++; }, renderingFailed(o, e) { calls.failed++; calls.error = e; } },
+    colorPalette: { isHighContrast: false, foreground: { value: "#000" }, background: { value: "#fff" }, getColor(k) { if (!seen.has(k)) seen.set(k, COLORS[seen.size % COLORS.length]); return { value: seen.get(k) }; } },
+    tooltipService: { show() {}, move() {}, hide() {} },
+};
+// Made up hours: team, service, activity, hours.
+const ALL = [
+    ["Team A", "Service 1", "Tickets", 6000], ["Team A", "Service 1", "Projects", 2000], ["Team A", "Service 2", "Projects", 1500],
+    ["Team A", "Service 2", "Meetings", 700], ["Team A", "Service 3", "Projects", 500], ["Team B", "Service 1", "Projects", 1800],
+    ["Team B", "Service 1", "Tickets", 300], ["Team B", "Service 2", "Projects", 900], ["Team B", "Service 2", "Meetings", 150],
+    ["Team C", "Service 1", "Projects", 700], ["Team C", "Service 4", "Projects", 120], ["Team C", "Service 2", "Meetings", 90],
+    ["Team D", "Service 2", "Projects", 400], ["Team E", "Service 4", "Projects", 100], [null, "Service 3", "Projects", 5],
+];
+const cols = [
+    { displayName: "Team", roles: { team: true } }, { displayName: "Service", roles: { service: true } },
+    { displayName: "Activity", roles: { activity: true } }, { displayName: "Hours", roles: { hours: true } },
+];
+const guid = Object.keys(window).find((k) => k.startsWith("effortSankey"));
+const v = window[guid].default.create({ element: document.getElementById("host"), host });
+const send = (rows, type = 2, w = 1256, h = 576) => v.update({ type, viewport: { width: w, height: h }, dataViews: [{ table: { columns: cols, rows } }] });
+window.t = {
+    v, calls, send, ALL,
+    all() { send(ALL); },
+    sprint() { send(ALL.filter((r) => r[0] !== "Team D").map((r) => [r[0], r[1], r[2], r[3] / 10])); },
+    none() { send([]); },
+    node(n) { return [...document.querySelectorAll(".sankey-node")].find((g) => (g.getAttribute("aria-label") || "").startsWith(n + ",")); },
+    click(n) { t.node(n).dispatchEvent(new MouseEvent("click", { bubbles: true })); },
+    state() {
+        return {
+            scope: document.querySelector(".sankey-scope").textContent,
+            total: document.querySelector(".sankey-total").textContent,
+            share: document.querySelector(".sankey-share").textContent,
+            empty: document.querySelector(".sankey-empty").textContent,
+            labels: [...document.querySelectorAll(".sankey-label")].filter((l) => l.style.display !== "none").map((l) => l.textContent),
+            calls,
+        };
+    },
+};
+t.all();
+</script></body></html>
