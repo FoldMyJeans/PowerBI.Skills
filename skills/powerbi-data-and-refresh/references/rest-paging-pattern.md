@@ -28,7 +28,7 @@ let
     let
       Raw = Web.Contents(BaseUrl, [
         RelativePath = RelPath,
-        Timeout      = #duration(0, 0, 10, 0),
+        Timeout      = #duration(0, 0, 10, 0),   // default is 100 seconds, budget this below
         Query = [
           sysparm_display_value          = "true",
           sysparm_exclude_reference_link = "true",
@@ -131,12 +131,23 @@ and the table has many reference fields. Drop to a few thousand and raise `MaxPa
 same factor so the row ceiling does not change. Silently truncating data is worse than a slow
 refresh.
 
-## Put a Timeout on every Web.Contents, not just the paged ones
+## Set Timeout on purpose, on every Web.Contents
 
-`Timeout = #duration(0, 0, 10, 0)` makes a stalled request fail in 10 minutes instead of
-creeping toward the Pro 2 hour cap. Paged pulls usually get one because the loop is where
-people are thinking about performance. Single calls and workbook reads usually do not, and a
-workbook read that hangs costs exactly as much refresh time. Add it everywhere.
+`Web.Contents` gives up on a request after 100 seconds when you set nothing. So
+`Timeout = #duration(0, 0, 10, 0)` raises the limit, it does not protect you from a stall. Set a
+value because a page or a download really needs it. https://learn.microsoft.com/en-us/powerquery-m/web-contents
+
+Budget it. The worst case for one paged query is `Timeout` times `MaxPages`, against 2 hours for the
+whole attempt. The values above allow 10 minutes times 20 pages, 200 minutes, before fan out multiplies
+it (see `folding-and-duplication.md`). If the product passes 2 hours, lower one or shrink the pull.
+
+Retries are built in, so do not write your own loop. `Web.Contents` retries 408, 429, 503, 504, and 509
+up to three times with exponential back off, or waits for a `Retry-After` in seconds, from 0.5 to 120.
+Those waits come out of the same budget. https://learn.microsoft.com/en-us/power-query/handling-status-codes
+
+Single calls and workbook reads usually get no `Timeout`, and a read that hangs costs just as much
+refresh time, so make it a decision everywhere. Microsoft does not say whether the value covers a whole
+streaming download or only the wait for a first response, so test a large workbook.
 
 ## No paging is a decision, not a default
 
@@ -212,9 +223,10 @@ the meaning. Group the OR rows together and put them first, as above.
 - `sysparm_fields` projects columns. Never pull a field you drop later.
 - `sysparm_query` carries every filter you can express server side. Filtering in M after a
   full pull is the most common reason a REST model is slow, because nothing folds.
-- A date floor in the query string is the practical alternative to incremental refresh on a
-  non folding source. It works, and the cost is that the window grows forever unless someone
-  edits it. Put the date in one named constant at the top so that edit is one line.
+- A date floor in the query string is the simple way to bound a pull. It works, and the cost is
+  that the window grows forever unless someone edits it. Put the date in one named constant at the
+  top so that edit is one line. To stop re-pulling closed history, `RangeStart` and `RangeEnd` can
+  go in the same query string, see `incremental-refresh.md`.
 
 ## Freezing history instead of re-pulling it
 
@@ -231,5 +243,7 @@ Power Query writes this shape itself when you use Enter data, and it holds a sur
 ```
 
 Used well, this splits a pull in two: closed periods frozen in the model, and a live query
-that only has to cover the open ones. It is the poor version of incremental refresh, and on a
-non folding source it is often the only version available.
+that only has to cover the open ones. It is the manual version of incremental refresh. Incremental
+refresh can work on a non folding source when the date range goes in the request, so read
+`incremental-refresh.md` first. Keep the freeze for when the republish cost described there is
+unacceptable, because a frozen range survives a republish and a partition does not.

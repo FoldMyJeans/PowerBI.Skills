@@ -34,7 +34,11 @@ for a recalc problem. Deleting calculated columns does nothing for a slow API.
   not. Microsoft states it plainly: "In a cloud environment, each query is refreshed using its
   own separate cache. So a query can't benefit from the same request having already been
   cached for a different query." A staging query referenced by 4 loaded tables is crawled
-  once in Desktop and 4 times in the Service.
+  4 times in the Service. Desktop only gets that down to once with parallel loading of tables
+  turned off. Chris Webb measured 4 web calls with it on, the default, and 1 with it off, and found
+  no such switch in the Service, where queries appeared to always run in parallel
+  (https://blog.crossjoin.co.uk/2019/03/26/power-bi-caching-parallelism-and-power-query-refresh-performance/).
+  That is from 2019, so count your own requests (see Measuring on Pro below).
 
 ## What loads the data phase
 
@@ -188,6 +192,14 @@ a benchmark.
 ## Measuring on Pro
 
 - Desktop refresh dialog, per table timers. The most useful free signal you have.
+- Query Diagnostics in the Power Query editor, on the Tools tab, for the requests that really went
+  out. The Data Source Query column shows the HTTP request and response on connectors that support
+  it. A grep of the M gives you an estimate of fan out, this gives you the observed count. Run it
+  with parallel loading on and off. https://learn.microsoft.com/en-us/power-query/query-diagnostics
+- SQL Server Profiler opened from DAX Studio against Desktop's local engine, for source time per
+  table: Progress Report End with subclass 25 ExecuteSQL, plus 17 Read Data for sources that defer
+  work. A table's time includes the queries it references. Compare traced runs with traced runs.
+  https://blog.crossjoin.co.uk/2019/02/09/power-query-execution-times-using-sql-server-profiler/
 - Service refresh history, for total duration, the attempt pattern, and the error.
 - Best Practice Analyzer in Tabular Editor 2, against a locally open Desktop file. Free, and it
   catches auto date tables, unused columns, and heavy calculated columns.

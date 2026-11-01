@@ -3,15 +3,16 @@
 The manual Power BI Desktop steps that come before any skill can help. An agent cannot do these,
 they need a person with Desktop open. Hand them over as a checklist.
 
-## Turn on the project format, once per machine
+## Check the project format, once per machine
 
-File, Options and settings, Options, Preview features. Check:
+Microsoft lists PBIP and PBIR as generally available, so a current build should offer Power BI
+Project (.pbip) under File, Save as. If it does not, or you get no TMDL `definition/` folder (see
+below), look under File, Options and settings, Options, Preview features for:
 
 - Power BI Project (.pbip) save option
 - Store semantic model using TMDL format
 
-Restart Desktop. These are per machine, so a new laptop needs them again, and a colleague who
-opens your project without them will save it back as a pbix.
+Restart Desktop after changing them. Options are per machine, so check a new laptop too.
 
 ## Turn auto date/time off, once per machine and once per file
 
@@ -74,8 +75,8 @@ MyReport.Report/
 .gitignore                         Desktop writes this
 ```
 
-If you do not see a `definition/` folder full of `.tmdl` files, the TMDL preview flag was not on
-when you saved. Turn it on and save again.
+If you do not see a `definition/` folder full of `.tmdl` files, the project saved in another format.
+Check the TMDL option above and save again.
 
 ## Initialise git before the first real change
 
@@ -111,7 +112,7 @@ so everything inherits rather than needing a restyle later. The theme lives in t
 
 Give the person this list and ask them to confirm each one.
 
-- [ ] pbip and TMDL preview options on, Desktop restarted
+- [ ] Power BI Project type available under Save as, saving TMDL
 - [ ] Auto date/time off, GLOBAL page, before any data loaded
 - [ ] Project saved as .pbip to a short local path, not OneDrive
 - [ ] `definition/` folder contains `.tmdl` files

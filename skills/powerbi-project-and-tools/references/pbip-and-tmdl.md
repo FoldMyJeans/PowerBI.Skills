@@ -7,9 +7,11 @@ it, or edit it in a text editor.
 
 A Power BI Project (PBIP) is the same content saved as a folder of plain text files instead. The
 model and report metadata become human readable files in a simple folder tree. That makes them
-diffable in git, mergeable, and editable in VS Code or any text editor. PBIP is still a preview
-feature in Power BI Desktop. Turn it on under File, Options and settings, Options, Preview
-features, then check the pbip save option and the option to store the semantic model using TMDL.
+diffable in git, mergeable, and editable in VS Code or any text editor. Microsoft lists PBIP and
+PBIR as generally available, with detecting and reloading external changes still in preview
+(https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-external-editing). If your
+build does not offer the project type or a TMDL `definition` folder, look under File, Options and
+settings, Options, Preview features.
 
 You save a pbip with File, Save as, and pick the Power BI Project type. You can convert a pbix
 to a pbip and back through Save as in Desktop.
@@ -27,6 +29,7 @@ ABCSales.SemanticModel/            the model
     model.tmdl                     model level settings, default culture, and table order refs
     relationships.tmdl             every relationship in the model, one file
     expressions.tmdl               every shared expression, one file (see below)
+    functions.tmdl                 DAX user defined functions, present only when the model has them
     tables/
       Fact_Sales.tmdl              one file per table: its columns, measures, hierarchies, and
       Dim_Date.tmdl                the partition that holds the table's M query
@@ -73,7 +76,8 @@ of the data from the last edit, and it is git ignored. When you fix the model, y
    Newer Desktop builds do detect on-disk changes and offer to apply them, which is a preview
    feature. It does not change the rule. The prompt resolves a conflict after the fact, and the
    version in Desktop's memory is the one that wins if you get it wrong. Closing first means
-   there is no conflict to resolve.
+   there is no conflict to resolve. An agent running the Desktop Bridge has a second branch, with
+   its own conditions, in `agent-verification.md`.
 3. Make minimal, targeted edits. One property or one measure at a time, then verify. A small diff
    is easy to review and easy to revert.
 4. Preserve line endings and encoding. Desktop writes CRLF and UTF-8 without BOM. A tool that
@@ -171,9 +175,10 @@ reuses the same id across visuals when you duplicate a visual, so duplicates the
   local root, which also gets it out of OneDrive.
 - Restart to see external edits. Newer builds prompt to apply changes they detect on disk, but
   a close and reopen after editing TMDL in VS Code is the path that cannot go wrong.
-- Do not hand edit `diagramLayout.json` or the report layout files during preview. Those files
-  are not documented for external editing. The one exception is box positions in
-  `diagramLayout.json`, which `references/model-diagram-layout.md` covers along with its limits.
+- Do not hand edit `diagramLayout.json`, `semanticModelDiagramLayout.json`, `mobileState.json`, or a
+  PBIR-Legacy `report.json`. Microsoft lists those as not supported for external editing. The one
+  exception is box positions in `diagramLayout.json`, which `references/model-diagram-layout.md`
+  covers along with its limits.
 
 ## See also
 

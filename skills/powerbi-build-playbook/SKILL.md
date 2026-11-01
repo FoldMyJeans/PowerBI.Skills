@@ -101,7 +101,10 @@ Theme first, so every visual you add inherits the look instead of being styled b
 layout, chart choice, slicers, and navigation. See `powerbi-report-design`.
 
 If you are generating pages or many similar visuals, bring the design decision to
-`powerbi-pbir-builder` and write the JSON. Desktop must be closed while you do.
+`powerbi-pbir-builder` and write the JSON. Before a build, have a person review a short written spec
+per page (the question, the visuals, the fields, the expected numbers), and start the build after
+that review, not in the same breath. Desktop must be closed while you write, unless you are on the
+bridge branch in `agent-verification.md` in the `powerbi-project-and-tools` skill.
 
 ### 8. Harden before you ship
 
@@ -128,7 +131,7 @@ Two decisions are painful to reverse. Make them deliberately in phase 3.
 - Get one page working end to end before building ten. The first page finds the modeling
   mistakes.
 - Close Power BI Desktop before any file edit, and reopen to verify. This applies to TMDL and to
-  PBIR JSON equally.
+  PBIR JSON equally. The Desktop Bridge is the one other route, see `powerbi-project-and-tools`.
 - Commit early and branch per change. The pbip format is text, so use it.
 - Validate numbers against the source before styling anything. A beautiful wrong report is worse
   than an ugly right one.

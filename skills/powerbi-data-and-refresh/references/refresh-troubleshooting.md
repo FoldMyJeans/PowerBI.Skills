@@ -11,11 +11,13 @@ In the Service, open the semantic model settings, then Refresh. Under refresh fa
 notifications, turn on the owner and add a group. A group survives the owner being away or
 changing roles, which a single contact does not.
 
-Two things it does not cover, so know the edges:
+Three things it does not cover, so know the edges:
 
 - A refresh that succeeds with wrong data is still a success. Notifications catch failures, not
   a query that quietly returned a short table. That is what the row ceiling guard in
   `rest-paging-pattern.md` is for.
+- On demand refreshes and refreshes started programmatically, including from Power Automate, send
+  no failure email. Anything you trigger that way needs its own failure branch.
 - A model nobody owns, because the owner left, stops refreshing and notifies nobody. Take
   ownership of an inherited model before you rely on it.
 
@@ -33,15 +35,27 @@ Two things it does not cover, so know the edges:
      so it does not reproduce a multi hour pull. Only a real refresh does.
 2. In the Service, open the dataset settings, Refresh history, then the failed run, then
    Show. It lists the attempts and, where available, per table durations and the exact error.
-   A repeating pattern of attempts that each run about 2 hours and then fail means a single
-   query is hitting the 2 hour cap and being cancelled.
+   A repeating pattern of attempts that each run about 2 hours and then fail means the run is
+   hitting the 2 hour cap and being cancelled. The cap covers all the work in the attempt, so look
+   at total work across the queries, not only for one slow query.
 
 ## What the common errors mean
 
 - "The operation was cancelled" and "the exception was raised by the IDbCommand interface":
   a timeout or a source side cancellation. Not credentials. A query ran too long, or the
   source (for example ServiceNow) cancelled a heavy request. Fix by making that query
-  cheaper (smaller pages, direct file reads, less duplication) and add a `Timeout`.
+  cheaper (smaller pages, direct file reads, less duplication). A `Web.Contents` call with no
+  `Timeout` gives up at 100 seconds, which may produce a similar symptom, so check that too. The
+  budget is in `rest-paging-pattern.md`.
+- A credentials error after about an hour of loading, on an Entra OAuth source such as SharePoint
+  Online. The token lasts about an hour and the Service waits up to 2 hours for data, so it can
+  expire mid load. Treat it as a duration problem and shorten the run before you re-enter
+  credentials. SharePoint OAuth also needs the same account you use to sign in to the Service, and
+  the source in the same tenant. Microsoft names SharePoint Online, not a `Web.Contents` workbook
+  read in particular, so that case is an inference from the shared credential type.
+- `Container exited unexpectedly with code 0x0000DEAD`: Microsoft's documented action is to disable
+  the schedule and republish. On a model with incremental refresh, that republish also wipes the
+  history (see `incremental-refresh.md`).
 - "Formula.Firewall ... information could not be combined": privacy levels. Two sources with
   mismatched privacy are being combined. Set them consistently (often Organizational), or turn
   the firewall off at the model level (see below).
@@ -55,7 +69,7 @@ Two things it does not cover, so know the edges:
    first. Replace with a direct `Web.Contents` file URL. This is a frequent multi hour cause.
 2. A REST page that is too large to build inside the source's transaction limit, so the
    source cancels it. Lower the page size (a few thousand), keep the row ceiling by raising
-   max pages, add a `Timeout`.
+   max pages, and budget the `Timeout`.
 3. Duplication: several loaded tables re-running the same expensive staging query. See
    `folding-and-duplication.md`. Reduce fan out or make the pull cheap.
 4. A genuinely large table with no source side filter. Filter at the source, or use
@@ -93,19 +107,38 @@ If a model refreshes on one machine and fails on another, compare this block fir
 
 ## The Pro limits that bite
 
-- A single refresh run is capped at 2 hours on Pro. Past that it is cancelled.
+- A refresh is capped at 2 hours per attempt on Pro. The cap covers all the work in the attempt,
+  and it applies to each attempt separately, not to the total across attempts.
 - 8 scheduled refreshes per day, at least 30 minutes apart. API triggered refreshes count.
 - 1 GB model size. A model near the cap is slow to refresh and may fail.
+- 10 GB of uncompressed data processed during a refresh on shared capacity. If refresh fails on
+  this, the fix is to import less.
+- A full refresh can use up to double the model's memory, because the Service keeps a snapshot
+  until the refresh completes. So watch peak memory as well as resting size.
 
 See `pro-vs-premium-facts.md` in the `powerbi-project-and-tools` skill for the full list.
+
+## How a schedule stops or misleads without anyone deciding
+
+- Four consecutive failures, or an unrecoverable error such as expired credentials, deactivates
+  the schedule, and the threshold cannot be changed. Fix the cause, then turn the schedule back on.
+- Two months with nobody visiting a report or dashboard built on the model pauses the schedule.
+  The owner is emailed and the schedule shows as Disabled. Any view resets the counter.
+- Start times slip. The target is within 15 minutes of the slot, the delay can reach an hour, and a
+  refresh can begin up to 5 minutes early. Do not chain one refresh to another on a clock gap.
+- A run marked Completed can carry warnings, including for memory limits. The refresh history shows
+  them, the REST APIs for refresh history and execution details do not.
+
+Sources: https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-troubleshooting-refresh-scenarios
+and https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-scheduled-refresh
 
 ## Incremental refresh on Pro
 
 Incremental refresh is available on Pro and is the right tool for a large history that only
-grows. Set RangeStart and RangeEnd parameters and a date filter. The catch: it only saves
-work if the date filter folds to the source. For a non folding REST or SharePoint source,
-inject the RangeStart and RangeEnd into the source request yourself (put the date range in
-the API query string), otherwise Power BI still pulls everything before filtering.
+grows. The catch: the date range has to reach the source. For a non folding REST or SharePoint
+source, put RangeStart and RangeEnd in the request yourself, otherwise each partition repeats the
+full pull. Read `incremental-refresh.md` before you turn it on, because a republish wipes the
+partitions and Pro has no way round that.
 
 ## A safe fixing routine
 
@@ -114,4 +147,5 @@ the API query string), otherwise Power BI still pulls everything before filterin
 - Keep changes that preserve row counts. If you change a page size, adjust max pages so the
   total ceiling is unchanged, so you never silently truncate data.
 - After it refreshes fast in Desktop, republish. If the Service still fails, re-check the
-  data source credentials and privacy levels in the dataset settings.
+  data source credentials and privacy levels in the dataset settings. Desktop does not publish
+  privacy settings, so they have to be reapplied there.

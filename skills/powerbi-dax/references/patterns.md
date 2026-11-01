@@ -4,9 +4,9 @@ Copy ready patterns that are correct and come up constantly. Change the table an
 to match the model. Every ratio uses DIVIDE. Everything time based assumes a real Date table
 that is marked as a date table (see `powerbi-modeling`).
 
-Names used below: `Sales` is the fact table, `'Date'` is the Date dimension, and `Product` and
-`Budget` are dimensions. `[Total Sales]` is the base measure defined first, and the later
-patterns reuse it.
+Names used below: `Sales` is the fact table, `'Date'` is the Date dimension, `Product` is a
+dimension, and `Budget` is a fact at a higher grain. `[Total Sales]` is the base measure defined
+first, and the later patterns reuse it.
 
 ## Base measure
 
@@ -29,7 +29,8 @@ DIVIDE (
 ```
 
 DIVIDE returns blank when the denominator is zero or blank, so no divide by zero error. Pass a
-third argument if you want something other than blank, for example `DIVIDE ( a, b, 0 )`.
+third argument if you want something other than blank, for example `DIVIDE ( a, b, 0 )`, after
+reading its cost in `ratios-and-totals.md`.
 
 ## Percent of total
 
@@ -96,7 +97,8 @@ TOTALYTD (
 ```
 
 TOTALYTD accumulates from January 1 of the current year to the current date in the filter. Add
-a year end date as the last argument for a non calendar fiscal year.
+a year end date as the last argument for a non calendar fiscal year. When the latest period is only
+part done, a prior period measure compares it with a whole period. See `time-intelligence.md`.
 
 ## Running total
 
@@ -134,7 +136,8 @@ population to rank over. The empty third argument means rank the current item. D
 largest first, and DENSE avoids gaps after ties.
 
 For a 0-100 score, a composite of several scores, a tier or quadrant label, or windowing this
-rank into pages for a leaderboard, see `scoring-and-pagination.md`.
+rank into pages for a leaderboard, see `scoring-and-pagination.md`. For a tie break on several
+columns, see RANK in `window-and-visual-calculations.md`.
 
 ## Virtual relationship with TREATAS
 
@@ -154,7 +157,9 @@ CALCULATE (
 
 TREATAS applies the values of the first argument as a filter on the column in the second. Here
 the Date slice drives the Budget table even though the two are not related in the model. It is
-the lightweight way to relate at a different grain without a physical relationship.
+the lightweight way to relate at a different grain without a physical relationship. A budget held
+by month repeats the whole month on a day level visual, so return blank below the fact's grain, as
+in the higher grain case in `many-to-many.md` in the `powerbi-modeling` skill.
 
 ## KPI label with an arrow and a semantic color
 
@@ -227,7 +232,8 @@ what you want, and it removes repeated subexpressions.
   measure. A calculated column bloats the model and does not respond to filters. See
   `measures-vs-calc.md`.
 - Forgetting DIVIDE. Plain `/` returns Infinity or NaN on a zero denominator, which shows up as
-  an error or a broken visual. Use DIVIDE for every ratio.
+  an error or a broken visual. Use DIVIDE for every ratio whose denominator could be zero or blank.
+  With a constant denominator, plain `/` is the better choice.
 - Measures scattered across fact and dimension tables. Where a measure lives does not change its
   result, but loose measures are hard to find. Keep them in one _Measures table (see
   `powerbi-modeling`).

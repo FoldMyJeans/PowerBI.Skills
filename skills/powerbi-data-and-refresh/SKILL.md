@@ -3,7 +3,7 @@ name: powerbi-data-and-refresh
 description: >-
   Build and troubleshoot the data layer of a Power BI model: Power Query (M) sources,
   connecting to REST or OData or a ServiceNow Table API or SharePoint or Excel on
-  SharePoint, paging an API, query folding, parameters, and refresh performance. Use
+  SharePoint, paging an API, query folding, parameters, incremental refresh, and refresh performance. Use
   whenever the user is writing or fixing M queries, wiring Power BI to an API or SharePoint,
   paging a REST endpoint, parameterizing a connection, or hitting a slow, stuck, or failing
   refresh: a refresh timeout, "the operation was cancelled", a scheduled refresh that fails,
@@ -33,8 +33,10 @@ For DAX use `powerbi-dax`. For the pbip and TMDL file format and external tools 
    work to the source when the source can do it (folding).
 2. Watch for the source being read more than once. Referencing another loaded query does
    not reuse its result, it re-runs the whole pipeline.
-3. A Pro refresh has a hard 2 hour cap. If a single query runs past it, the refresh is
-   cancelled and fails. Most "will not refresh" cases are a timeout, not a credential issue.
+3. A Pro refresh has a hard 2 hour cap per attempt, and it covers the whole run, not one query.
+   Past it, the attempt is cancelled and fails. Most "will not refresh" cases are a timeout, and a
+   long load from SharePoint can report that as a credentials error at about one hour. See
+   `references/refresh-troubleshooting.md`.
 4. Refresh has two phases and they need opposite fixes. The data phase pulls and compresses,
    the recalc phase rebuilds calculated tables, calculated columns, relationships, and
    hierarchies. Know which one is slow before changing anything. See
@@ -116,11 +118,14 @@ Full reasoning and the rest of the list in `references/refresh-cost-model.md`.
   row ceiling the same if you change the page size (page size times max pages). `FetchPage`
   must return a declared empty table on a zero row page or `Table.Combine` breaks. Start at a
   page size of 10000 for a ServiceNow Table API and drop to a few thousand if you see "the
-  operation was cancelled", which means the source could not assemble the page. Put a `Timeout`
-  on every `Web.Contents` call, paged or not. Full loop in `references/rest-paging-pattern.md`.
-- Do not push a Dataflow Gen1 into a model that also refreshes on a schedule. On Pro there
-  is no orchestration between the two, so the model can read stale or partial data or fail.
-  See `pro-vs-premium-facts.md` in the `powerbi-project-and-tools` skill.
+  operation was cancelled", which means the source could not assemble the page. Set `Timeout`
+  deliberately on every `Web.Contents` call, paged or not. The default is 100 seconds, so a larger
+  value raises the limit, and `Timeout` times `MaxPages` has to fit the 2 hour cap. Full loop in
+  `references/rest-paging-pattern.md`.
+- Do not push a Dataflow Gen1 into a model that also refreshes on a schedule unless you sequence
+  the two. Power Automate can start the model refresh when the dataflow succeeds, but that refresh
+  counts against the 8, sends no failure email, and shares no transaction with the dataflow. See
+  `pro-vs-premium-facts.md` in the `powerbi-project-and-tools` skill.
 - Referencing another loaded query (`Source = OtherQuery`) re-runs that query in full every
   time. If three loaded tables reference the same expensive staging query, that staging
   query, and its API calls, run 3 times. See `references/folding-and-duplication.md`.
@@ -128,9 +133,11 @@ Full reasoning and the rest of the list in `references/refresh-cost-model.md`.
 ## References in this skill
 
 - `references/connecting-to-sources.md`: picking the connector, SharePoint and Excel file reads
-  including the patterns for a workbook a business user edits, auth, and the literal URL rule.
+  including the patterns for a workbook a business user edits, OData, auth, and the literal URL rule.
 - `references/rest-paging-pattern.md`: the complete paging loop with the empty page guard, page
   size and timeout rules, flattening reference fields, and building a filter from a table.
+- `references/incremental-refresh.md`: RangeStart and RangeEnd in a REST request, one query per
+  partition, the partition date and refresh window, and the Pro republish trap.
 - `references/m-hardening.md`: surviving schema drift, quoting field names with punctuation,
   parsing durations and choice fields, text key joins, and turning one row into several.
 - `references/folding-and-duplication.md`: query folding, and the "referencing a query

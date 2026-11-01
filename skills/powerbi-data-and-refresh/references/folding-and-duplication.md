@@ -30,8 +30,9 @@ query's result. It re-executes that query's full M, including its API calls. The
 shared cache between tables during refresh.
 
 This is worse in the Service than on your machine, which is why a model can refresh fine in
-Desktop and fail on a schedule. Desktop refreshes all tables against a single shared cache. The
-Service gives every query its own cache, so nothing is reused across tables. Microsoft: "In a
+Desktop and fail on a schedule. Desktop refreshes all tables against a single shared cache, though
+with parallel loading on, its default, parallel queries can miss it (`refresh-cost-model.md` has
+the measurement). The Service gives every query its own cache, so nothing is reused across tables. Microsoft: "In a
 cloud environment, each query is refreshed using its own separate cache. So a query can't
 benefit from the same request having already been cached for a different query."
 
@@ -72,9 +73,10 @@ There is no free shared cache on Pro. The levers are:
    Dataflow Gen1 with the problems listed in point 5. The Best Practice Analyzer also flags heavy
    use of calculated tables as technical debt. So after converting, go and clean up the recalc
    phase you just loaded, starting with auto date/time. See `refresh-cost-model.md`.
-5. Dataflows would materialize the staging once, but Dataflow Gen1 on Pro is unreliable when
-   a refreshing model imports it (no orchestration, no folding). Treat it as a last resort
-   and sequence it by hand. The clean version needs Fabric or Premium.
+5. A dataflow materializes the staging once, so each source pull happens one time however many
+   model queries read it. On Pro that means Dataflow Gen1, which is legacy and can be sequenced with
+   Power Automate at a real cost. The costs are in `pro-vs-premium-facts.md` in the
+   `powerbi-project-and-tools` skill. The clean version needs Fabric or Premium.
 
 ## Counting the fan out
 
@@ -91,6 +93,9 @@ Method:
    inside `fact`, and once inside `rollup`.
 4. Write the number next to the query. That is how many times its API calls or file downloads
    happen in one Service refresh.
+
+That number is a static estimate. To see real requests, use Query Diagnostics in Desktop, and
+`refresh-cost-model.md` has the method.
 
 Count LOADED tables too, not just staging queries. This is the part that surprises people. A
 loaded table is still a query, and referencing it re-runs its whole M exactly like referencing

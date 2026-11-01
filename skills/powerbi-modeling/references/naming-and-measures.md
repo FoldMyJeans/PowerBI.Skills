@@ -58,6 +58,12 @@ you can tell from the name alone what a table is and whether it should be visibl
 author. A `stg_` table showing up in the field list is a bug you can spot without opening
 anything.
 
+This is a house choice, not a standard. SQLBI and Tabular Editor both advise against `dim` and
+`fact` prefixes on tables, and the cost is a visible `fact_effort` in report authors' field lists.
+We keep them because an agent or a reviewer can read a table's role from its name, which is
+judgement. PBIR field references carry table names, so settle this on a new model and do not rename
+an existing one for it.
+
 Mirror the same taxonomy in the Power Query query groups so the editor matches the model. In
 TMDL, a backslash makes a nested group:
 
@@ -109,7 +115,8 @@ The TMDL:
 
 Two things about that block if you clone it across measures. The third `DIVIDE` argument is what
 makes the description true: with only two arguments it returns blank, not 0, and a description
-that disagrees with its own DAX is worse than no description.
+that disagrees with its own DAX is worse than no description. The 0 is there for this example, not
+as a default. The `powerbi-dax` skill has the cost of returning a value instead of blank.
 
 And `lineageTag` must be unique across the whole model. Generate a fresh GUID per measure. Paste
 the same one twice and the project stops opening, with an error that names a different table
@@ -184,7 +191,10 @@ hidden.
 Have exactly one Date dimension, built for the job, and mark it. In Power BI Desktop, select the
 table, then Table tools, Mark as date table, and point it at the date column.
 
-- One continuous Date table with no gaps across the range the facts cover.
+- One continuous Date table with no gaps, covering the range the facts use in full years. A year
+  need not be a calendar year. Microsoft requires full years, and Desktop's marking check does not
+  test for them (it tests unique, no nulls, contiguous, one timestamp), so a table that stops mid
+  year still passes. https://learn.microsoft.com/en-us/power-bi/guidance/model-date-tables
 - Relate each date key on the facts to it (order date active, other date roles inactive, per
   `relationships.md`).
 - Marking it as a date table makes time intelligence (`TOTALYTD`, `SAMEPERIODLASTYEAR`, and so on)
@@ -211,7 +221,8 @@ Two things hold either way:
 - Turn auto date/time off regardless. In `model.tmdl` that is
   `annotation __PBI_TimeIntelligenceEnabled = 0`.
 - Do not let an agent or a reviewer "fix" this by marking the date table. It will not make a
-  single measure better and it adds a date hierarchy nobody uses.
+  single measure better. Marking does not add a hierarchy. It stops Desktop auto creating them and
+  removes the built in date tables, and anything still bound to those stops working.
 
 ## What the report layer needs from the model
 

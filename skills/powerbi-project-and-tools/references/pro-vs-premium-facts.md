@@ -10,13 +10,14 @@ Microsoft Learn once a year, because limits move.
 - Model size up to 1 GB per semantic model. The pbix upload cap is also 1 GB.
 - Scheduled refresh up to 8 times per day, at least 30 minutes apart. Manual refreshes
   from the browser do not count. Refreshes triggered by the REST API do count.
-- A single refresh run is capped at 2 hours. If a refresh runs past 2 hours it is
-  cancelled and fails. This is the single most common cause of a Pro model that "will not
-  refresh" (see the data-and-refresh skill).
+- A refresh is capped at 2 hours per attempt, across all the work in the attempt. If it runs
+  past 2 hours it is cancelled and fails. This is the single most common cause of a Pro model
+  that "will not refresh" (see the data-and-refresh skill).
 - Incremental refresh IS supported on Pro. You do not need Premium for it. Set it up with
-  RangeStart and RangeEnd parameters plus a date filter. It only helps if the source folds
-  the date filter, so for non-folding REST or SharePoint sources you must inject the date
-  range into the source query yourself.
+  RangeStart and RangeEnd parameters plus a date filter. It only helps if the filter reaches
+  the source, so for non-folding REST or SharePoint sources you must inject the date range
+  into the source query yourself. A republish wipes the partitions, and the metadata only way
+  round that is Premium. See `incremental-refresh.md` in the `powerbi-data-and-refresh` skill.
 
 ## What needs Premium, Premium Per User, or Fabric (do not rely on these)
 
@@ -40,18 +41,31 @@ Dataflow Gen1 runs in Pro workspaces. It still works, though Microsoft now calls
 (end of active innovation, not removed). The problem is what happens when a dataset imports
 a Gen1 dataflow:
 
-- There is no transactional link and no orchestration between the dataflow refresh and the
-  dataset refresh. The dataset reads whatever the dataflow last stored.
+- There is no transactional link between the dataflow refresh and the dataset refresh. The
+  dataset reads whatever the dataflow last stored.
 - If the dataflow is mid refresh, partially failed, or has not finished before the dataset
   refresh fires, the dataset pulls stale or partial data, or the refresh fails.
 - Without the Premium compute engine, Gen1 transformations do not fold, so its refreshes
   are slow and timing collisions are common.
 
-This is inherent to Gen1 on Pro, not a setting you can fix. Guidance: avoid pushing a Gen1
-dataflow into a model that also refreshes on a schedule. If you must use one, sequence it
-by hand (refresh the dataflow first, leave a wide gap, then refresh the dataset) and accept
-that it is fragile. The clean fix (Gen2, staging in a lakehouse or warehouse) needs Fabric
-or Premium, which we do not have.
+Sequencing is possible with Power Automate. A cloud flow triggers on "When a dataflow refresh
+completes", checks that Refresh Status equals Success, and calls "Refresh a dataset". Both
+connectors are Standard class. Microsoft names this as a scenario, though its walkthrough covers
+the dataflow to dataflow case, so this is from Microsoft docs and not yet run on a real model.
+Add a failure branch that tells someone. The costs:
+
+- The dataset refresh is API triggered, so it counts against the 8 per day.
+- It sends no failure email. Power BI does not email for refreshes started this way.
+- There is still no transaction. A failed dataset refresh leaves new dataflow data under an old
+  model.
+- A shared dataflow times out at 2 hours per table and 3 hours per dataflow.
+- Transferring ownership of a Gen1 dataflow invalidates its connections, and a new or renamed
+  column does not reach the model until it is refreshed in Desktop and republished.
+
+Guidance: avoid pushing a Gen1 dataflow into a model that also refreshes on a schedule unless the
+fan out it removes is worth those costs. Do not sequence it on a clock gap, because scheduled
+starts can slip by up to an hour. The clean fix (Gen2, staging in a lakehouse or warehouse) needs
+Fabric or Premium, which we do not have.
 
 ## Calculated columns and tables: help or hurt
 
@@ -96,3 +110,4 @@ The `powerbi-report-design` skill has the how-to and a Pro vs Fabric table for t
 - Semantic model connectivity with the XMLA endpoint: https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/service-premium-connect-tools
 - Dataflows considerations and limitations (Gen1 legacy): https://learn.microsoft.com/en-us/power-bi/transform-model/dataflows/dataflows-features-limitations
 - Differences between Dataflow Gen1 and Gen2: https://learn.microsoft.com/en-us/fabric/data-factory/dataflows-gen2-overview
+- Trigger dataflows and semantic models in sequence: https://learn.microsoft.com/en-us/power-query/dataflows/trigger-dataflows-and-power-bi-dataset-sequentially

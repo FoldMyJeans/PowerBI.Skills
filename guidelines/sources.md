@@ -17,6 +17,10 @@ of mid 2026. Re-check yearly.
 
 - MS Learn, model relationships: https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-relationships-understand
 - MS Learn, many to many relationship guidance: https://learn.microsoft.com/en-us/power-bi/guidance/relationships-many-to-many
+- MS Learn, date table design guidance (full years) and marking: https://learn.microsoft.com/en-us/power-bi/guidance/model-date-tables and https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-date-tables
+- MS Learn, data reduction for Import models: https://learn.microsoft.com/en-us/power-bi/guidance/import-modeling-data-reduction
+- SQLBI and Tabular Editor on naming, where they differ from the house `dim_` and `fact_` choice: https://docs.sqlbi.com/dax-style/dax-naming-conventions and https://tabulareditor.com/blog/naming-conventions-for-power-bi-semantic-models
+- `IsAvailableInMdx`, Tabular Editor KB, Chris Webb, and Data Mozart: https://docs.tabulareditor.com/en/kb/bpa-set-isavailableinmdx-false.html, https://blog.crossjoin.co.uk/2018/07/02/isavailableinmdx-ssas-tabular/, and https://data-mozart.com/hidden-little-gem-that-can-save-your-power-bi-life/
 - SQLBI, star schema or single table: https://www.sqlbi.com/articles/power-bi-star-schema-or-single-table/
 - Kimball Group, dimensional modeling techniques (vendor neutral theory): https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/
 
@@ -25,6 +29,9 @@ of mid 2026. Re-check yearly.
 - DAX Patterns, second edition, free online (SQLBI): https://www.daxpatterns.com/
 - SQLBI DAX topic hub, includes calculated columns vs measures and context transition: https://www.sqlbi.com/topics/dax/
 - MS Learn DAX function reference: https://learn.microsoft.com/en-us/dax/dax-function-reference
+- MS Learn DAX best practices, DIVIDE and its neighbours on blanks, references, and FILTER, plus user defined functions: https://learn.microsoft.com/en-us/dax/best-practices/dax-divide-function-operator and https://learn.microsoft.com/en-us/dax/best-practices/dax-user-defined-functions
+- MS Learn, calculation groups, value filter behavior, visual calculations, time intelligence: https://learn.microsoft.com/en-us/power-bi/transform-model/calculation-groups, https://learn.microsoft.com/en-us/power-bi/transform-model/value-filter-behavior, https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-visual-calculations-overview, and https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-time-intelligence
+- SQLBI on ISINSCOPE, TREATAS, RANK, user defined functions, and value filter behavior: https://www.sqlbi.com/articles/distinguishing-hasonevalue-from-isinscope/, https://www.sqlbi.com/articles/propagate-filters-using-treatas-in-dax/, https://www.sqlbi.com/articles/introducing-the-rank-window-function-in-dax/, https://www.sqlbi.com/articles/introducing-user-defined-functions-in-dax/, and https://www.sqlbi.com/articles/understanding-value-filter-behavior-in-summarizecolumns/
 
 ## M, Power Query, and refresh performance
 
@@ -33,11 +40,16 @@ of mid 2026. Re-check yearly.
 - MS Learn, referencing Power Query queries (referenced steps re-execute, no free cache): https://learn.microsoft.com/en-us/power-bi/guidance/power-query-referenced-queries
 - MS Learn, best practices when working with Power Query: https://learn.microsoft.com/en-us/power-query/best-practices
 - MS Learn, understanding query evaluation and query folding: https://learn.microsoft.com/en-us/power-query/query-folding-basics
+- MS Learn, `Web.Contents` defaults and status code retries: https://learn.microsoft.com/en-us/powerquery-m/web-contents and https://learn.microsoft.com/en-us/power-query/handling-status-codes
+- MS Learn, OData and Parquet connectors, Query Diagnostics: https://learn.microsoft.com/en-us/power-query/connectors/odata-feed, https://learn.microsoft.com/en-us/power-query/connectors/parquet, and https://learn.microsoft.com/en-us/power-query/query-diagnostics
+- Chris Webb, parallel loading and repeated web calls, Excel sheet layout, Profiler timing: https://blog.crossjoin.co.uk/2019/03/26/power-bi-caching-parallelism-and-power-query-refresh-performance/, https://blog.crossjoin.co.uk/2023/11/12/excel-workbook-layout-and-the-performance-of-reading-data-with-power-query-in-power-bi/, and https://blog.crossjoin.co.uk/2019/02/09/power-query-execution-times-using-sql-server-profiler/
 
 ## Licensing and limits
 
 - MS Learn, data refresh in Power BI (the 8 per day, 1 GB, 2 hour Pro limits): https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-data
 - MS Learn, configure incremental refresh and real time data: https://learn.microsoft.com/en-us/power-bi/connect-data/incremental-refresh-overview
+- MS Learn, troubleshoot incremental refresh, refresh scenarios, and scheduled refresh: https://learn.microsoft.com/en-us/power-bi/connect-data/incremental-refresh-troubleshoot, https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-troubleshooting-refresh-scenarios, and https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-scheduled-refresh
+- MS Learn, sequencing dataflows and semantic models with Power Automate: https://learn.microsoft.com/en-us/power-query/dataflows/trigger-dataflows-and-power-bi-dataset-sequentially
 - MS Learn, dataflows considerations and limitations, Gen1 legacy: https://learn.microsoft.com/en-us/power-bi/transform-model/dataflows/dataflows-features-limitations
 - MS Learn, differences between Dataflow Gen1 and Gen2 (Gen2 needs Fabric or Premium): https://learn.microsoft.com/en-us/fabric/data-factory/dataflows-gen2-overview
 
@@ -100,6 +112,9 @@ of mid 2026. Re-check yearly.
 
 - MS Learn, Power BI Desktop projects (pbip) overview: https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-overview
 - MS Learn, semantic model folder and TMDL: https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset
+- MS Learn, report folder and PBIR: https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report
+- MS Learn, editing project files outside Desktop, which states the PBIP and PBIR status: https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-external-editing
+- MS Learn, Desktop Bridge: https://learn.microsoft.com/en-us/power-bi/developer/agentic/power-bi-desktop-bridge-overview
 
 ## Maintained GitHub repos
 
@@ -147,11 +162,15 @@ an agent rewrites the content.
 
 ### Official tools, install when a build needs them
 
-- microsoft/PowerBI-visuals-tools, the `pbiviz` CLI for custom visuals, with a built in MCP server
-  (`npx -y powerbi-visuals-tools mcp`). MIT: https://github.com/microsoft/PowerBI-visuals-tools
+Pin every version, per the tool risk policy in `external-tools.md` in `powerbi-project-and-tools`.
+
+- microsoft/PowerBI-visuals-tools, the `pbiviz` CLI for custom visuals, with a built in MCP server.
+  MIT: https://github.com/microsoft/PowerBI-visuals-tools
 - microsoft/powerbi-modeling-mcp, edits semantic models in Power BI Desktop and in PBIP and TMDL
-  files. It also reaches Fabric workspaces, which Pro does not need. MIT:
-  https://github.com/microsoft/powerbi-modeling-mcp
+  files. It also reaches Fabric workspaces, which Pro does not need. The LICENSE file is MIT, but
+  the README makes use of the software subject to a separate proprietary EULA that a person has to
+  accept: https://github.com/microsoft/powerbi-modeling-mcp and
+  https://github.com/microsoft/powerbi-modeling-mcp/blob/main/EULA.txt
 - @microsoft/powerbi-desktop-bridge-cli, finds running Desktop instances, reloads PBIR reports, and
   captures page screenshots. MIT: https://www.npmjs.com/package/@microsoft/powerbi-desktop-bridge-cli
 - @microsoft/powerbi-report-authoring-cli, PBIR capability lookup and conformance validation, in
@@ -159,6 +178,11 @@ an agent rewrites the content.
 
 ### Skills and tools to read
 
+- microsoft/skills-for-fabric, Microsoft's Power BI Report skill, including the validate, reload,
+  screenshot, and review loop. Its service paths need Fabric. MIT:
+  https://github.com/microsoft/skills-for-fabric
+- RuiRomano/pbip-demo-agentic, an agent run Best Practice Analyzer script and a spec first flow. MIT:
+  https://github.com/RuiRomano/pbip-demo-agentic
 - data-goblin/power-bi-agentic-development, see the section above. Read `release-notes/` rather
   than the whole repo, since it ships weekly and warns of renames. Its `custom-visuals` plugin
   carries no hooks and one MCP server, the `pbiviz` one, and is the one worth a project scoped trial
@@ -166,7 +190,9 @@ an agent rewrites the content.
 - MinaSaad1/pbi-cli, a CLI plus skills, including a custom visual workflow from scaffold to PBIR
   import. MIT: https://github.com/MinaSaad1/pbi-cli
 - Mofaji/Agentic-PBIP-Template, a `pbiviz` skill that embeds the visual in the PBIP so the report
-  opens without an import. MIT: https://github.com/Mofaji/Agentic-PBIP-Template
+  opens without an import, and the source of the fix budget idea in `agent-verification.md`. Its
+  project settings run PowerShell on session start, so read them before opening it in an agent. MIT:
+  https://github.com/Mofaji/Agentic-PBIP-Template
 - NatVanG/fab-inspector, rule based testing for Power BI and Fabric artifacts. MIT:
   https://github.com/NatVanG/fab-inspector
 

@@ -16,7 +16,8 @@ the defensive transforms that keep a query alive when a source drifts, see
 | One Excel file on SharePoint | `Excel.Workbook(Web.Contents("<direct file url>"), null, true)` | `SharePoint.Files`, which crawls every file in the site first |
 | Many files in one folder | `SharePoint.Files` filtered early, or `Folder.Files` on a synced path | A direct read per file, which does not scale |
 | A file that moves or gets renamed | `SharePoint.Files`, accepting the crawl cost | A fixed path that breaks silently |
-| Data that will never change again | A static blob frozen into the model, see the paging reference | Re-pulling closed history on every refresh |
+| An OData service | `OData.Feed` from the service root, see below | A hand paged `Web.Contents` |
+| Closed history you do not want to re-pull | Incremental refresh with the range in the request (`incremental-refresh.md`), or a static blob when the republish cost is unacceptable | Re-pulling closed history on every refresh |
 
 ## Reading an Excel file on SharePoint
 
@@ -57,14 +58,38 @@ Web.Contents("https://yourtenant.sharepoint.com/sites/Site",
   [RelativePath = "_api/web/GetFileById('<file-id>')/$value"])
 ```
 
-Put a `Timeout` on a workbook read the same way you would on an API call. A hung download costs
-the same refresh minutes as a hung request.
+Set a `Timeout` on a workbook read the same way you would on an API call. A hung download costs
+the same refresh minutes as a hung request. The default and the budget are in
+`rest-paging-pattern.md`.
 
 ### Kind is Sheet or Table, and they differ
 
 `Excel.Workbook` returns both. A `Table` (a real Excel table object) arrives with headers already
 correct. A `Sheet` is the raw grid, so you promote headers yourself and you own whatever title
 rows sit above the data. Prefer a `Table` when the file has one.
+
+### Sheet layout and file format change the read time
+
+These are Chris Webb's measurements, not taken over SharePoint, so trust the direction more than
+the factor. Read from local disk, a small Excel table on a sheet shared with a lot of other data
+took 4,918 ms against 63 ms on its own sheet, and being a real Excel table did not avoid it
+(https://blog.crossjoin.co.uk/2023/11/12/excel-workbook-layout-and-the-performance-of-reading-data-with-power-query-in-power-bi/).
+In an older test that does not say where the files sat, the same data took 59 seconds from xlsx and
+9 from CSV (https://blog.crossjoin.co.uk/2018/08/02/comparing-the-performance-of-csv-and-excel-data-sources-in-power-query/).
+So keep each source table on its own sheet, and when a process you control writes the file, write
+CSV.
+
+### Parquet is not a Pro speed fix
+
+Microsoft documents the Parquet connector as reading only from the local filesystem, Azure Blob
+Storage, and Azure Data Lake Storage Gen2. Small files from elsewhere may work through
+`Binary.Buffer`, at a possible performance cost, and larger ones fail with `Parquet.Document cannot
+be used with streamed binary values` (https://learn.microsoft.com/en-us/power-query/connectors/parquet).
+So Parquet on SharePoint is a small file trick. Chris Webb's 2021 tests, run against ADLS Gen2 rather
+than local disk, found the generated code for combining files faster on CSV than on Parquet, and the
+Parquet gain coming from loading only some columns, with no predicate pushdown
+(https://blog.crossjoin.co.uk/2021/04/11/importing-data-from-adlsgen2-into-power-bi-summary-of-findings/).
+For a generated extract on Pro, write CSV.
 
 ### Do not hardcode a sheet or table name a business user can edit
 
@@ -115,6 +140,29 @@ model reads wrong numbers until somebody questions a total, which can take month
 header name whenever a header exists. Where a headerless block forces positional names, assert
 that a known marker value sits in its expected column and raise a clear `error` when it does
 not, the fail loud pattern in the m-hardening reference of this skill.
+
+## OData
+
+Use `OData.Feed` when the service really is OData, and start from the service root so Power Query
+can navigate and filter from there. This comes from Microsoft docs and has not yet been run on a
+real model here.
+
+- `Timeout` defaults to 600 seconds on `OData.Feed`, not the 100 seconds of `Web.Contents`.
+- `Concurrent` follows the service's `AsynchronousRequestsSupported` annotation, and runs
+  sequentially if the service does not say.
+- `OmitValues = ODataOmitValues.Nulls` and `Implementation = "2.0"` are options worth testing one at
+  a time. No published benchmark turned up for either.
+- If the URL is more than the service root, select Skip Test Connection when you set up refresh. The
+  Service's credential test ignores the query options in the M.
+- Joins with OData or Web sources can be slow enough for the host to close the connection, with `An
+  existing connection was forcibly closed by the remote host`. Use a navigation column when you can,
+  otherwise `Table.Buffer` the smaller query before the merge.
+- On a SharePoint list or Project Online, a URL past about 2,100 characters fails with a 401. Start
+  from the root endpoint and filter in Power Query.
+- Microsoft Graph is not supported through this connector.
+
+Sources: https://learn.microsoft.com/en-us/powerquery-m/odata-feed and
+https://learn.microsoft.com/en-us/power-query/connectors/odata-feed
 
 ## Authentication notes (Pro)
 

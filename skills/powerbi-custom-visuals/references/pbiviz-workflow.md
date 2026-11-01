@@ -88,7 +88,7 @@ in the `powerbi-custom-visuals` rules of thumb.
 
 ## The Microsoft tooling
 
-`powerbi-visuals-tools` is the CLI and has its own MCP server, started with
-`npx -y powerbi-visuals-tools mcp`. It offers API lookup and feature instructions while you build.
-The `npx -y` form runs whatever version is latest, so pin the version when it matters. Source:
+`powerbi-visuals-tools` is the CLI and has its own MCP server, in preview, started with
+`npx -y powerbi-visuals-tools@7.2.1 mcp`. It offers API lookup and feature instructions while you
+build. Keep the version pinned, because without one `npx -y` runs whatever is latest. Source:
 https://github.com/microsoft/PowerBI-visuals-tools

@@ -84,8 +84,10 @@ because it is a holder table with no rows.
   volume makes that expensive. Fewer hops filter faster and read cleaner.
 - Prefer a star over one big flat table too. A single wide table repeats dimension text on
   every row, compresses worse, and cannot filter two facts from a shared dimension.
-- One to many is the default and the goal. If you reach for many to many, stop and add a
-  bridge table instead. See `references/relationships.md`.
+- One to many is the default and the goal. If you reach for many to many, first work out which
+  case you have. Two dimensions get a bridge table, two facts get shared dimensions, and a fact at a
+  higher grain can take a single direction many to many with a grain guard in its measures. See
+  `references/many-to-many.md`.
 - Single cross filter direction is the safe default. Both directions can cause ambiguous
   filter paths, wrong totals, and slower queries. Turn it on only for a deliberate bridge, and
   know why.
@@ -93,7 +95,8 @@ because it is a holder table with no rows.
   ship date) go through inactive relationships plus `USERELATIONSHIP` in a measure, or a second
   Date table. See `references/relationships.md` and `powerbi-dax`.
 - Relationship columns must be clean keys. No blanks, no duplicates on the "one" side, one data
-  type on both ends. A dirty key is the usual cause of a blank or doubled number.
+  type on both ends. A dirty key is the usual cause of a blank or doubled number, and a duplicate
+  arriving on the "one" side fails the whole refresh.
 - Keep the model view readable, facts in one column and dimensions in one row, so shared
   dimensions, stray joins, and inactive relationships can be seen. The
   `powerbi-project-and-tools` skill owns the layout and a script that applies it.
@@ -108,7 +111,9 @@ because it is a holder table with no rows.
   VertiPaq, star vs snowflake, why a star beats one flat table, the three fact types, and a
   worked Sales example.
 - `references/relationships.md`: cardinality, single vs both cross filter direction, active vs
-  inactive and USERELATIONSHIP, the many to many pitfall and bridge tables, and clean keys.
+  inactive and USERELATIONSHIP, and clean keys.
+- `references/many-to-many.md`: the three many to many cases, bridge tables, a fact at a higher grain,
+  and limited relationships.
 - `references/naming-and-measures.md`: the `_Measures` holder table and the reserved name trap,
   friendly names, hiding keys and foreign keys, one marked Date table, and casing.
 
