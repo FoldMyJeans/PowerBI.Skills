@@ -30,6 +30,7 @@ and expensive afterwards, and two of them are one way doors.
 | Write or fix a measure | `powerbi-dax` |
 | What should the page look like, which chart, what colors | `powerbi-report-design` |
 | Write pages and visuals as JSON instead of clicking | `powerbi-pbir-builder` |
+| A chart Power BI does not have, a pbiviz, animation between states | `powerbi-custom-visuals` |
 | Edit the model files, external tools, what needs Premium | `powerbi-project-and-tools` |
 | Document a finished model into a shareable repo | `powerbi-doc-repo` |
 
