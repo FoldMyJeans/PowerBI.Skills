@@ -30,9 +30,9 @@ or Fabric. This is a summary. For the full detail and the Microsoft Learn source
   write endpoint, which is Premium. On Pro, edit locally then republish from Desktop. See
   `external-tools.md`.
 - Dataflow Gen1. It runs in Pro workspaces, but do not push a Gen1 dataflow into a model that
-  also refreshes on a schedule. On Pro there is no orchestration between the two, so the model
-  can read stale or partial data or the refresh can fail. The clean fix is Gen2, which needs
-  Fabric or Premium.
+  also refreshes on a schedule unless you sequence the two. Unsequenced, the model can read stale
+  or partial data or the refresh can fail. Power Automate can sequence them, at the cost listed in
+  `pro-vs-premium-facts.md`. The clean fix is Gen2, which needs Fabric or Premium.
 
 ## Full detail
 

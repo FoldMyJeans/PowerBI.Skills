@@ -10,7 +10,8 @@ description: >-
   XMLA, tidy a tangled model view, or asks what needs Premium. Trigger on phrases like "pbip",
   "TMDL", "edit the model files", "model view", "arrange the model diagram", "diagramLayout", "Tabular Editor", "DAX Studio", "VertiPaq Analyzer", "Bravo", "Measure Killer",
   "Best Practice Analyzer", "model size", "external tools", "XMLA", "what needs Premium",
-  "licensing". Assumes Power BI Pro only, no Fabric or Premium.
+  "licensing", "Desktop Bridge", "modeling MCP", "verify the edit". Assumes Power BI Pro only, no
+  Fabric or Premium.
 ---
 
 # Power BI project and tools
@@ -29,6 +30,8 @@ Use this when the user wants to:
 - Run the Best Practice Analyzer, check model size, or find unused measures and columns.
 - Untangle the model view so the relationships can be read and reviewed.
 - Know what is Pro versus Premium versus Fabric, or whether an XMLA tool edit will work.
+- Check an agent's edit: conformance validation, reload and screenshot through the Desktop Bridge,
+  and the expected numbers asserted with DAX.
 
 For M and refresh use `powerbi-data-and-refresh`. For star schema use `powerbi-modeling`. For
 DAX use `powerbi-dax`. For report layout use `powerbi-report-design`. To stand up a documented,
@@ -47,7 +50,8 @@ republish from Power BI Desktop. See `references/licensing-cheatsheet.md`.
 2. Close Power BI Desktop before you touch the files. Desktop holds the model in memory and
    writes the TMDL files from memory when it saves. Edits made while it is open get clobbered.
    Newer builds prompt to apply edits they spot on disk, but closing first avoids the conflict
-   rather than resolving it.
+   rather than resolving it. An agent running the Desktop Bridge has a second branch, with its own
+   conditions, in `references/agent-verification.md`.
 3. Make one minimal, targeted edit at a time. Change a single property or measure, then verify.
    Never change a repeated code idiom with a global search and replace. Measures share guard
    blocks, so an identical snippet often appears in four places and a replace all rewrites the
@@ -92,8 +96,12 @@ republish from Power BI Desktop. See `references/licensing-cheatsheet.md`.
   column lineage traps that stop the model opening.
 - `references/model-diagram-layout.md`: the facts in a column, dimensions in a row layout for
   the model view, what it makes visible, and the script that applies it to `diagramLayout.json`.
-- `references/external-tools.md`: the free Pro friendly tools, what each is for, and the XMLA
-  write boundary repeated clearly.
+- `references/external-tools.md`: the free Pro friendly tools, what each is for, Best Practice
+  Analyzer conflicts to expect, cutting model size, the local modeling MCP, the tool risk policy, and
+  the XMLA write boundary repeated clearly.
+- `references/agent-verification.md`: the completion loop for an agent's edit, source checks,
+  conformance validation, reload and screenshot, review, and numbers asserted with DAX, plus when
+  Desktop can stay open, the fix budget, and the fake data fixture.
 - `references/licensing-cheatsheet.md`: a compact Pro versus Premium versus Fabric table.
 
 ## Related

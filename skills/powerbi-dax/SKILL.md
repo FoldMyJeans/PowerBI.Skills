@@ -6,7 +6,8 @@ description: >-
   write a measure, asks for DAX help, or is doing year over year, year to date, a running or
   cumulative total, percent of total, ranking, safe division, or a virtual relationship. Also
   use for "calculated column vs measure", context transition, what CALCULATE does, row context
-  vs filter context, DIVIDE, RANKX, TREATAS, DATEADD, SAMEPERIODLASTYEAR, TOTALYTD, or a
+  vs filter context, DIVIDE, RANKX, RANK, TREATAS, ISINSCOPE, DATEADD, SAMEPERIODLASTYEAR, TOTALYTD,
+  a user defined function, a calculation group, a visual calculation, or a
   measure that returns a blank or a wrong total. Trigger on "write a DAX measure", "my measure
   is wrong", "year over year in power bi", "running total", "percent of total", "should this be
   a calculated column or a measure". Assumes Power BI Pro only, no Fabric or Premium.
@@ -50,7 +51,8 @@ DAX Studio, the pbip and TMDL format, and the calculated table limitation use
 5. For anything time based (year over year, year to date, a moving total) confirm there is a
    real Date table marked as a date table first. Without it the time functions are wrong or
    blank.
-6. Guard every division with DIVIDE so an empty denominator returns blank, not an error.
+6. Guard every division that could hit a zero or blank denominator with DIVIDE, so it returns
+   blank, not an error.
 7. If a total looks wrong, check context transition and whether the measure should aggregate
    over the visible rows. A ratio whose denominator is an AVERAGE, or any ratio that does not
    sum, is correct per row and meaningless at the total until you fix it. See
@@ -66,9 +68,17 @@ DAX Studio, the pbip and TMDL format, and the calculated table limitation use
   or row context that M cannot provide.
 - Calculated tables (a Date table, a bridge) are fine, but they recompute every refresh and do
   not fold. Keep them small.
-- Time intelligence needs a proper Date table, contiguous dates, and Mark as date table set.
-  Build it once in `powerbi-modeling`, not per measure.
-- Always use DIVIDE(numerator, denominator) instead of the / operator for a ratio.
+- Classic time intelligence needs a proper Date table, contiguous dates, and Mark as date table
+  set. Build it once in `powerbi-modeling`, not per measure. See `references/time-intelligence.md`.
+- Use DIVIDE(numerator, denominator) whenever the denominator could be zero or blank. When it is a
+  constant, Microsoft recommends the / operator, because the test is wasted work.
+- Always qualify columns and never qualify measures: `Sales[Amount]`, `[Total Sales]`. A qualified
+  measure reference breaks when the measure's home table changes, which matters with a _Measures
+  table. https://learn.microsoft.com/en-us/dax/best-practices/dax-column-measure-references
+- In CALCULATE, prefer a Boolean filter over FILTER when one will do. A Boolean filter cannot
+  reference a measure or columns from several tables, nest CALCULATE, or use a function that scans a
+  table, so those still need FILTER.
+  https://learn.microsoft.com/en-us/dax/best-practices/dax-avoid-avoid-filter-as-filter-argument
 - Name intermediate results with VAR. It is faster and far easier to read and debug.
 - Where a measure lives does not change its result, but a _Measures table keeps the model clean
   and the measures findable.
@@ -87,8 +97,15 @@ DAX Studio, the pbip and TMDL format, and the calculated table limitation use
   of total, year over year, year to date, running totals, ranking, virtual relationships, and
   VAR, plus a common mistakes list.
 - `references/ratios-and-totals.md`: the measure that is right on a row and wrong on the total,
-  the HASONEVALUE and AVERAGEX fix, releasing specific columns rather than a whole table,
-  collapsing duplicate rows before summing, and a cumulative total over a non date column.
+  ISINSCOPE versus HASONEVALUE, custom totals, the cost of a zero from DIVIDE, releasing specific
+  columns rather than a whole table, value filter behavior, collapsing duplicate rows before
+  summing, and a cumulative total over a non date column.
+- `references/time-intelligence.md`: fair prior period comparisons when the latest period is partial,
+  and the status of calendar based time intelligence.
+- `references/functions-and-calculation-groups.md`: DAX user defined functions, calculation groups on
+  Pro, their traps for text measures, and how to choose between them.
+- `references/window-and-visual-calculations.md`: RANK and the window functions, visual calculations,
+  and where each belongs.
 - `references/virtual-relationships.md`: the five TREATAS forms, joining two facts at different
   grains, building a composite key in a measure, KEEPFILTERS, and what to do when the source
   gives you no surrogate key.

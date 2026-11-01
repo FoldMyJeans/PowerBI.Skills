@@ -65,7 +65,8 @@ the same page, `landingPageName` is the one that does it.
 ## The safety checklist, every time
 
 1. Confirm Power BI Desktop is closed. If it is open, ask the user to close it first. Desktop
-   holds the project's files open and can overwrite or lock them.
+   holds the project's files open and can overwrite or lock them. The exception is the bridge branch
+   in `agent-verification.md` in the `powerbi-project-and-tools` skill.
 2. Back up the `.Report` folder, or confirm it is committed to git, before writing anything.
 3. Work out the `$schema` for each file kind. `pages.json`, `page.json` and `visual.json` use
    three different schemas, so take each one from an existing file of the SAME kind, never from
@@ -76,7 +77,8 @@ the same page, `landingPageName` is the one that does it.
 5. Parse every JSON file you wrote (a simple `JSON.parse` or equivalent) before telling the
    user it is done. A single missing comma or bracket blocks the whole report from loading in
    Desktop, so catch it before the user sees it.
-6. Tell the user the files are written and to reopen the `.pbip` in Desktop.
+6. Run the completion loop in `agent-verification.md` in the `powerbi-project-and-tools` skill. Without
+   the bridge, tell the user the files are written and to reopen the `.pbip` in Desktop.
 7. If a visual does not render after reopening, valid JSON does not guarantee rendering. Check
    the field reference `Entity` and `Property` values match the model exactly (case
    sensitive), and that the visual is not sized to zero or cropped by its container.

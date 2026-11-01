@@ -10,19 +10,32 @@ That is form A and it is not repeated here. These are the four forms that come u
 
 ### B. Two columns at once
 
-Two TREATAS arguments in one CALCULATE intersect. Both must match, which is an AND, not an OR.
+Pass pairs as pairs. One TREATAS takes a table expression with both columns, then both target
+columns in the same order.
 
 ```dax
 PS Estimate Hours =
 CALCULATE (
     SUM ( fact_estimate_ps[Estimate of Effort] ),
-    TREATAS ( ALLSELECTED ( dim_work_item[Company] ), fact_estimate_ps[Company] ),
-    TREATAS ( ALLSELECTED ( dim_work_item[Epic Number] ), fact_estimate_ps[Epic Number] )
+    TREATAS (
+        ALLSELECTED ( dim_work_item[Company], dim_work_item[Epic Number] ),
+        fact_estimate_ps[Company],
+        fact_estimate_ps[Epic Number]
+    )
 )
 ```
 
 This is how you match on a composite grain (company plus epic) with no key column that holds
-both.
+both. For what is visible on the row, use `SUMMARIZE ( dim_work_item, dim_work_item[Company],
+dim_work_item[Epic Number] )` as the table expression. Form C below is the same choice.
+
+Two separate TREATAS arguments look the same and are not. Each one filters its own column, and
+filters on a table combine as an AND. So companies A and B with epics E1 and E2 also let (A, E2)
+through, even when no selected row holds that pair, and the estimate counts a pair the selection
+never had. It only bites when the target table holds such a pair, which is why it survives review.
+On one real model, two team and service pairs returned 1,635 hours as pairs and 6,405 hours as two
+separate arguments, nearly four times as much, with no error. EVALUATE both forms side by side in DAX
+query view before you trust either.
 
 ### C. VALUES or ALLSELECTED inside TREATAS
 
@@ -75,9 +88,10 @@ the same measure without being typed twice.
 
 ## Fact to fact, at different grains
 
-TREATAS is usually taught as dimension to fact. It is also the only clean way to join two facts
-that sit at different grains, for example a work item grain effort table against a company and
-month grain estimate table.
+TREATAS is usually taught as dimension to fact. It can also join two facts that sit at different
+grains, for example a work item grain effort table against a company and month grain estimate
+table. Shared dimensions are the first thing to try, and the `powerbi-modeling` skill has the three
+many to many cases. TREATAS is the route when no shared dimension can be built.
 
 A physical relationship would need a shared key column, which means inventing a synthetic key
 and storing it on both tables. The virtual relationship needs neither. It costs query time
@@ -168,27 +182,17 @@ groupable or sliceable.
 control the source. A ticketing API or a workbook a human maintains gives you none. When the
 key has to be a concatenated string, three things keep it from breaking.
 
-- Let the duplicate fail the refresh. The one side of a relationship enforces uniqueness, so a
-  duplicate key stops the refresh with a clear error. That is the behaviour you want, because
-  the alternative is a relationship that quietly fans out and doubles your numbers.
-
-  Resist the urge to "fix" it upstream with `Table.Distinct`. That silently keeps one arbitrary
-  row per key and throws the rest away, so the refresh goes green while the data goes wrong.
-
-  ```m
-  // Only when you have confirmed the duplicates are byte identical rows, for example a source
-  // that returns the same record twice. Then losing one costs nothing.
-  #"Removed Duplicates" = Table.Distinct(Source, {"Task Number"})
-  ```
-
-  If the duplicates are not identical, the key is wrong, not the data. Widen it until it is
-  unique, or take the grain question back to whoever owns the source.
+- Let a duplicate fail the refresh, and resist `Table.Distinct`. The rule and its one exception are
+  in `relationships.md` in the `powerbi-modeling` skill.
 
 - TRIM every part of the key on both sides. A trailing space from a hand maintained sheet is
   invisible in the data view and produces a silent non match.
 
   ```dax
-  CompanyMonthYearKey = TRIM ( [Company] ) & " - " & TRIM ( [Month] ) & " - " & FORMAT ( [Year], "0000" )
+  CompanyMonthYearKey =
+  TRIM ( fact_estimate_company_month[Company] ) & " - "
+      & TRIM ( fact_estimate_company_month[Month] ) & " - "
+      & FORMAT ( fact_estimate_company_month[Year], "0000" )
   ```
 
 - Format numbers explicitly. `FORMAT ( [Year], "0000" )` guarantees the same string on both

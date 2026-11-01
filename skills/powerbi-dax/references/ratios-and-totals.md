@@ -36,7 +36,8 @@ IF (
 
 The CALCULATE inside AVERAGEX is doing the work. It turns each sprint row into a filter
 (context transition) so the ratio is computed per sprint, then the mean of those ratios is
-returned.
+returned. If a slicer can narrow Sprint while Sprint is not on the visual, swap HASONEVALUE for
+ISINSCOPE. The test section below explains why.
 
 ## The ISFILTERED variant, dropping empty rows first
 
@@ -61,13 +62,27 @@ number the business will argue with.
 
 Which test to use:
 
-- HASONEVALUE is true when exactly one value of the column is visible. Use it when the visual
-  has that column on its axis, so the leaf row really is one sprint.
+- ISINSCOPE is true when the column is a grouping level of the visual. Use it when the branch
+  depends on the visual's level, which is what a total test usually means.
+- HASONEVALUE is true when exactly one value of the column is visible, whatever narrowed it. A
+  slicer down to one sprint makes it true with Sprint nowhere on the visual, so a card or a total
+  takes the leaf branch. Use it when the calculation needs a single selected value.
 - ISFILTERED is true when the column is filtered at all, from any source including a slicer.
   Use it when the slicer, not the axis, is what narrows the calculation.
 
 Pick by which one matches your visual. Getting this wrong sends you down the wrong branch and
-the result looks like the total problem you were fixing.
+the result looks like the total problem you were fixing. SQLBI also finds ISINSCOPE cheaper because
+it counts nothing, and warns that true can mean zero values as well as one, which made one of their
+queries far slower than HASONEVALUE.
+https://www.sqlbi.com/articles/distinguishing-hasonevalue-from-isinscope/
+
+## Custom totals, with no DAX
+
+On a table or matrix, Customize total calculation on a numeric column changes what the total row
+shows: Sum, Min, Max, Count, Count Distinct, Average, or None. Microsoft lists this as generally
+available from May 2026 and builds it on visual calculations. It may replace an AVERAGEX total branch
+on a matrix, but a card has no total row, so the measure fix stays for cards. This is from Microsoft
+docs and has not yet been run on a real model. The limits are in `window-and-visual-calculations.md`.
 
 ## The same trap on cards and titles
 
@@ -78,7 +93,12 @@ built from a measure has the same shape. For the title version see the
 
 ## DIVIDE with or without the third argument
 
-Both are correct. The third argument is a display decision, so make it deliberately.
+Both are valid, and blank is usually the better default. The third argument looks like a display
+decision, but it has a cost. A measure that always returns a value turns a sparse calculation into a
+dense one, so the visual fetches every grouping in the filter context, renders slower, and shows rows
+with no data. Microsoft's example is a table trying to list all 18,484 customers
+(https://learn.microsoft.com/en-us/dax/best-practices/dax-avoid-converting-blank). Make it
+deliberately.
 
 - `DIVIDE ( n, d, 0 )` when a chart reads better with a zero mark on the axis, so a gap does
   not look like missing data.
@@ -113,6 +133,25 @@ RETURN DIVIDE ( Num, Den )
 in the second. Both release the sprint and company slicers too, so the denominator becomes the
 whole model rather than the whole page. The percentages then sum to less than 100 and nobody
 can explain why.
+
+## Value filter behavior can change a REMOVEFILTERS result
+
+When two columns of one table are both filtered, DAX can merge them into only the combinations that
+exist. Clearing one column then still leaves the other narrowed. In Microsoft's example, a measure
+that clears Year returns 5 where 6 is expected, because the selected year has no red products. SQLBI's
+returns 372 where 657 is expected. Nothing errors. `Activity % of Month` above has this shape when a
+slicer sits on the same table as the columns it releases.
+
+The setting is Value filter behavior, in the model's properties in Model view: Automatic, Independent,
+or Coalesced. Independent keeps the filters separate. The sources disagree on the default. Microsoft's
+page, dated October 2024, says Automatic behaves as Coalesced for now and will change for new models
+later. SQLBI, in October 2025, says Automatic gives new models Independent, and recommends Independent.
+So read the setting on your own model instead of assuming. Changing it can change numbers, so snapshot
+your measures with two same table slicers first and diff them after. To see the property in TMDL,
+toggle it in Desktop and read the file back.
+
+Sources: https://learn.microsoft.com/en-us/power-bi/transform-model/value-filter-behavior and
+https://www.sqlbi.com/articles/understanding-value-filter-behavior-in-summarizecolumns/
 
 ## MAXX over FILTER to collapse duplicate source rows
 
@@ -162,8 +201,11 @@ DIVIDE (
     ),
     CALCULATE (
         SUM ( fact_estimate_ps[Estimate of Effort] ),
-        TREATAS ( ALLSELECTED ( dim_work_item[Company] ), fact_estimate_ps[Company] ),
-        TREATAS ( ALLSELECTED ( dim_work_item[Epic Number] ), fact_estimate_ps[Epic Number] )
+        TREATAS (
+            ALLSELECTED ( dim_work_item[Company], dim_work_item[Epic Number] ),
+            fact_estimate_ps[Company],
+            fact_estimate_ps[Epic Number]
+        )
     ),
     0
 )

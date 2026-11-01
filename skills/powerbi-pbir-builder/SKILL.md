@@ -39,10 +39,13 @@ the general pbip safety rules, use `powerbi-project-and-tools`.
    not practical to hand write. Always start from a PBIP the user already saved from Desktop.
 2. **Power BI Desktop must be closed** while you write files. Desktop holds the project open
    and will overwrite your changes from its in memory copy on save, or the files may be locked.
+   With the Desktop Bridge there is a second branch, see `agent-verification.md` in the
+   `powerbi-project-and-tools` skill.
 3. **Back up first.** Copy the `.Report` folder, or make sure it is committed to git, before
    writing anything.
 4. **Validate after writing.** Parse every JSON file you wrote before telling the user to
-   reopen Desktop. A missing comma or bracket blocks the whole report from loading.
+   reopen Desktop. A missing comma or bracket blocks the whole report from loading. Parsing is the
+   first check, not the last, see the workflow below.
 5. **Prefer the theme over bespoke visual formatting.** Put color and font choices in the
    report's theme JSON (see `house-default-theme.json` in the `powerbi-report-design` skill) rather than repeating them
    in every `visual.json`. Change it once, it applies everywhere.
@@ -68,9 +71,13 @@ the general pbip safety rules, use `powerbi-project-and-tools`.
    without it subtitles, dividers, shadows, and header tooltips silently do nothing.
 6. Write the files: the page folder, `page.json`, each visual's folder and `visual.json`,
    then update `pages/pages.json` to add the new page to `pageOrder`.
-7. Validate every JSON file you wrote parses cleanly.
-8. Tell the user the files are written, Desktop must stay closed until now, and to reopen
-   the `.pbip` to see the result.
+7. Validate every JSON file you wrote parses cleanly, then run the completion loop in
+   `agent-verification.md` in the `powerbi-project-and-tools` skill: conformance validation, reload
+   and screenshot through the Desktop Bridge, the review checklist, and the expected numbers asserted
+   with DAX. Valid JSON can still render wrong, and a page that renders can still show a wrong total.
+8. Report what the loop showed, and name any step that was blocked rather than claiming it is done.
+   Without the bridge, tell the user the files are written, Desktop must stay closed until now, and
+   to reopen the `.pbip` to see the result, then to run the same review and number checks.
 
 ## Rules of thumb
 
