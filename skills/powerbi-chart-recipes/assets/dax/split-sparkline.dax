@@ -1,0 +1,47 @@
+// Sparkline that changes colour at the row's own average. Set Data Category to Image URL.
+// Replace 'Date'[Month] with the axis column and [KPI Actual] with the measure.
+Split Sparkline SVG =
+VAR Points =
+    ADDCOLUMNS (
+        CALCULATETABLE ( VALUES ( 'Date'[Month] ), ALLSELECTED ( 'Date' ) ),
+        "@V", [KPI Actual]
+    )
+VAR Plotted = FILTER ( Points, NOT ISBLANK ( [@V] ) )
+VAR Width = 160
+VAR Height = 40
+VAR Pad = 5
+VAR LowV = MINX ( Plotted, [@V] )
+VAR HighV = MAXX ( Plotted, [@V] )
+VAR MeanV = AVERAGEX ( Plotted, [@V] )
+VAR SpanV = HighV - LowV
+VAR LowX = MINX ( Plotted, 'Date'[Month] )
+VAR HighX = MAXX ( Plotted, 'Date'[Month] )
+VAR SpanX = HighX - LowX
+VAR ToY = ( Height - 2 * Pad ) / IF ( SpanV = 0, 1, SpanV )
+VAR ToX = ( Width - 2 * Pad ) / IF ( SpanX = 0, 1, SpanX )
+VAR AvgY = ROUND ( Height - Pad - ( MeanV - LowV ) * ToY, 1 )
+VAR Line =
+    CONCATENATEX (
+        Plotted,
+        ROUND ( Pad + ( 'Date'[Month] - LowX ) * ToX, 1 ) & ","
+            & ROUND ( Height - Pad - ( [@V] - LowV ) * ToY, 1 ),
+        " ",
+        'Date'[Month], ASC
+    )
+VAR LastV = MAXX ( TOPN ( 1, Plotted, 'Date'[Month], DESC ), [@V] )
+VAR EndX = ROUND ( Pad + SpanX * ToX, 1 )
+VAR EndY = ROUND ( Height - Pad - ( LastV - LowV ) * ToY, 1 )
+VAR RowId = "s" & ROUND ( MeanV * 1000, 0 )
+VAR Svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " & Width & " " & Height & "'>"
+        & "<clipPath id='" & RowId & "a'><rect x='0' y='0' width='" & Width & "' height='" & AvgY & "'/></clipPath>"
+        & "<clipPath id='" & RowId & "b'><rect x='0' y='" & AvgY & "' width='" & Width & "' height='" & Height - AvgY & "'/></clipPath>"
+        & "<polyline fill='none' stroke='#0072B2' stroke-width='2' stroke-linecap='round' points='" & Line & "' clip-path='url(#" & RowId & "a)'/>"
+        & "<polyline fill='none' stroke='#D55E00' stroke-width='2' stroke-linecap='round' points='" & Line & "' clip-path='url(#" & RowId & "b)'/>"
+        & "<circle cx='" & EndX & "' cy='" & EndY & "' r='3' fill='#FFFFFF' stroke='#222222' stroke-width='1.5'/>"
+        & "</svg>"
+RETURN
+    IF (
+        COUNTROWS ( Plotted ) > 1,
+        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )
+    )

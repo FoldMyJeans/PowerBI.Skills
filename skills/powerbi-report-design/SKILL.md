@@ -112,6 +112,12 @@ notebook). Smart narrative in Custom mode and the free theme generators (themes.
 bibb.pro) are Pro safe. The Q&A visual is Pro safe but is on a retirement path
 (around December 2026), so do not build new reports around it.
 
+## Beyond native charts
+
+The `powerbi-chart-recipes` skill builds charts Power BI lacks, such as a beeswarm, waffle or filter
+drawer, with a screenshot of each to show the owner. `references/visual-decisions.md` records which ones
+the owner wants where.
+
 ## References in this skill
 
 - `references/layout-and-charts.md`: canvas and the 8 pixel grid, the three tier layout, the

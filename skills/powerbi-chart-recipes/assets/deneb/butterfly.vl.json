@@ -1,0 +1,255 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "name": "dataset"
+  },
+  "width": "container",
+  "height": "container",
+  "params": [
+    {
+      "name": "leftTitle",
+      "value": "Opened"
+    },
+    {
+      "name": "rightTitle",
+      "value": "Closed"
+    },
+    {
+      "name": "gapShare",
+      "value": 0.22
+    }
+  ],
+  "transform": [
+    {
+      "joinaggregate": [
+        {
+          "op": "max",
+          "field": "Left",
+          "as": "MaxLeft"
+        },
+        {
+          "op": "max",
+          "field": "Right",
+          "as": "MaxRight"
+        }
+      ]
+    },
+    {
+      "calculate": "max(datum.MaxLeft, datum.MaxRight)",
+      "as": "Top"
+    },
+    {
+      "calculate": "datum.Top * gapShare",
+      "as": "Gap"
+    },
+    {
+      "calculate": "-datum.Gap - datum.Left",
+      "as": "LeftEnd"
+    },
+    {
+      "calculate": "-datum.Gap",
+      "as": "LeftStart"
+    },
+    {
+      "calculate": "datum.Gap + datum.Right",
+      "as": "RightEnd"
+    },
+    {
+      "calculate": "datum.Top * (1 + gapShare + 0.14)",
+      "as": "Reach"
+    },
+    {
+      "calculate": "-datum.Reach",
+      "as": "ReachLeft"
+    }
+  ],
+  "encoding": {
+    "y": {
+      "field": "Name",
+      "type": "nominal",
+      "title": null,
+      "axis": null,
+      "sort": {
+        "field": "RowOrder",
+        "op": "min"
+      },
+      "scale": {
+        "paddingInner": 0.25
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "rule",
+        "opacity": 0
+      },
+      "encoding": {
+        "x": {
+          "field": "ReachLeft",
+          "type": "quantitative",
+          "axis": null,
+          "title": null
+        },
+        "x2": {
+          "field": "Reach"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "bar",
+        "color": "#D55E00",
+        "tooltip": {
+          "content": "data"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "LeftEnd",
+          "type": "quantitative"
+        },
+        "x2": {
+          "field": "LeftStart"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "bar",
+        "color": "#0072B2",
+        "tooltip": {
+          "content": "data"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "Gap",
+          "type": "quantitative"
+        },
+        "x2": {
+          "field": "RightEnd"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "fontSize": 12
+      },
+      "encoding": {
+        "x": {
+          "datum": 0,
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "Name",
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "dx": -4,
+        "fontSize": 11
+      },
+      "encoding": {
+        "x": {
+          "field": "LeftEnd",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "Left",
+          "type": "quantitative",
+          "format": ","
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "dx": 4,
+        "fontSize": 11
+      },
+      "encoding": {
+        "x": {
+          "field": "RightEnd",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "Right",
+          "type": "quantitative",
+          "format": ","
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum.RowOrder == 1"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "bottom",
+        "fontWeight": "bold",
+        "fontSize": 12,
+        "yOffset": -2,
+        "text": {
+          "expr": "leftTitle"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "LeftStart",
+          "type": "quantitative"
+        },
+        "y": {
+          "value": 0
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum.RowOrder == 1"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "bottom",
+        "fontWeight": "bold",
+        "fontSize": 12,
+        "yOffset": -2,
+        "text": {
+          "expr": "rightTitle"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "Gap",
+          "type": "quantitative"
+        },
+        "y": {
+          "value": 0
+        }
+      }
+    }
+  ],
+  "padding": {
+    "top": 20,
+    "left": 4,
+    "right": 4,
+    "bottom": 4
+  },
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  }
+}

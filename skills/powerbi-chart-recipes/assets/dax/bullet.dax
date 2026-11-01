@@ -1,0 +1,34 @@
+// Bullet for a table or matrix row. Set the measure's Data Category to Image URL.
+// Replace [KPI Actual] and [KPI Target]. Bands are shares of Scale, so set Scale first.
+Bullet SVG =
+VAR Actual = [KPI Actual]
+VAR Target = [KPI Target]
+VAR Scale = 100
+VAR BandLow = 60
+VAR BandMid = 80
+VAR Width = 160
+VAR Height = 24
+VAR ToX = Width / Scale
+VAR ActualX = ROUND ( MIN ( Actual, Scale ) * ToX, 1 )
+VAR TargetX = ROUND ( MIN ( Target, Scale ) * ToX, 1 )
+VAR BarColour =
+    SWITCH (
+        TRUE (),
+        Actual >= Target, "#009E73",
+        Actual < Target * 0.8, "#D55E00",
+        "#333333"
+    )
+VAR Bands =
+    "<rect x='0' y='2' width='" & BandLow * ToX & "' height='20' fill='#EDEDED'/>"
+        & "<rect x='" & BandLow * ToX & "' y='2' width='" & ( BandMid - BandLow ) * ToX & "' height='20' fill='#DDDDDD'/>"
+        & "<rect x='" & BandMid * ToX & "' y='2' width='" & ( Scale - BandMid ) * ToX & "' height='20' fill='#EDEDED'/>"
+VAR Bar = "<rect x='0' y='8' width='" & ActualX & "' height='8' fill='" & BarColour & "'/>"
+VAR Tick = "<rect x='" & TargetX - 1 & "' y='0' width='2' height='24' fill='#222222'/>"
+VAR Svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " & Width & " " & Height & "'>"
+        & Bands & Bar & Tick & "</svg>"
+RETURN
+    IF (
+        NOT ISBLANK ( Actual ),
+        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )
+    )

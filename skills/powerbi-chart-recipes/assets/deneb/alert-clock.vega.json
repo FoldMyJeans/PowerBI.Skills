@@ -1,0 +1,91 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v6.json",
+  "autosize": {"type": "none"},
+  "width": {"signal": "denebContainer.width"},
+  "height": {"signal": "denebContainer.height"},
+  "signals": [
+    {"name": "cx", "update": "width / 2"},
+    {"name": "cy", "update": "height / 2"},
+    {"name": "outer", "update": "min(width, height) / 2 - 22"},
+    {"name": "inner", "update": "outer * 0.22"},
+    {"name": "ringCount", "update": "length(data('rings'))"},
+    {"name": "ring", "update": "(outer - inner) / ringCount"},
+    {"name": "slice", "update": "2 * PI / 24"}
+  ],
+  "data": [
+    {"name": "dataset"},
+    {
+      "name": "rings",
+      "source": "dataset",
+      "transform": [{"type": "aggregate", "groupby": ["Day", "DayOrder"]}, {"type": "collect", "sort": {"field": "DayOrder"}}]
+    },
+    {
+      "name": "hours",
+      "values": [{"Hour": 0}, {"Hour": 6}, {"Hour": 12}, {"Hour": 18}]
+    }
+  ],
+  "scales": [
+    {
+      "name": "heat",
+      "type": "linear",
+      "domain": {"data": "dataset", "field": "Value"},
+      "domainMin": 0,
+      "range": ["#E8F3FB", "#0072B2", "#D55E00"]
+    },
+    {
+      "name": "ringIndex",
+      "type": "band",
+      "domain": {"data": "rings", "field": "DayOrder", "sort": true},
+      "range": [0, {"signal": "ringCount"}]
+    }
+  ],
+  "marks": [
+    {
+      "type": "arc",
+      "from": {"data": "dataset"},
+      "encode": {
+        "update": {
+          "x": {"signal": "cx"},
+          "y": {"signal": "cy"},
+          "startAngle": {"signal": "datum.Hour * slice + 0.012"},
+          "endAngle": {"signal": "(datum.Hour + 1) * slice - 0.012"},
+          "innerRadius": {"signal": "inner + scale('ringIndex', datum.DayOrder) * ring"},
+          "outerRadius": {"signal": "inner + (scale('ringIndex', datum.DayOrder) + 1) * ring - 1"},
+          "fill": {"scale": "heat", "field": "Value"},
+          "tooltip": {"signal": "{'Day': datum.Day, 'Hour': pad(datum.Hour, 2, '0', 'left') + ':00', 'Alerts': datum.Value}"}
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {"data": "hours"},
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {"signal": "cx + (outer + 12) * sin(datum.Hour * slice)"},
+          "y": {"signal": "cy - (outer + 12) * cos(datum.Hour * slice)"},
+          "text": {"signal": "pad(datum.Hour, 2, '0', 'left') + 'h'"},
+          "align": {"value": "center"},
+          "baseline": {"value": "middle"},
+          "fontSize": {"value": 11},
+          "fill": {"value": "#555555"}
+        }
+      }
+    },
+    {
+      "type": "text",
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {"signal": "cx"},
+          "y": {"signal": "cy"},
+          "text": {"signal": "data('rings')[0].Day + ' inner'"},
+          "align": {"value": "center"},
+          "baseline": {"value": "middle"},
+          "fontSize": {"value": 10},
+          "fill": {"value": "#555555"}
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v6.json",
+  "autosize": {
+    "type": "none"
+  },
+  "width": {
+    "signal": "denebContainer.width"
+  },
+  "height": {
+    "signal": "denebContainer.height"
+  },
+  "signals": [
+    {
+      "name": "planWidth",
+      "value": 400
+    },
+    {
+      "name": "planHeight",
+      "value": 200
+    },
+    {
+      "name": "zoom",
+      "update": "min(width / planWidth, height / planHeight)"
+    }
+  ],
+  "data": [
+    {
+      "name": "dataset"
+    },
+    {
+      "name": "measured",
+      "source": "dataset",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "isValid(datum.Value)"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "heat",
+      "type": "linear",
+      "domain": {
+        "data": "measured",
+        "field": "Value"
+      },
+      "domainMin": 0,
+      "range": [
+        "#FBE9DD",
+        "#D55E00"
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "type": "path",
+      "from": {
+        "data": "dataset"
+      },
+      "encode": {
+        "update": {
+          "path": {
+            "field": "Path"
+          },
+          "x": {
+            "value": 0
+          },
+          "y": {
+            "value": 0
+          },
+          "scaleX": {
+            "signal": "zoom"
+          },
+          "scaleY": {
+            "signal": "zoom"
+          },
+          "fill": {
+            "signal": "isValid(datum.Value) ? scale('heat', datum.Value) : '#EEEEEE'"
+          },
+          "stroke": {
+            "value": "#333333"
+          },
+          "strokeWidth": {
+            "value": 1
+          },
+          "tooltip": {
+            "signal": "{'Room': datum.Name, 'Count': isValid(datum.Value) ? datum.Value : 'No data'}"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "dataset"
+      },
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "datum.LabelX * zoom"
+          },
+          "y": {
+            "signal": "datum.LabelY * zoom"
+          },
+          "text": {
+            "field": "Name"
+          },
+          "fontWeight": {
+            "value": "bold"
+          },
+          "fontSize": {
+            "value": 11
+          },
+          "fill": {
+            "signal": "isValid(datum.Value) && datum.Value > 0.6 * domain('heat')[1] ? '#FFFFFF' : '#222222'"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "measured"
+      },
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "datum.LabelX * zoom"
+          },
+          "y": {
+            "signal": "datum.LabelY * zoom + 14"
+          },
+          "text": {
+            "signal": "format(datum.Value, ',')"
+          },
+          "fontSize": {
+            "value": 11
+          },
+          "fill": {
+            "signal": "isValid(datum.Value) && datum.Value > 0.6 * domain('heat')[1] ? '#FFFFFF' : '#222222'"
+          }
+        }
+      }
+    }
+  ]
+}

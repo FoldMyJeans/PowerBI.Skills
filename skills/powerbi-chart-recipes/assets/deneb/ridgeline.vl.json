@@ -1,0 +1,119 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "name": "dataset"
+  },
+  "params": [
+    {
+      "name": "rowHeight",
+      "value": 26
+    },
+    {
+      "name": "overlap",
+      "value": 1.6
+    }
+  ],
+  "facet": {
+    "row": {
+      "field": "Name",
+      "type": "nominal",
+      "title": null,
+      "sort": {
+        "field": "RowOrder"
+      },
+      "header": {
+        "labelAngle": 0,
+        "labelAlign": "left",
+        "labelFontSize": 12,
+        "labelPadding": 6,
+        "labelOrient": "left",
+        "labelBaseline": "bottom"
+      }
+    }
+  },
+  "spacing": 0,
+  "bounds": "flush",
+  "spec": {
+    "width": 520,
+    "height": 26,
+    "layer": [
+      {
+        "mark": {
+          "type": "area",
+          "interpolate": "monotone",
+          "fillOpacity": 0.8,
+          "stroke": "#FFFFFF",
+          "strokeWidth": 1,
+          "color": "#0072B2",
+          "clip": false
+        },
+        "encoding": {
+          "x": {
+            "field": "Hour",
+            "type": "quantitative",
+            "title": null,
+            "scale": {
+              "domain": [
+                0,
+                23
+              ]
+            },
+            "axis": {
+              "grid": false,
+              "values": [
+                0,
+                6,
+                12,
+                18,
+                23
+              ],
+              "labelExpr": "datum.value + 'h'",
+              "domainColor": "#999999",
+              "tickColor": "#999999"
+            }
+          },
+          "y": {
+            "field": "Value",
+            "type": "quantitative",
+            "axis": null,
+            "scale": {
+              "range": [
+                {
+                  "expr": "rowHeight"
+                },
+                {
+                  "expr": "rowHeight - rowHeight * overlap"
+                }
+              ]
+            }
+          },
+          "tooltip": [
+            {
+              "field": "Name",
+              "type": "nominal",
+              "title": "Source"
+            },
+            {
+              "field": "Hour",
+              "type": "quantitative"
+            },
+            {
+              "field": "Value",
+              "type": "quantitative"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "resolve": {
+    "scale": {
+      "y": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  }
+}

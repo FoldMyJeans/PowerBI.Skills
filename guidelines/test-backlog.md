@@ -10,6 +10,35 @@ as facts and reworded. Ideas taken from other repos note their license, so check
 text. An MIT repo needs attribution. The data-goblin terms ask for attribution and a link even when an
 agent rewrites the content, so take no wording or structure from it.
 
+## Charts
+
+### Deneb charts after publishing
+
+- **Question:** `powerbi-chart-recipes` writes Deneb through `publicCustomVisuals`, and it draws in
+  Desktop. Does it draw in the Service, the app and on a phone, under the real tenant visual settings?
+- **Test:** Publish the fake data report to My workspace. Open each page.
+- **Source:** Microsoft Learn, https://learn.microsoft.com/en-us/fabric/admin/organizational-visuals
+
+### Export of the charts
+
+- **Question:** Microsoft says certified visuals export to PowerPoint and show in subscription emails. Do
+  these specs, and does the animated card show full bars?
+- **Test:** Export the fake data report to PDF and PowerPoint from the Service.
+- **Source:** Microsoft Learn, https://learn.microsoft.com/en-us/power-bi/developer/visuals/power-bi-custom-visuals-certified
+
+### Clicks on the charts
+
+- **Question:** Do the drawer's buttons, its slicer sync, the bump highlight and Deneb cross-filtering work?
+  Do the card's bars visibly rise in Desktop? A rendered screenshot cannot show any of this.
+- **Test:** Click through the fake data report in Desktop and in the Service.
+- **Source:** None, this is our own build.
+
+### Beeswarm at real row counts
+
+- **Question:** The fake beeswarm has under 200 dots. How does the force layout feel at a few thousand?
+- **Test:** Bind it to a real backlog on a copy and filter a few times.
+- **Source:** None. One public report's README claims about 8,700 dots this way.
+
 ## Refresh
 
 ### Refresh execution metrics on Pro (highest value)

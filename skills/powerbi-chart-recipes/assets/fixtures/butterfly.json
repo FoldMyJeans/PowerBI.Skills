@@ -1,0 +1,6 @@
+[
+  {"Name": "Critical", "RowOrder": 1, "Left": 42, "Right": 31},
+  {"Name": "High", "RowOrder": 2, "Left": 120, "Right": 134},
+  {"Name": "Medium", "RowOrder": 3, "Left": 260, "Right": 205},
+  {"Name": "Low", "RowOrder": 4, "Left": 180, "Right": 240}
+]

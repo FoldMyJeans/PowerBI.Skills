@@ -1,0 +1,220 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v6.json",
+  "autosize": {
+    "type": "fit",
+    "contains": "padding"
+  },
+  "width": {
+    "signal": "denebContainer.width"
+  },
+  "height": {
+    "signal": "denebContainer.height"
+  },
+  "signals": [
+    {
+      "name": "limit",
+      "value": 30
+    },
+    {
+      "name": "limitLabel",
+      "value": "30 day SLA"
+    },
+    {
+      "name": "dotRadius",
+      "value": 4
+    }
+  ],
+  "data": [
+    {
+      "name": "dataset"
+    },
+    {
+      "name": "swarm",
+      "source": "dataset",
+      "transform": [
+        {
+          "type": "formula",
+          "as": "xfocus",
+          "expr": "scale('x', datum.Value)"
+        },
+        {
+          "type": "formula",
+          "as": "yfocus",
+          "expr": "scale('y', datum.Group) + bandwidth('y') / 2"
+        },
+        {
+          "type": "force",
+          "static": true,
+          "iterations": 200,
+          "forces": [
+            {
+              "force": "collide",
+              "radius": {
+                "signal": "dotRadius + 0.5"
+              },
+              "iterations": 2
+            },
+            {
+              "force": "x",
+              "x": "xfocus",
+              "strength": 0.7
+            },
+            {
+              "force": "y",
+              "y": "yfocus",
+              "strength": 0.15
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "domain": {
+        "data": "dataset",
+        "field": "Value"
+      },
+      "range": [
+        16,
+        {
+          "signal": "width"
+        }
+      ],
+      "zero": true,
+      "nice": true
+    },
+    {
+      "name": "y",
+      "type": "band",
+      "domain": {
+        "data": "dataset",
+        "field": "Group",
+        "sort": {
+          "field": "GroupOrder",
+          "op": "min"
+        }
+      },
+      "range": "height",
+      "padding": 0.05
+    },
+    {
+      "name": "colour",
+      "type": "ordinal",
+      "domain": {
+        "data": "dataset",
+        "field": "Group",
+        "sort": {
+          "field": "GroupOrder",
+          "op": "min"
+        }
+      },
+      "range": [
+        "#D55E00",
+        "#E69F00",
+        "#0072B2",
+        "#56B4E9"
+      ]
+    }
+  ],
+  "axes": [
+    {
+      "orient": "bottom",
+      "scale": "x",
+      "title": "Days open",
+      "grid": false,
+      "domainColor": "#999999",
+      "tickColor": "#999999"
+    },
+    {
+      "orient": "left",
+      "scale": "y",
+      "title": null,
+      "domain": false,
+      "ticks": false
+    }
+  ],
+  "marks": [
+    {
+      "type": "rule",
+      "encode": {
+        "update": {
+          "x": {
+            "scale": "x",
+            "signal": "limit"
+          },
+          "y": {
+            "value": 0
+          },
+          "y2": {
+            "signal": "height"
+          },
+          "stroke": {
+            "value": "#333333"
+          },
+          "strokeDash": {
+            "value": [
+              3,
+              3
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "encode": {
+        "update": {
+          "x": {
+            "scale": "x",
+            "signal": "limit",
+            "offset": 4
+          },
+          "y": {
+            "value": 10
+          },
+          "text": {
+            "signal": "limitLabel"
+          },
+          "fill": {
+            "value": "#333333"
+          },
+          "fontSize": {
+            "value": 11
+          }
+        }
+      }
+    },
+    {
+      "type": "symbol",
+      "from": {
+        "data": "swarm"
+      },
+      "encode": {
+        "update": {
+          "x": {
+            "field": "x"
+          },
+          "y": {
+            "field": "y"
+          },
+          "size": {
+            "signal": "PI * dotRadius * dotRadius"
+          },
+          "fill": {
+            "scale": "colour",
+            "field": "Group"
+          },
+          "fillOpacity": {
+            "signal": "datum.Value > limit ? 1 : 0.4"
+          },
+          "tooltip": {
+            "signal": "{'Item': datum.Name, 'Group': datum.Group, 'Days open': datum.Value}"
+          }
+        }
+      }
+    }
+  ]
+}

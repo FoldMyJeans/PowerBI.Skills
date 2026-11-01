@@ -1,0 +1,127 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "name": "dataset"
+  },
+  "transform": [
+    {
+      "calculate": "sequence(0, 100)",
+      "as": "Dot"
+    },
+    {
+      "flatten": [
+        "Dot"
+      ]
+    },
+    {
+      "calculate": "datum.Dot % 10",
+      "as": "Column"
+    },
+    {
+      "calculate": "floor(datum.Dot / 10)",
+      "as": "Row"
+    },
+    {
+      "calculate": "datum.Dot < round(datum.Value)",
+      "as": "Filled"
+    },
+    {
+      "calculate": "format(datum.Value, '.0f') + '%'",
+      "as": "Label"
+    }
+  ],
+  "facet": {
+    "column": {
+      "field": "Name",
+      "type": "nominal",
+      "title": null,
+      "sort": {
+        "field": "Value",
+        "order": "descending"
+      },
+      "header": {
+        "labelFontSize": 12,
+        "labelFontWeight": "bold"
+      }
+    }
+  },
+  "spacing": 24,
+  "spec": {
+    "width": 118,
+    "height": 118,
+    "layer": [
+      {
+        "mark": {
+          "type": "circle",
+          "size": 70,
+          "opacity": 1
+        },
+        "encoding": {
+          "x": {
+            "field": "Column",
+            "type": "ordinal",
+            "axis": null
+          },
+          "y": {
+            "field": "Row",
+            "type": "ordinal",
+            "axis": null,
+            "sort": "descending"
+          },
+          "color": {
+            "field": "Filled",
+            "type": "nominal",
+            "legend": null,
+            "scale": {
+              "domain": [
+                true,
+                false
+              ],
+              "range": [
+                "#0072B2",
+                "#E6E6E6"
+              ]
+            }
+          },
+          "tooltip": [
+            {
+              "field": "Name",
+              "type": "nominal",
+              "title": "Measure"
+            },
+            {
+              "field": "Value",
+              "type": "quantitative",
+              "title": "Percent"
+            }
+          ]
+        }
+      },
+      {
+        "transform": [
+          {
+            "filter": "datum.Dot == 0"
+          }
+        ],
+        "mark": {
+          "type": "text",
+          "fontSize": 28,
+          "fontWeight": "bold",
+          "dy": -76,
+          "color": "#333333"
+        },
+        "encoding": {
+          "text": {
+            "field": "Label",
+            "type": "nominal"
+          }
+        }
+      }
+    ]
+  },
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  }
+}

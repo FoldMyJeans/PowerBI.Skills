@@ -1,0 +1,6 @@
+[
+  {"Name": "Delivered", "StageOrder": 1, "Value": 1000},
+  {"Name": "Opened", "StageOrder": 2, "Value": 620},
+  {"Name": "Clicked", "StageOrder": 3, "Value": 90},
+  {"Name": "Gave password", "StageOrder": 4, "Value": 40}
+]
