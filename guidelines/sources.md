@@ -137,3 +137,53 @@ Both are worth reading for ideas, neither should be copied into this repo.
 
 `powerbi-pbir-builder` in this repo was written from scratch after reviewing both, grounded in
 the official Microsoft PBIR JSON schema and a real working report, not copied from either.
+
+## Repo watchlist (read monthly, filter for Pro)
+
+Read only what changed since the last pass. Keep what applies on Pro, reproduce it on a real
+report, then write it up through a pull request. Check the license before reusing any text. An
+MIT repo needs attribution. The data-goblin terms above ask for attribution and a link even when
+an agent rewrites the content.
+
+### Official tools, install when a build needs them
+
+- microsoft/PowerBI-visuals-tools, the `pbiviz` CLI for custom visuals, with a built in MCP server
+  (`npx -y powerbi-visuals-tools mcp`). MIT: https://github.com/microsoft/PowerBI-visuals-tools
+- microsoft/powerbi-modeling-mcp, edits semantic models in Power BI Desktop and in PBIP and TMDL
+  files. It also reaches Fabric workspaces, which Pro does not need. MIT:
+  https://github.com/microsoft/powerbi-modeling-mcp
+- @microsoft/powerbi-desktop-bridge-cli, finds running Desktop instances, reloads PBIR reports, and
+  captures page screenshots. MIT: https://www.npmjs.com/package/@microsoft/powerbi-desktop-bridge-cli
+- @microsoft/powerbi-report-authoring-cli, PBIR capability lookup and conformance validation, in
+  public preview. MIT: https://www.npmjs.com/package/@microsoft/powerbi-report-authoring-cli
+
+### Skills and tools to read
+
+- data-goblin/power-bi-agentic-development, see the section above. Read `release-notes/` rather
+  than the whole repo, since it ships weekly and warns of renames. This repo has no custom visual
+  coverage yet, so its `custom-visuals` plugin is the one worth a project scoped trial. It carries
+  no hooks and one MCP server, the `pbiviz` one. Several of its other plugins do ship hooks.
+- MinaSaad1/pbi-cli, a CLI plus skills, including a custom visual workflow from scaffold to PBIR
+  import. MIT: https://github.com/MinaSaad1/pbi-cli
+- Mofaji/Agentic-PBIP-Template, a `pbiviz` skill that embeds the visual in the PBIP so the report
+  opens without an import. MIT: https://github.com/Mofaji/Agentic-PBIP-Template
+- NatVanG/fab-inspector, rule based testing for Power BI and Fabric artifacts. MIT:
+  https://github.com/NatVanG/fab-inspector
+
+### Reports and examples to study
+
+- omarrim/aurum-jet, a report with no custom visuals, with SVG animation inside DAX measures shown
+  in native cards. MIT: https://github.com/omarrim/aurum-jet
+- gusbavia/the-world-of-peaches, the Power BI World Championship 2026 winner, with its DAX, HTML
+  components, and theme. MIT: https://github.com/gusbavia/the-world-of-peaches
+- PBI-David/Deneb-Showcase, advanced Vega and Deneb examples. MIT:
+  https://github.com/PBI-David/Deneb-Showcase
+- Datashow-Pty-Ltd/super-visual, compiles a full page React app into one Power BI visual. Apache
+  2.0: https://github.com/Datashow-Pty-Ltd/super-visual
+
+### Non commercial licenses, keep out of paid work
+
+- maxanatsko/pbir.tools, a PBIR CLI. Its license bars commercial use without written permission
+  and bars derivative works: https://github.com/maxanatsko/pbir.tools
+- data-goblin/powerbi-macguyver-toolbox, visual templates. Its license bars paid work without
+  written permission: https://github.com/data-goblin/powerbi-macguyver-toolbox
