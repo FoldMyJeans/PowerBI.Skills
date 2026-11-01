@@ -1,0 +1,184 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "name": "dataset"
+  },
+  "width": "container",
+  "height": "container",
+  "padding": {
+    "left": 8,
+    "right": 90,
+    "top": 12,
+    "bottom": 8
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "Rank"
+        }
+      ],
+      "sort": [
+        {
+          "field": "Value",
+          "order": "descending"
+        },
+        {
+          "field": "Name",
+          "order": "ascending"
+        }
+      ],
+      "groupby": [
+        "Period"
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "max",
+          "field": "PeriodOrder",
+          "as": "LastPeriod"
+        }
+      ]
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "Period",
+      "type": "ordinal",
+      "title": null,
+      "sort": {
+        "field": "PeriodOrder"
+      },
+      "axis": {
+        "labelAngle": 0,
+        "orient": "top",
+        "domain": false,
+        "ticks": false
+      },
+      "scale": {
+        "padding": 0.5
+      }
+    },
+    "y": {
+      "field": "Rank",
+      "type": "ordinal",
+      "axis": null
+    },
+    "color": {
+      "field": "Name",
+      "type": "nominal",
+      "legend": null,
+      "scale": {
+        "scheme": "pbiColorNominal"
+      }
+    },
+    "opacity": {
+      "condition": {
+        "param": "pick",
+        "empty": true,
+        "value": 1
+      },
+      "value": 0.15
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "line",
+        "strokeWidth": 2.5,
+        "interpolate": "monotone"
+      },
+      "encoding": {
+        "detail": {
+          "field": "Name"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "circle",
+        "size": 260,
+        "opacity": 1
+      },
+      "encoding": {
+        "tooltip": [
+          {
+            "field": "Name",
+            "type": "nominal"
+          },
+          {
+            "field": "Period",
+            "type": "ordinal"
+          },
+          {
+            "field": "Rank",
+            "type": "ordinal"
+          },
+          {
+            "field": "Value",
+            "type": "quantitative"
+          }
+        ]
+      },
+      "params": [
+        {
+          "name": "pick",
+          "select": {
+            "type": "point",
+            "fields": [
+              "Name"
+            ],
+            "on": "click",
+            "clear": "dblclick"
+          }
+        }
+      ]
+    },
+    {
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fontWeight": "bold",
+        "color": "#FFFFFF"
+      },
+      "encoding": {
+        "text": {
+          "field": "Rank",
+          "type": "ordinal"
+        },
+        "color": {
+          "value": "#FFFFFF"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum.PeriodOrder == datum.LastPeriod"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "dx": 15,
+        "fontSize": 12
+      },
+      "encoding": {
+        "text": {
+          "field": "Name",
+          "type": "nominal"
+        },
+        "color": {
+          "value": "#333333"
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  }
+}

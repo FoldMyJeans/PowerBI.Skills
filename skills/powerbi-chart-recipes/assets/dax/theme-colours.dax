@@ -1,0 +1,25 @@
+// Wall-screen dark mode. Theme is a disconnected table with one column, Mode, holding Light and
+// Dark, shown as a button slicer with single select and a default of Light.
+// Bind these measures with fx wherever a colour can take one. Add a measure per colour role.
+Theme Mode = SELECTEDVALUE ( Theme[Mode], "Light" )
+
+Colour Page = IF ( [Theme Mode] = "Dark", "#0F1720", "#FFFFFF" )
+
+Colour Card = IF ( [Theme Mode] = "Dark", "#1B2530", "#FFFFFF" )
+
+Colour Text = IF ( [Theme Mode] = "Dark", "#E8EDF2", "#222222" )
+
+Colour Muted Text = IF ( [Theme Mode] = "Dark", "#9AA7B4", "#555555" )
+
+Colour Accent = IF ( [Theme Mode] = "Dark", "#56B4E9", "#0072B2" )
+
+Colour Bad = IF ( [Theme Mode] = "Dark", "#EF8043", "#D55E00" )
+
+// Bottom layer of the page, in an image visual the size of the canvas. Unlike the page's own
+// background it answers to slicers and page filters.
+Page Backdrop SVG =
+VAR Svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9' preserveAspectRatio='none'>"
+        & "<rect width='16' height='9' fill='" & [Colour Page] & "'/></svg>"
+RETURN
+    "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )

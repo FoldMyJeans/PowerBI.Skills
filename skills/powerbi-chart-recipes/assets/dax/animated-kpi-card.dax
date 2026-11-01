@@ -1,0 +1,56 @@
+// One card: title, value, change, and mini bars that rise on load. Data Category Image URL.
+// Each bar's real height is its base value and the animation only runs from low to real, so a
+// renderer that ignores animation (PDF, PowerPoint) still draws the correct bars.
+// Replace 'Date'[Month], [KPI Actual], [KPI Change] and the title.
+Animated KPI Card SVG =
+VAR Title = "Mean time to patch"
+VAR ValueText = FORMAT ( [KPI Actual], "0.0" ) & " days"
+VAR Change = [KPI Change]
+VAR ChangeText = IF ( Change <= 0, "Down ", "Up " ) & FORMAT ( ABS ( Change ), "0.0" ) & " days"
+VAR ChangeColour = IF ( Change <= 0, "#009E73", "#D55E00" )
+VAR Months = 6
+VAR Recent =
+    TOPN (
+        Months,
+        ADDCOLUMNS (
+            CALCULATETABLE ( VALUES ( 'Date'[Month] ), ALLSELECTED ( 'Date' ) ),
+            "@V", [KPI Actual]
+        ),
+        'Date'[Month], DESC
+    )
+VAR Plotted = FILTER ( Recent, NOT ISBLANK ( [@V] ) )
+VAR Numbered =
+    ADDCOLUMNS ( Plotted, "@I", RANKX ( Plotted, 'Date'[Month],, ASC, DENSE ) - 1 )
+VAR TopV = MAXX ( Plotted, [@V] )
+VAR Slot = 22
+VAR BarWidth = 14
+VAR Base = 96
+VAR MaxHeight = 70
+VAR LastI = MAXX ( Numbered, [@I] )
+VAR Bars =
+    CONCATENATEX (
+        Numbered,
+        VAR H = ROUND ( DIVIDE ( [@V], TopV ) * MaxHeight, 1 )
+        VAR X = 214 + [@I] * Slot
+        VAR Delay = FORMAT ( [@I] * 0.07, "0.00", "en-US" )
+        VAR Fill = IF ( [@I] = LastI, "#0072B2", "#A9D3EA" )
+        RETURN
+            "<rect x='" & X & "' y='" & Base - H & "' width='" & BarWidth & "' height='" & H & "' rx='3' fill='" & Fill & "'>"
+                & "<animate attributeName='height' from='" & H * 0.1 & "' to='" & H & "' dur='0.6s' begin='" & Delay & "s'/>"
+                & "<animate attributeName='y' from='" & Base - H * 0.1 & "' to='" & Base - H & "' dur='0.6s' begin='" & Delay & "s'/>"
+                & "</rect>",
+        "",
+        'Date'[Month], ASC
+    )
+VAR Svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 350 116' font-family='Segoe UI, sans-serif'>"
+        & "<text x='18' y='28' font-size='13' fill='#555555'>" & Title & "</text>"
+        & "<text x='18' y='68' font-size='30' font-weight='600' fill='#222222'>" & ValueText & "</text>"
+        & "<text x='18' y='94' font-size='12' fill='" & ChangeColour & "'>" & ChangeText & "</text>"
+        & Bars
+        & "</svg>"
+RETURN
+    IF (
+        NOT ISBLANK ( [KPI Actual] ),
+        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )
+    )

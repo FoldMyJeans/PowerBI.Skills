@@ -1,0 +1,288 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v6.json",
+  "autosize": {
+    "type": "fit",
+    "contains": "padding"
+  },
+  "width": {
+    "signal": "denebContainer.width"
+  },
+  "height": {
+    "signal": "denebContainer.height"
+  },
+  "padding": 8,
+  "signals": [
+    {
+      "name": "barWidth",
+      "value": 12
+    },
+    {
+      "name": "top",
+      "value": 44
+    },
+    {
+      "name": "barHeight",
+      "update": "height - top - 36"
+    }
+  ],
+  "data": [
+    {
+      "name": "dataset"
+    },
+    {
+      "name": "stageTotal",
+      "source": "dataset",
+      "transform": [
+        {
+          "type": "aggregate",
+          "fields": [
+            "Value"
+          ],
+          "ops": [
+            "max"
+          ],
+          "as": [
+            "Max"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stages",
+      "source": "dataset",
+      "transform": [
+        {
+          "type": "collect",
+          "sort": {
+            "field": "StageOrder"
+          }
+        },
+        {
+          "type": "window",
+          "sort": {
+            "field": "StageOrder"
+          },
+          "ops": [
+            "lead",
+            "lead",
+            "row_number"
+          ],
+          "fields": [
+            "Value",
+            "StageOrder",
+            null
+          ],
+          "as": [
+            "NextValue",
+            "NextOrder",
+            "Position"
+          ]
+        },
+        {
+          "type": "formula",
+          "as": "First",
+          "expr": "data('stageTotal')[0].Max"
+        },
+        {
+          "type": "formula",
+          "as": "BarHeight",
+          "expr": "max(2, datum.Value / datum.First * barHeight)"
+        },
+        {
+          "type": "formula",
+          "as": "NextHeight",
+          "expr": "isValid(datum.NextValue) ? max(2, datum.NextValue / datum.First * barHeight) : 0"
+        },
+        {
+          "type": "formula",
+          "as": "X0",
+          "expr": "scale('x', datum.StageOrder) + barWidth"
+        },
+        {
+          "type": "formula",
+          "as": "X1",
+          "expr": "isValid(datum.NextOrder) ? scale('x', datum.NextOrder) : 0"
+        },
+        {
+          "type": "formula",
+          "as": "Mid",
+          "expr": "(datum.X0 + datum.X1) / 2"
+        },
+        {
+          "type": "formula",
+          "as": "KeptPath",
+          "expr": "'M' + datum.X0 + ',' + top + ' L' + datum.X1 + ',' + top + ' L' + datum.X1 + ',' + (top + datum.NextHeight) + ' L' + datum.X0 + ',' + (top + datum.NextHeight) + ' Z'"
+        },
+        {
+          "type": "formula",
+          "as": "LostPath",
+          "expr": "'M' + datum.X0 + ',' + (top + datum.NextHeight) + ' C' + datum.Mid + ',' + (top + datum.NextHeight) + ' ' + datum.Mid + ',' + (top + datum.NextHeight + 24) + ' ' + datum.X1 + ',' + (top + datum.NextHeight + 24) + ' L' + datum.X1 + ',' + (top + datum.NextHeight + 24 + (datum.BarHeight - datum.NextHeight)) + ' C' + datum.Mid + ',' + (top + datum.NextHeight + 24 + (datum.BarHeight - datum.NextHeight)) + ' ' + datum.Mid + ',' + (top + datum.BarHeight) + ' ' + datum.X0 + ',' + (top + datum.BarHeight) + ' Z'"
+        }
+      ]
+    },
+    {
+      "name": "links",
+      "source": "stages",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "isValid(datum.NextValue)"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "point",
+      "domain": {
+        "data": "dataset",
+        "field": "StageOrder",
+        "sort": true
+      },
+      "range": [
+        0,
+        {
+          "signal": "width - barWidth"
+        }
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "type": "path",
+      "from": {
+        "data": "links"
+      },
+      "encode": {
+        "update": {
+          "path": {
+            "field": "LostPath"
+          },
+          "fill": {
+            "value": "#999999"
+          },
+          "fillOpacity": {
+            "value": 0.22
+          },
+          "tooltip": {
+            "signal": "{'Stage': datum.Name, 'Lost at this stage': datum.Value - datum.NextValue}"
+          }
+        }
+      }
+    },
+    {
+      "type": "path",
+      "from": {
+        "data": "links"
+      },
+      "encode": {
+        "update": {
+          "path": {
+            "field": "KeptPath"
+          },
+          "fill": {
+            "value": "#0072B2"
+          },
+          "fillOpacity": {
+            "value": 0.3
+          },
+          "tooltip": {
+            "signal": "{'From': datum.Name, 'Kept': datum.NextValue, 'Share kept': format(datum.NextValue / datum.Value, '.0%')}"
+          }
+        }
+      }
+    },
+    {
+      "type": "rect",
+      "from": {
+        "data": "stages"
+      },
+      "encode": {
+        "update": {
+          "x": {
+            "scale": "x",
+            "field": "StageOrder"
+          },
+          "width": {
+            "signal": "barWidth"
+          },
+          "y": {
+            "signal": "top"
+          },
+          "height": {
+            "field": "BarHeight"
+          },
+          "fill": {
+            "value": "#0072B2"
+          },
+          "cornerRadius": {
+            "value": 2
+          },
+          "tooltip": {
+            "signal": "{'Stage': datum.Name, 'Count': datum.Value}"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "stages"
+      },
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "datum.Position == length(data('stages')) ? scale('x', datum.StageOrder) + barWidth : scale('x', datum.StageOrder)"
+          },
+          "y": {
+            "signal": "top - 22"
+          },
+          "align": {
+            "signal": "datum.Position == length(data('stages')) ? 'right' : 'left'"
+          },
+          "text": {
+            "field": "Name"
+          },
+          "fontWeight": {
+            "value": "bold"
+          },
+          "fontSize": {
+            "value": 12
+          },
+          "fill": {
+            "value": "#333333"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "stages"
+      },
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "datum.Position == length(data('stages')) ? scale('x', datum.StageOrder) + barWidth : scale('x', datum.StageOrder)"
+          },
+          "y": {
+            "signal": "top - 7"
+          },
+          "align": {
+            "signal": "datum.Position == length(data('stages')) ? 'right' : 'left'"
+          },
+          "text": {
+            "signal": "format(datum.Value, ',') + (datum.Position > 1 ? '  (' + format(datum.Value / datum.First, '.0%') + ')' : '')"
+          },
+          "fontSize": {
+            "value": 11
+          },
+          "fill": {
+            "value": "#555555"
+          }
+        }
+      }
+    }
+  ]
+}

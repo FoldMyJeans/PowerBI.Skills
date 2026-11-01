@@ -1,0 +1,341 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "name": "dataset"
+  },
+  "params": [
+    {
+      "name": "overIsBad",
+      "value": true
+    }
+  ],
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "RowOrder"
+        }
+      ],
+      "sort": [
+        {
+          "field": "Actual",
+          "order": "descending"
+        }
+      ]
+    },
+    {
+      "calculate": "max(datum.Actual, datum.Plan)",
+      "as": "LabelAt"
+    },
+    {
+      "calculate": "datum.Actual - datum.Plan",
+      "as": "Gap"
+    },
+    {
+      "calculate": "datum.Plan == 0 ? null : (datum.Actual - datum.Plan) / datum.Plan",
+      "as": "GapShare"
+    },
+    {
+      "calculate": "(datum.Gap > 0) == overIsBad ? 'bad' : 'good'",
+      "as": "Verdict"
+    },
+    {
+      "calculate": "(datum.Gap > 0 ? '+' : '') + format(datum.Gap, ',')",
+      "as": "GapLabel"
+    },
+    {
+      "calculate": "(datum.GapShare > 0 ? '+' : '') + format(datum.GapShare, '.0%')",
+      "as": "ShareLabel"
+    }
+  ],
+  "spacing": 16,
+  "bounds": "flush",
+  "hconcat": [
+    {
+      "width": 300,
+      "height": {
+        "step": 32
+      },
+      "title": {
+        "text": "Actual vs plan",
+        "anchor": "start",
+        "fontSize": 12
+      },
+      "encoding": {
+        "y": {
+          "field": "Name",
+          "type": "nominal",
+          "title": null,
+          "sort": {
+            "field": "RowOrder",
+            "op": "min"
+          },
+          "axis": {
+            "domain": false,
+            "ticks": false,
+            "labelFontSize": 12,
+            "labelPadding": 8
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "color": "#E6E6E6",
+            "size": 24,
+            "tooltip": {
+              "content": "data"
+            }
+          },
+          "encoding": {
+            "x": {
+              "field": "Plan",
+              "type": "quantitative",
+              "axis": null,
+              "title": null
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "bar",
+            "color": "#333333",
+            "size": 11,
+            "tooltip": {
+              "content": "data"
+            }
+          },
+          "encoding": {
+            "x": {
+              "field": "Actual",
+              "type": "quantitative"
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "fontSize": 11
+          },
+          "encoding": {
+            "x": {
+              "field": "LabelAt",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": "Actual",
+              "type": "quantitative",
+              "format": ","
+            }
+          }
+        }
+      ]
+    },
+    {
+      "width": 160,
+      "height": {
+        "step": 32
+      },
+      "title": {
+        "text": "Gap",
+        "anchor": "start",
+        "fontSize": 12
+      },
+      "encoding": {
+        "y": {
+          "field": "Name",
+          "type": "nominal",
+          "sort": {
+            "field": "RowOrder",
+            "op": "min"
+          },
+          "axis": null
+        },
+        "x": {
+          "field": "Gap",
+          "type": "quantitative",
+          "axis": null,
+          "title": null,
+          "scale": {
+            "nice": true,
+            "padding": 36
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "size": 12,
+            "tooltip": {
+              "content": "data"
+            }
+          },
+          "encoding": {
+            "color": {
+              "field": "Verdict",
+              "type": "nominal",
+              "legend": null,
+              "scale": {
+                "domain": [
+                  "bad",
+                  "good"
+                ],
+                "range": [
+                  "#D55E00",
+                  "#009E73"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "rule",
+            "color": "#666666"
+          },
+          "encoding": {
+            "x": {
+              "datum": 0
+            },
+            "y": null
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "fontSize": 11,
+            "align": {
+              "expr": "datum.Gap > 0 ? 'left' : 'right'"
+            },
+            "dx": {
+              "expr": "datum.Gap > 0 ? 8 : -8"
+            }
+          },
+          "encoding": {
+            "text": {
+              "field": "GapLabel",
+              "type": "nominal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "width": 160,
+      "height": {
+        "step": 32
+      },
+      "title": {
+        "text": "Gap %",
+        "anchor": "start",
+        "fontSize": 12
+      },
+      "encoding": {
+        "y": {
+          "field": "Name",
+          "type": "nominal",
+          "sort": {
+            "field": "RowOrder",
+            "op": "min"
+          },
+          "axis": null
+        },
+        "x": {
+          "field": "GapShare",
+          "type": "quantitative",
+          "axis": null,
+          "title": null,
+          "scale": {
+            "nice": true,
+            "padding": 36
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "rule",
+            "strokeWidth": 2
+          },
+          "encoding": {
+            "x2": {
+              "datum": 0
+            },
+            "color": {
+              "field": "Verdict",
+              "type": "nominal",
+              "legend": null,
+              "scale": {
+                "domain": [
+                  "bad",
+                  "good"
+                ],
+                "range": [
+                  "#D55E00",
+                  "#009E73"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "circle",
+            "size": 70,
+            "opacity": 1,
+            "tooltip": {
+              "content": "data"
+            }
+          },
+          "encoding": {
+            "color": {
+              "field": "Verdict",
+              "type": "nominal",
+              "legend": null
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "rule",
+            "color": "#666666"
+          },
+          "encoding": {
+            "x": {
+              "datum": 0
+            },
+            "y": null
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "fontSize": 11,
+            "align": {
+              "expr": "datum.GapShare > 0 ? 'left' : 'right'"
+            },
+            "dx": {
+              "expr": "datum.GapShare > 0 ? 8 : -8"
+            }
+          },
+          "encoding": {
+            "text": {
+              "field": "ShareLabel",
+              "type": "nominal"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  }
+}

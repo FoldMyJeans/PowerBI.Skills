@@ -1,0 +1,7 @@
+[
+  {"Name": "Team A", "Actual": 680, "Plan": 400},
+  {"Name": "Team B", "Actual": 410, "Plan": 450},
+  {"Name": "Team C", "Actual": 300, "Plan": 290},
+  {"Name": "Team D", "Actual": 150, "Plan": 210},
+  {"Name": "Team E", "Actual": 90, "Plan": 60}
+]

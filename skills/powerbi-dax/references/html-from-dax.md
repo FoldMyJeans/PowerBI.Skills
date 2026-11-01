@@ -5,8 +5,7 @@ plain string concatenation, and a third party HTML rendering visual draws it. Va
 FORMAT(), styling comes from VARs at the top of the measure, and the whole thing lives and
 refreshes like any other measure.
 
-This pattern requires a third party HTML rendering custom visual. It is a deliberate, governed
-exception to building visuals natively. See `powerbi-report-design` for when a third party
+This pattern requires a third party HTML rendering custom visual. See `powerbi-report-design` for when a third party
 visual like this is worth the dependency, that policy is not repeated here.
 
 ## Keep the styling reviewable

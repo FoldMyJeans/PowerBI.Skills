@@ -29,7 +29,7 @@ SVG drawn by a measure use `powerbi-dax`. For hand editing PBIR around the visua
 | Need | Use | The limit you accept |
 | --- | --- | --- |
 | Inline bars, bullets or icons in a table or card | SVG from a DAX measure | Animation replays from a fixed start on every redraw. It cannot glide from the last state. |
-| A chart type native lacks, static is fine | Deneb (Vega) | No built in animation between states. The data often needs reshaping first. |
+| A chart type native lacks, static is fine | Deneb (Vega). See `powerbi-chart-recipes` for ready specs. | No built in animation between states. The data often needs reshaping first. |
 | Common chart type from the marketplace | AppSource visual | Less control of the look, and a licence that can change. |
 | Click to open, glide between states, full control | Private `pbiviz` | Code to maintain, an admin setting, and the export gap below. |
 

@@ -9,6 +9,15 @@ owner's terms. Ideas nobody has reacted to do not go here.
 
 ## Liked
 
+- **One or two third-party visuals per report (2026-11).** Replaces the old limit of exactly one. If a
+  chart uploads to the Service and looks good, the visual is fine. More than two only when the owner says
+  so.
+- **A wider toolbox of charts, none assigned yet (2026-11).** Shown a deck of beeswarm, calendar heatmap,
+  waffle, funnel Sankey, bump, butterfly, variance trio, KPI table with bullets and sparklines, animated
+  KPI card, floor plan, filter drawer, ridgeline, 24 hour clock and wall screen dark mode. The owner said
+  the charts look really interesting and wants to be able to build all of them, depending on the case. So
+  they all have recipes in `powerbi-chart-recipes`. This is not approval to use one in a report. Whether
+  any goes on a given chart is a later decision, made case by case with the owner.
 - **Sankey for where effort goes (2026-11).** Team to service type to activity, on an exploration
   page, replacing a decomposition tree that opened as one bar. It shows how fields connect, which a
   set of totals cannot. Conditions: least possible overlap, no zeros, and no slicer for what the chart

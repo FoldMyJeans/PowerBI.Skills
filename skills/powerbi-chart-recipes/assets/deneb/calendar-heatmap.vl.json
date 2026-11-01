@@ -1,0 +1,59 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {"name": "dataset"},
+  "transform": [
+    {"calculate": "toDate(datum.Date)", "as": "Day"},
+    {"calculate": "year(datum.Day)", "as": "Year"},
+    {"calculate": "(day(datum.Day) + 6) % 7", "as": "Weekday"},
+    {"calculate": "floor((dayofyear(datum.Day) - 1 + (day(datetime(datum.Year, 0, 1)) + 6) % 7) / 7)", "as": "Week"}
+  ],
+  "facet": {
+    "row": {"field": "Year", "type": "ordinal", "title": null, "header": {"labelAngle": 0, "labelAlign": "left", "labelFontWeight": "bold"}}
+  },
+  "spacing": 12,
+  "spec": {
+    "width": {"step": 13},
+    "height": {"step": 13},
+    "mark": {"type": "rect", "cornerRadius": 2, "tooltip": {"content": "data"}},
+    "encoding": {
+      "x": {
+        "field": "Week",
+        "type": "ordinal",
+        "title": null,
+        "scale": {"domain": {"expr": "sequence(0, 54)"}},
+        "axis": {
+          "orient": "top",
+          "domain": false,
+          "ticks": false,
+          "labelAngle": 0,
+          "values": [0, 5, 9, 13, 18, 22, 26, 31, 35, 40, 44, 48],
+          "labelExpr": "timeFormat(datetime(2001, 0, 4 + datum.value * 7), '%b')"
+        }
+      },
+      "y": {
+        "field": "Weekday",
+        "type": "ordinal",
+        "title": null,
+        "scale": {"domain": [0, 1, 2, 3, 4, 5, 6]},
+        "axis": {
+          "domain": false,
+          "ticks": false,
+          "values": [0, 2, 4],
+          "labelExpr": "['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][datum.value]"
+        }
+      },
+      "color": {
+        "field": "Value",
+        "type": "quantitative",
+        "title": "Count",
+        "scale": {"range": ["#E8F3FB", "#0072B2"]},
+        "legend": {"orient": "right", "gradientLength": 60}
+      },
+      "tooltip": [
+        {"field": "Day", "type": "temporal", "title": "Date"},
+        {"field": "Value", "type": "quantitative", "title": "Count"}
+      ]
+    }
+  },
+  "config": {"view": {"stroke": null}}
+}

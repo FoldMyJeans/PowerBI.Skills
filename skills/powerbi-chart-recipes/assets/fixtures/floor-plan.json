@@ -1,0 +1,8 @@
+[
+  {"Name": "Lobby", "Path": "M4,4H114V94H4Z", "LabelX": 12, "LabelY": 22, "Value": 8},
+  {"Name": "Server room", "Path": "M118,4H198V94H118Z", "LabelX": 126, "LabelY": 22, "Value": 41},
+  {"Name": "SOC", "Path": "M202,4H396V94H202Z", "LabelX": 210, "LabelY": 22, "Value": 17},
+  {"Name": "Meeting A", "Path": "M4,98H94V196H4Z", "LabelX": 12, "LabelY": 116, "Value": 3},
+  {"Name": "Open office", "Path": "M98,98H298V196H98Z", "LabelX": 106, "LabelY": 116, "Value": 22},
+  {"Name": "Storage", "Path": "M302,98H396V196H302Z", "LabelX": 310, "LabelY": 116, "Value": null}
+]
