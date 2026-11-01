@@ -45,10 +45,10 @@ spec expects.
 
 ## Decide the route first
 
-Native and DAX SVG need nothing installed. Deneb is a free certified third-party visual, so it counts
-against the house rule of one third-party visual per report in `powerbi-report-design`. A report that
-already spends that allowance, for example on a private pbiviz, needs an owner's decision before it
-takes Deneb too. Every Deneb chart in one report counts as the same visual.
+Native and DAX SVG need nothing installed. Deneb is a free certified third-party visual. Plan on one or
+two third-party visuals per report, more if the owner asks. See `powerbi-report-design`. Every Deneb
+chart in one report counts as the same visual. Test publish to My workspace the first time a report
+takes Deneb, because that step has not been run here.
 
 ## Workflow
 

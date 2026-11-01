@@ -129,9 +129,10 @@ Prefer native Power BI visuals first. They cover more ground than people assume,
 reach deep interactivity, dynamic imagery, and narrative text using only stock visuals plus DAX.
 See the `powerbi-dax` skill for the DAX-driven native techniques.
 
-If a third-party visual is genuinely needed, treat it as a governed exception. Pick exactly one,
-chosen deliberately, note its source and license in the project docs, and never stack several
-different third-party visuals in the same report.
+Third-party visuals are fine when they work in the Power BI Service and look good. Plan on one or two
+per report where they fit, and go past that when the report owner asks for it. Test publish to My
+workspace before relying on one, and note its source and license in the project docs. All charts built
+on one visual, such as Deneb, count as one.
 
 ## Asset discipline
 

@@ -9,6 +9,9 @@ owner's terms. Ideas nobody has reacted to do not go here.
 
 ## Liked
 
+- **One or two third-party visuals per report (2026-11).** Replaces the old limit of exactly one. If a
+  chart uploads to the Service and looks good, the visual is fine. More than two only when the owner says
+  so.
 - **A wider toolbox of charts, none assigned yet (2026-11).** Shown a deck of beeswarm, calendar heatmap,
   waffle, funnel Sankey, bump, butterfly, variance trio, KPI table with bullets and sparklines, animated
   KPI card, floor plan, filter drawer, ridgeline, 24 hour clock and wall screen dark mode. The owner said

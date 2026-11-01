@@ -93,8 +93,9 @@ themselves use `powerbi-dax`. For the pbip and TMDL file format and external the
   and the semantic pair (green and a red orange, never a true red against green) for good
   versus bad.
 - Name every object. In the Selection and Bookmarks panes, so future you can maintain it.
-- Native visuals first. Stock visuals plus DAX cover most reports. Treat a third-party visual as
-  a deliberate, governed exception, exactly one, with its source and license noted. For building
+- Native visuals first. Stock visuals plus DAX cover most reports. Third-party visuals are fine
+  when they work in the Service and look good. Plan on one or two per report, more if the owner asks,
+  with source and license noted. For building
   your own, use `powerbi-custom-visuals`.
 - The full list of rules and when to bend them is in `references/design-principles.md`. A dense
   export page for one analyst is allowed to break the 5 second rule.
