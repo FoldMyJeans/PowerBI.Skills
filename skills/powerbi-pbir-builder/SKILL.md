@@ -48,7 +48,9 @@ the general pbip safety rules, use `powerbi-project-and-tools`.
    first check, not the last, see the workflow below.
 5. **Prefer the theme over bespoke visual formatting.** Put color and font choices in the
    report's theme JSON (see `house-default-theme.json` in the `powerbi-report-design` skill) rather than repeating them
-   in every `visual.json`. Change it once, it applies everywhere.
+   in every `visual.json`. Change it once, it applies everywhere. One exception: classic
+   slicer `dropdown` properties in the theme were ignored by Desktop in one report and applied
+   in another. Render one page after a theme change and set them per visual if nothing moved.
 
 ## Workflow
 
@@ -103,19 +105,24 @@ the general pbip safety rules, use `powerbi-project-and-tools`.
 - `references/pbir-structure-and-safety.md`: the PBIR folder layout, the files you write
   versus the files only Desktop can generate, and the full safe editing checklist.
 - `references/visual-types-and-patterns.md`: the visual type catalog and query roles, field
-  reference shapes, letting a field parameter drive a role, and worked JSON for a trend chart,
-  a slicer, and an image.
+  reference shapes, letting a field parameter drive a chart or a table, and worked JSON for a
+  trend chart and a slicer.
 - `references/formatting-and-selectors.md`: where formatting lives, the selector forms and
   why the wrong one silently does nothing, referencing a theme color with `ThemeDataColor`, the
-  container card that makes a report look finished, gradients, and reference lines.
+  container card that makes a report look finished, and gradients.
+- `references/formatting-charts-and-tables.md`: line series colour, data labels on stacked
+  bars, reference lines, and table and matrix column widths with `columnAdjustment`.
 - `references/cards-and-dynamic-text.md`: the new card's shape, the legacy card's
   remaining job, titles bound to a measure, and the grain trap that overstates them.
 - `references/filters-and-sync.md`: the `filterConfig` shapes including excluding blanks
   properly, and slicer sync group naming.
+- `references/slicer-templates.md`: the classic underline dropdown, the list slicer with a wide
+  open list, the button slicer with its state selectors, and the traps each one hit.
 - `references/templates-grids.md`: complete copyable `visual.json` files for a table and a
   matrix, with the column, header, and subtotal formatting each one needs.
 - `references/templates-single-value.md`: complete copyable files for the legacy card, KPI,
-  gauge, and textbox, including the textbox's own formatting grammar.
+  gauge, and textbox, including the textbox's own formatting grammar, plus the image visual,
+  a page background picture, and an image bound to an SVG measure.
 - `references/layout-and-schema-versions.md`: canvas, the grid densities with real numbers,
   the z and tab order bands Desktop writes, hiding a visual, and reading the schema
   version already in use instead of hardcoding one.

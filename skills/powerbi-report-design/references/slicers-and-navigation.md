@@ -19,8 +19,25 @@ Match the slicer to the field and the question.
   Month hierarchy, so the reader drills from year to quarter to month in a single control, rather
   than separate Year and Month slicers. Format the display and the downstream axes as MMM yyyy,
   for example "Jan 2026".
-- Tile or button style. A list styled as buttons. Good for a small, always visible choice like
-  a two or three option toggle.
+
+The slicer family, as of November 2026:
+
+- Classic slicer. List, Dropdown, Between, Relative date and Tile styles. Its open dropdown list
+  is always exactly as wide as the box, with no setting to change that.
+- Button slicer, GA since October 2025. A grid of buttons with fixed or fit to space sizing,
+  hover and selected states, images per button, and paging arrows when values overflow. Good
+  for a small, always visible choice, and for a picker that shows the latest few periods with an
+  arrow to older ones.
+- List slicer, in preview since October 2026. Its dropdown mode has a configurable open list
+  width and height, selection pills, and Show selected first. It is the only way to open a wide
+  list from a narrow box, so long names read in full. Being preview, test it under the report's
+  own base theme first. Under an old base theme it drew as a white box.
+- Input slicer, GA since February 2026, numeric columns since May 2026. The user types a value.
+- Date picker, GA since August 2026, for picking a single date or a range from a calendar.
+
+There is no slicer style gallery. Style a slicer per visual or through the theme, and render a
+page to check the theme took. The JSON for each type is in `slicer-templates.md` in the
+`powerbi-pbir-builder` skill.
 
 Keep about 5 slicers visible on a page. Beyond that, switch the rest to dropdowns or move
 them into the filter pane, or the page turns into a control panel instead of a report.
@@ -33,6 +50,9 @@ them into the filter pane, or the page turns into a control panel instead of a r
   stored on each slicer as a `syncGroup` with a shared group name, group by the exact field so two
   slicers built on different tables do not cross drive. See the `powerbi-pbir-builder` skill for the
   exact shape.
+- Keep one slicer type per sync group. A button slicer and a classic slicer synced on one field do
+  not share a selection, and the page shows blanks. The `powerbi-pbir-builder` skill has the
+  detail.
 - Always give a way to clear. Add a button with the Clear all slicers action, or a bookmark
   that captures the cleared state. A user who cannot reset a filter is stuck.
 - Decide single or multi select per slicer. Single select keeps a clean one thing at a time

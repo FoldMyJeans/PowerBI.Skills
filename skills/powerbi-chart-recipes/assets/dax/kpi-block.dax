@@ -1,0 +1,58 @@
+// One KPI block: the number, its label, the previous value, and a pill with the change.
+// Replace [KPI Current] and [KPI Previous], then set the three settings below per KPI.
+// Set Data Category to Image URL and bind the measure to an image visual.
+// The colours are literals. Swap them for the report palette.
+KPI Block SVG =
+VAR Label = "Open items"
+VAR LowerIsBetter = TRUE ()
+VAR IsPercent = FALSE ()
+VAR Cur = [KPI Current]
+VAR Prev = [KPI Previous]
+VAR Fmt = IF ( IsPercent, "0%", "#,0" )
+VAR CurText = FORMAT ( Cur, Fmt, "en-US" )
+VAR PrevText = IF ( ISBLANK ( Prev ), "", "Previous month " & FORMAT ( Prev, Fmt, "en-US" ) )
+// Points for a percentage, units for a count
+VAR Delta = IF ( IsPercent, ROUND ( ( Cur - Prev ) * 100, 0 ), Cur - Prev )
+VAR DeltaText =
+    SWITCH (
+        TRUE (),
+        Delta = 0, "same",
+        IsPercent, FORMAT ( ABS ( Delta ), "0", "en-US" ) & " pts",
+        FORMAT ( ABS ( Delta ), "#,0", "en-US" )
+    )
+VAR IsGood = IF ( LowerIsBetter, Delta < 0, Delta > 0 )
+VAR PillColour = SWITCH ( TRUE (), Delta = 0, "#8A8886", IsGood, "#107C10", "#D13438" )
+// Pill x is estimated from the text length of a 24 px semibold number
+VAR PillX = LEN ( CurText ) * 14 + 10
+VAR ArrowW = IF ( Delta = 0, 0, 12 )
+VAR PillW = 12 + ArrowW + LEN ( DeltaText ) * 7
+VAR ArrowX = PillX + 8
+VAR Arrow =
+    SWITCH (
+        TRUE (),
+        Delta > 0,
+            "<path d='M " & ArrowX & " 25 L " & ArrowX + 4 & " 18 L " & ArrowX + 8 & " 25 Z' fill='" & PillColour & "'/>",
+        Delta < 0,
+            "<path d='M " & ArrowX & " 18 L " & ArrowX + 8 & " 18 L " & ArrowX + 4 & " 25 Z' fill='" & PillColour & "'/>",
+        ""
+    )
+VAR Pill =
+    IF (
+        NOT ISBLANK ( Prev ),
+        "<rect x='" & PillX & "' y='13' width='" & PillW & "' height='18' rx='9' fill='" & PillColour & "' fill-opacity='0.18'/>"
+            & Arrow
+            & "<text x='" & PillX + 6 + ArrowW & "' y='26' font-family='Segoe UI' font-size='11' font-weight='600' fill='" & PillColour & "'>"
+            & DeltaText & "</text>"
+    )
+VAR Svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 80'>"
+        & "<text x='0' y='30' font-family='Segoe UI' font-size='24' font-weight='600' fill='#252423'>" & CurText & "</text>"
+        & Pill
+        & "<text x='0' y='50' font-family='Segoe UI' font-size='12' fill='#252423'>" & Label & "</text>"
+        & "<text x='0' y='68' font-family='Segoe UI' font-size='11' fill='#8A8886'>" & PrevText & "</text>"
+        & "</svg>"
+RETURN
+    IF (
+        NOT ISBLANK ( Cur ),
+        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( Svg, "%", "%25" ), "#", "%23" ), "'", """" )
+    )

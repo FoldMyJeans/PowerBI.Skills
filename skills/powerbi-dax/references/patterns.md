@@ -237,6 +237,8 @@ what you want, and it removes repeated subexpressions.
 - Measures scattered across fact and dimension tables. Where a measure lives does not change its
   result, but loose measures are hard to find. Keep them in one _Measures table (see
   `powerbi-modeling`).
+- A count that returns blank. `COUNTROWS` on no rows is blank, so a card reads "(Blank)" and a
+  colour rule testing `= 0` never fires. Add `+ 0` to a count that should show "0 people".
 - Expecting row context to filter. Being on a row does not restrict what a measure sees. Wrap it
   in CALCULATE to turn the row into a filter (context transition). See
   `measures-vs-calc.md`.

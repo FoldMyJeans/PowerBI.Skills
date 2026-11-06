@@ -12,7 +12,8 @@ out keeps the Power BI default. Microsoft groups the rest into four parts.
    - `dataColors`: an array of hex codes for the series in visuals. It can hold as many colors
      as you want. When they run out, Power BI generates more by shifting saturation and hue.
    - Sentiment slots `good`, `neutral`, `bad`: the status colors used by the waterfall chart
-     and the KPI visual.
+     and the KPI visual. A single waterfall overrides them in its own `sentimentColors` object
+     (`increaseFill`, `decreaseFill`, `totalFill`).
    - Divergent slots `minimum`, `center`, `maximum`, and `null`: the gradient endpoints in the
      conditional formatting dialog. In the visual JSON gradient (`fillRule`) the same four are
      `minColor`, `midColor`, `maxColor` and `nullColor`. They are not available to DAX, which
@@ -154,6 +155,8 @@ is the fastest way to author `visualStyles` without guessing card and property n
   back to a substitute that can break your layout. Prefer a web safe sans serif for anything
   that must travel. The house theme keeps Segoe UI across all four text classes for exactly
   this reason, rather than leaning on DIN for the callout.
+- A font named in the theme only shows where it is installed on the viewer's machine. A brand web
+  font was rejected for an executive page for that reason. Segoe UI everywhere, numbers included.
 - Make the hierarchy obvious. Large bold KPI values, medium headings, smaller secondary text.
   Do not center long text. Left align for reading.
 

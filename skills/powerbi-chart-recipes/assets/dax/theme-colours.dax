@@ -22,4 +22,4 @@ VAR Svg =
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9' preserveAspectRatio='none'>"
         & "<rect width='16' height='9' fill='" & [Colour Page] & "'/></svg>"
 RETURN
-    "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )
+    "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( Svg, "%", "%25" ), "#", "%23" ), "'", """" )

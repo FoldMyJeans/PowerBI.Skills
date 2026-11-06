@@ -1,0 +1,75 @@
+// A row of 270 degree gauges in one image, one per item, with a dashed target tick.
+// Replace [Gauge Score], [Gauge Target] and 'Gauge Item'[Code], and the DATATABLE rows.
+// Scores and targets share one scale, 0 to MaxScore. Set Data Category to Image URL and
+// bind the measure to an image visual. The colours are literals. Swap them for the report palette.
+Gauges SVG =
+VAR MaxScore = 5
+VAR R = 50
+VAR Gap = 150
+VAR Cy = 70
+VAR Items =
+    DATATABLE (
+        "Code", STRING,
+        "Label", STRING,
+        "Colour", STRING,
+        "Slot", INTEGER,
+        {
+            { "A", "Area A", "#0072B2", 0 },
+            { "B", "Area B", "#0072B2", 1 },
+            { "C", "Area C", "#0072B2", 2 }
+        }
+    )
+VAR Width = COUNTROWS ( Items ) * Gap
+VAR Height = Cy + R + 30
+VAR Body =
+    CONCATENATEX (
+        Items,
+        VAR __code = [Code]
+        VAR __cx = Gap / 2 + [Slot] * Gap
+        VAR __raw = CALCULATE ( [Gauge Score], 'Gauge Item'[Code] = __code )
+        VAR __score = MIN ( MAX ( __raw, 0 ), MaxScore )
+        VAR __target = CALCULATE ( [Gauge Target], 'Gauge Item'[Code] = __code )
+        VAR __a0 = RADIANS ( 225 )
+        VAR __aEnd = RADIANS ( -45 )
+        VAR __a1 = RADIANS ( 225 - 270 * __score / MaxScore )
+        VAR __aT = RADIANS ( 225 - 270 * MIN ( __target, MaxScore ) / MaxScore )
+        VAR __x0 = FORMAT ( __cx + R * COS ( __a0 ), "0.0", "en-US" )
+        VAR __y0 = FORMAT ( Cy - R * SIN ( __a0 ), "0.0", "en-US" )
+        VAR __xE = FORMAT ( __cx + R * COS ( __aEnd ), "0.0", "en-US" )
+        VAR __yE = FORMAT ( Cy - R * SIN ( __aEnd ), "0.0", "en-US" )
+        VAR __x1 = FORMAT ( __cx + R * COS ( __a1 ), "0.0", "en-US" )
+        VAR __y1 = FORMAT ( Cy - R * SIN ( __a1 ), "0.0", "en-US" )
+        VAR __large = IF ( 270 * __score / MaxScore > 180, 1, 0 )
+        VAR __track =
+            "<path d='M " & __x0 & " " & __y0 & " A " & R & " " & R & " 0 1 1 " & __xE & " " & __yE
+                & "' fill='none' stroke='#E6E6E6' stroke-width='10' stroke-linecap='round'/>"
+        VAR __value =
+            IF (
+                __score > 0,
+                "<path d='M " & __x0 & " " & __y0 & " A " & R & " " & R & " 0 " & __large & " 1 " & __x1 & " " & __y1
+                    & "' fill='none' stroke='" & [Colour] & "' stroke-width='10' stroke-linecap='round'/>"
+            )
+        VAR __tick =
+            IF (
+                NOT ISBLANK ( __target ),
+                "<line x1='" & FORMAT ( __cx + ( R - 12 ) * COS ( __aT ), "0.0", "en-US" )
+                    & "' y1='" & FORMAT ( Cy - ( R - 12 ) * SIN ( __aT ), "0.0", "en-US" )
+                    & "' x2='" & FORMAT ( __cx + ( R + 12 ) * COS ( __aT ), "0.0", "en-US" )
+                    & "' y2='" & FORMAT ( Cy - ( R + 12 ) * SIN ( __aT ), "0.0", "en-US" )
+                    & "' stroke='#252423' stroke-width='2' stroke-dasharray='4 3'/>"
+            )
+        VAR __number = IF ( ISBLANK ( __raw ), "-", FORMAT ( __score, "0.0", "en-US" ) )
+        VAR __text =
+            "<text x='" & __cx & "' y='" & Cy + 7 & "' text-anchor='middle' font-family='Segoe UI' font-size='20' font-weight='600' fill='#252423'>"
+                & __number & "</text>"
+                & "<text x='" & __cx & "' y='" & Cy + R + 22 & "' text-anchor='middle' font-family='Segoe UI' font-size='12' fill='#605E5C'>"
+                & [Label] & "</text>"
+        RETURN
+            __track & __value & __tick & __text,
+        "",
+        [Slot], ASC
+    )
+VAR Svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " & Width & " " & Height & "'>" & Body & "</svg>"
+RETURN
+    "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( Svg, "%", "%25" ), "#", "%23" ), "'", """" )

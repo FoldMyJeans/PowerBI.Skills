@@ -22,6 +22,9 @@ on the grid object:
 - Do not name a variable after a function. `VAR MinX` made the table show "Something's wrong with one or
   more fields" until it was renamed `LowX`, because `MINX` is a function.
 - In the bullet, set `Scale` and the bands to your KPI's range.
+- The image keeps its aspect ratio. Raising `imageWidth` alone only centres the same small bullet in a
+  wider cell. Set `Width` and `Height` in the measure to the cell size, for example 300 by 18, and match
+  `imageWidth` and `imageHeight` to them.
 
 ## Animated KPI card
 
@@ -66,6 +69,103 @@ Format string for Opened Left: #,0;#,0
 - Sort with Sort by Column on the label column in the model. A `sortDefinition` on a field that is not
   in the visual was ignored, and rows came out alphabetical.
 - Labels sit at the left, not the centre. For centre labels use the Deneb spec.
+- A log axis cannot show negative values, so the butterfly stays linear and large categories dominate.
+  If a few rows dwarf the rest, split them out or use the Deneb spec.
+
+## Target as tick marks on a combo chart
+
+Use this when the category axis has no order, for example members or companies. A target line that
+joins unordered categories has a slope that means nothing. On an ordered axis such as a trend, keep the
+dashed target line.
+
+Bars in `Y`, the target in `Y2` of `lineStackedColumnComboChart`. The marker properties go on the base
+`lineStyles` entry with no selector, and the series entry only turns the stroke off. A marker set on the
+series entry alone did not draw.
+
+```json
+"lineStyles": [
+  {"properties": {
+    "showMarker": {"expr": {"Literal": {"Value": "true"}}},
+    "markerShape": {"expr": {"Literal": {"Value": "'longDash'"}}},
+    "markerSize": {"expr": {"Literal": {"Value": "10D"}}}}},
+  {"properties": {
+    "strokeShow": {"expr": {"Literal": {"Value": "false"}}},
+    "showMarker": {"expr": {"Literal": {"Value": "true"}}},
+    "markerShape": {"expr": {"Literal": {"Value": "'longDash'"}}},
+    "markerSize": {"expr": {"Literal": {"Value": "10D"}}}},
+   "selector": {"metadata": "<target queryRef>"}}
+]
+```
+
+- Colour the target red with a `dataPoint` `fill` on the same `metadata` selector, for example
+  `#C62828`.
+- Give the bars `fillTransparency` of about `45D` in their `dataPoint` entry, so the tick shows on top.
+- Hide the target's data label with a `labels` entry of `showSeries` false on the target selector. The
+  tooltip still shows its value.
+
+## Labels inside bars that get cut off
+
+```json
+"categoryAxis": [{"properties": {"innerPadding": {"expr": {"Literal": {"Value": "8L"}}}}}],
+"labels": [{"properties": {
+  "labelPosition": {"expr": {"Literal": {"Value": "'InsideCenter'"}}},
+  "labelDisplayUnits": {"expr": {"Literal": {"Value": "1000D"}}},
+  "labelPrecision": {"expr": {"Literal": {"Value": "1L"}}},
+  "enableBackground": {"expr": {"Literal": {"Value": "false"}}},
+  "fontSize": {"expr": {"Literal": {"Value": "7D"}}},
+  "bold": {"expr": {"Literal": {"Value": "true"}}}}}]
+```
+
+A smaller `innerPadding` narrows the gap between categories and widens the bars. Fixed K units show
+145,191 as 145.2K, and 7 pt bold fits inside the bar. A format string that switches to K only above
+1,000 did not work in data labels. See dynamic format strings in `powerbi-dax`.
+
+## Total at the end of a stacked bar
+
+```json
+"totals": [{"properties": {
+  "show": {"expr": {"Literal": {"Value": "true"}}},
+  "bold": {"expr": {"Literal": {"Value": "true"}}}}}]
+```
+
+## Waterfall from one scan to the next
+
+A bridge from the previous total, minus what was fixed, plus what is new. Build a step table as a
+calculated table:
+
+```dax
+Bridge Step =
+DATATABLE (
+    "Step", STRING, "Order", INTEGER,
+    { { "Previous", 1 }, { "Fixed", 2 }, { "New", 3 } }
+)
+```
+
+Sort `Step` by `Order`, hide `Order`, and add `ref table 'Bridge Step'` to `model.tmdl` or the table
+does not load. One measure drives every bar:
+
+```dax
+Bridge Value =
+SWITCH (
+    SELECTEDVALUE ( 'Bridge Step'[Step] ),
+    "Previous", [Previous Total],
+    "Fixed", - [Fixed],
+    "New", [New]
+)
+```
+
+Put `Step` in `Category` and the measure in `Y` of a `waterfallChart`. Power BI adds the final bar
+itself and labels it "Total". Colours are on the visual:
+
+```json
+"sentimentColors": [{"properties": {
+  "increaseFill": {"solid": {"color": {"expr": {"Literal": {"Value": "'#F2D06B'"}}}}},
+  "decreaseFill": {"solid": {"color": {"expr": {"Literal": {"Value": "'#4F9A6A'"}}}}},
+  "totalFill": {"solid": {"color": {"expr": {"Literal": {"Value": "'#A6A6A6'"}}}}}}}]
+```
+
+Every rising bar takes the increase colour, the first one included, so the starting total reads as an
+increase. Here a fall is good, so the decrease colour is the green one.
 
 ## Filter drawer
 

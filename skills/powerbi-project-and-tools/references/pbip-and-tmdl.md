@@ -83,10 +83,30 @@ of the data from the last edit, and it is git ignored. When you fix the model, y
 4. Preserve line endings and encoding. Desktop writes CRLF and UTF-8 without BOM. A tool that
    rewrites the file as LF makes the whole file look changed in git and can confuse a merge. Set
    git `autocrlf` so line endings stay consistent.
+   Python in text mode reads CRLF as `\n`, so a check for `\r\n` is always false, and a rewrite
+   can come back LF only. Read and write bytes, or open with `newline=''`. If a TMDL file you meant
+   to leave alone differs only in line endings, restore the original instead of committing it.
 5. Respect the indentation. TMDL is whitespace significant. One tab per level. A stray space, or
    a tab converted to spaces, breaks the parse.
 6. Reopen in Desktop to verify. If an edit is invalid, Desktop refuses to open the project and
    points at the file and location of the error.
+
+## What a Desktop save does to files you wrote
+
+- Desktop rewrites every PBIR file on save, formatting only. Parsed as JSON, hand written files
+  came back identical, apart from one empty `visualContainerObjects` it dropped. TMDL files gain
+  `lineageTag` lines.
+- So when shipping a working copy into the real project, compare by parsed JSON content, not by
+  bytes. Copy new and changed files, delete the files removed in the copy, and leave the rest.
+- Deleting a `visual.json` is safe. Desktop opens the page and removes the empty visual folder on
+  its next save. Empty page or visual folders left behind do not stop the report opening.
+
+## Expressions that stopped a project opening
+
+Two hand written shapes made Desktop refuse to open a project: a calculated column expression split
+over several lines, and a one line `formatStringDefinition` on a measure. The fenced block form of
+`formatStringDefinition` loaded. The safe habit is a calculated column on one line, a format string
+definition in the fenced form, and any other multi line shape copied from a file Desktop wrote.
 
 ## Query groups organize the model files
 

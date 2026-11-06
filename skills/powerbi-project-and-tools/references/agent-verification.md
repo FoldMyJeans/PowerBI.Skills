@@ -29,7 +29,8 @@ default, and an administrator can turn it off with a registry policy.
 There are two branches, and this is the only place that says so.
 
 **No bridge in this session.** Close Desktop, edit, reopen. That is the rule in `pbip-and-tmdl.md`,
-and nothing below changes it.
+and nothing below changes it. To render and refresh a copy without the bridge and without touching the
+person's screen, see `offscreen-render.md`.
 
 **With the bridge.** Desktop can stay open, on these conditions:
 
@@ -84,7 +85,8 @@ pick one route per project rather than mixing them.
 After a TMDL change, reopen the PBIP in Desktop. The sources disagree on whether a reload reapplies the
 model. Microsoft's bridge page says it does by default, the CLI README says to reopen if the changes do
 not show, and the report CLI has a separate `--reload-with-model` flag. The bridge also has no refresh
-method, so if data has to change, a person presses Refresh in Desktop.
+method. When data has to change, send a TMSL refresh to Desktop's local engine and save through UI
+Automation, as in `offscreen-render.md`, or ask the person to press Refresh.
 
 ### 4. Review each page
 

@@ -130,6 +130,15 @@ groups for three Company slicers built on three different tables. That naming ru
 same named slicers on different tables cross driving each other, which produces filter behaviour
 nobody can explain later.
 
+Two ways a sync group fails without an error:
+
+- Mixed slicer types. A button slicer (`advancedSlicerVisual`) and a classic `slicer` in one
+  group do not share a selection. In one report every card on the page went blank. Keep one
+  slicer type per group, or replace the pair with one control.
+- Different lists on one field. Each synced slicer keeps its own visual level filters, so two
+  synced slicers on the same field can offer different values. A page can then be filtered to a
+  value its own dropdown does not list. Give synced slicers the same visual filters.
+
 Leave search box slicers (`selfFilterEnabled`) out of sync groups. They are usually page specific
 and syncing a search term across pages is rarely what anyone wants.
 

@@ -21,6 +21,18 @@ when the project opens, with no cache, credentials or data source. This is a fai
 model. It is the one PBIP here not started in Desktop, because no real source ever has to connect. For a
 real report still follow `powerbi-pbir-builder`, which starts from a PBIP Desktop saved.
 
+## A test rig for one visual setting
+
+The fixture is also the cheap place to try a visual setting before it goes into a real report. A report
+over published semantic models shows a consent prompt after every outside edit, so each try on the real
+file costs the owner a click. A copy of a single source fake data PBIP shows no prompt.
+
+- Add a tiny `DATATABLE` calculated table for the fields the experiment needs, and its
+  `ref table <name>` line in `model.tmdl`.
+- Put each experiment on its own page. Slicers on one field cross-filter each other and hide the result.
+- Switch the copy to the same base theme as the real report. A button slicer and a list slicer drew
+  differently under an older base theme, so theme dependent bugs do not show otherwise.
+
 ## Traps building it hit
 
 - **Table names.** `EVALUATE ADDCOLUMNS ( Kpi, ...)` failed with "The syntax for 'Kpi' is incorrect" and

@@ -9,6 +9,29 @@ owner's terms. Ideas nobody has reacted to do not go here.
 
 ## Liked
 
+- **Target as tick marks on an unordered axis (2026-11).** A red tick per bar instead of a target line
+  when the categories have no order (members, companies). A line joining them has a meaningless slope.
+  A trend over months keeps its dashed target line. Recipe in `powerbi-chart-recipes`.
+- **A waterfall from the previous scan to the current one (2026-11).** Previous total, minus fixed,
+  plus new, then the current total. Beside it a butterfly of new against fixed by team, new in light
+  yellow and fixed in green.
+- **One page executive summary with no tables (2026-11).** Gauges and KPI blocks drawn as SVG, full
+  KPI names as labels, a change pill in green when good, soft red when bad and grey "same" when flat.
+  Direction is set per KPI, so a falling vulnerability count is green.
+- **Latest complete month by default (2026-11).** A November meeting reads October, with the two months
+  before one click away on a paginated button slicer. Snapshot numbers read the latest snapshot in the
+  month, never an average of snapshots.
+- **Two questions on completion (2026-11).** "How far along are we?" and "Is anyone behind?" as two
+  cards, with one on time rule across every page. See `powerbi-dax`.
+- **A people waffle (2026-11).** One square per person grouped by department, red when overdue, and a
+  hover that lists the person's open items grouped by campaign. Fairer than a raw count by group.
+- **Hatched gap to 100% on share columns (2026-11).** The gap reads as missing without a legend.
+- **Underline dropdowns (2026-11).** Rounded box, blue open arrow, a 3 px accent line along the bottom,
+  on every classic dropdown slicer. A wider open list only on narrow boxes over long names.
+- **A black selected button (2026-11).** Accepted when the button slicer's accent cannot be set from
+  the files.
+- **Keep as is (2026-11).** When the current chart already answers the question, leaving it is a valid
+  outcome of a review.
 - **One or two third-party visuals per report (2026-11).** Replaces the old limit of exactly one. If a
   chart uploads to the Service and looks good, the visual is fine. More than two only when the owner says
   so.
@@ -31,6 +54,13 @@ owner's terms. Ideas nobody has reacted to do not go here.
 
 ## Rejected
 
+- **Explanations in subtitles (2026-11).** Legend style lines ("hatching is the gap to 100%") and
+  instructions ("hover for names"). The rule is in `design-principles.md`.
+- **Per person "days to onboarding" bars (2026-11).** Too much detail for the question.
+- **A separate page for one minor measure (2026-11).** Time spent on training is not a critical KPI,
+  so it got one chart, not a page.
+- **A brand web font (2026-11).** It only shows where installed. Segoe UI everywhere.
+- **Slicer changes that make slicers bigger (2026-11).** Style changes must not cost canvas or clicks.
 - **Dense ribbon charts where every item is its own line (2026-11).** A Sankey with dozens of labelled
   rows and ribbons crossing everywhere. Avoid that look if the data allows, and accept some overlap
   only if it does not.

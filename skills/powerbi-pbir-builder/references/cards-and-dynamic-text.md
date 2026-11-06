@@ -84,6 +84,31 @@ Note that `layout.rectangleRoundedCurve` also exists and does nothing once
 `shapeCustomRectangle` is present. If you see both with different values, the
 `shapeCustomRectangle` one wins and the other is leftover.
 
+## A card that sits inside a container border
+
+When the container draws the box (title, subtitle, a rounded border), turn the card's own
+outline and fill off, or it draws a second box inside the first.
+
+```json
+"objects": {
+  "label":      [{ "properties": { "show": { "expr": { "Literal": { "Value": "false" } } } }, "selector": { "id": "default" } }],
+  "outline":    [{ "properties": { "show": { "expr": { "Literal": { "Value": "false" } } } }, "selector": { "id": "default" } }],
+  "fillCustom": [{ "properties": { "show": { "expr": { "Literal": { "Value": "false" } } } }, "selector": { "id": "default" } }]
+},
+"visualContainerObjects": {
+  "title":    [{ "properties": {
+    "show": { "expr": { "Literal": { "Value": "true" } } },
+    "text": { "expr": { "Literal": { "Value": "'How far along are we'" } } } } }],
+  "subTitle": [{ "properties": {
+    "show": { "expr": { "Literal": { "Value": "true" } } },
+    "text": { "expr": { "Measure": { "Expression": { "SourceRef": { "Entity": "_Measures" } }, "Property": "Card Subtitle" } } } } }]
+}
+```
+
+The title is the question, the value is the number, and a measure bound subtitle carries the
+one line of context, for example `FORMAT ( [Passed], "#,0" ) & " of " & FORMAT ( [Records],
+"#,0" ) & " passed"`. That subtitle was the reliable way to get a context line under a card.
+
 ## The legacy card still has a job
 
 `cardVisual` has a minimum practical size. For a thin inline value strip tucked between two
@@ -91,7 +116,9 @@ charts, roughly 208 by 32, the legacy `card` type is still the right tool. Set t
 keep the category label off, and let the value carry itself.
 
 Do not reach for it as a KPI tile. For anything with a label, a comparison, or a semantic color,
-use `cardVisual`.
+use `cardVisual`. A theme change can also break it. When one report moved to a house theme that
+styles container titles, every legacy `card` lost its value, because the title wrapped and
+filled the tile. Converting them to `cardVisual` fixed all of them.
 
 ## Binding a title to a measure
 

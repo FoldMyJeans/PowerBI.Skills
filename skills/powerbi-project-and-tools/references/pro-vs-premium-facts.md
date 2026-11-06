@@ -67,6 +67,10 @@ fan out it removes is worth those costs. Do not sequence it on a clock gap, beca
 starts can slip by up to an hour. The clean fix (Gen2, staging in a lakehouse or warehouse) needs
 Fabric or Premium, which we do not have.
 
+A summary that feeds on several published models needs no dataflow and no sequencing. DirectQuery
+to a published semantic model is Pro, and each source refresh shows up in the summary at once. See
+`composite-over-published-models.md` in the `powerbi-data-and-refresh` skill.
+
 ## Calculated columns and tables: help or hurt
 
 - Prefer computing a column upstream in M or at the source. Those columns compress better

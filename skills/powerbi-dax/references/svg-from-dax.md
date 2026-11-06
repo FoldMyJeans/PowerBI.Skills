@@ -91,13 +91,16 @@ VAR SvgBody =
     ViewboxHeight & "'><polyline fill='none' stroke='#0072B2' stroke-width='2' points='" &
     PointsString & "' /></svg>"
 VAR EscapedSvg =
-    SUBSTITUTE ( SUBSTITUTE ( SvgBody, "#", "%23" ), "'", """" )
+    SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SvgBody, "%", "%25" ), "#", "%23" ), "'", """" )
 RETURN
     "data:image/svg+xml;utf8," & EscapedSvg
 ```
 
-Two escapes, and both are required, not optional:
+Three escapes, all required, and the order matters:
 
+- `%` becomes `%25`, first. A bare `%` in a data URI starts a percent escape. Any SVG that prints a
+  percentage ("87%") rendered faded until this was added. It goes first because the next
+  escape writes `%` characters of its own, which must not be escaped again.
 - `#` becomes `%23`. A raw `#` inside a data URI reads as the start of a URI fragment, so
   everything after the first `#` (the stroke color above) gets silently cut from the image.
 - The single quote used to delimit SVG attributes becomes a literal double quote. Single quotes
@@ -105,6 +108,13 @@ Two escapes, and both are required, not optional:
   finished URI is dropped into another attribute that is itself single quoted, for example an
   `<img src='...'>` built by an HTML measure. There the first inner `'` closes the src early and
   the image breaks. Swap it every time rather than remembering which route the string took.
+
+Numbers written into coordinates need a point, never a decimal comma. Format them with an explicit
+locale, `FORMAT ( x, "0.0", "en-US" )`, so a model opened under another locale still draws.
+
+The image keeps the aspect ratio of its viewBox. In a table, `grid` `imageWidth` and `imageHeight`
+set the box, but a 160 by 24 viewBox in a 330 wide box only centred a small bar. Make the viewBox
+match the shape you want on screen (300 by 18 filled the column).
 
 Run the SUBSTITUTE chain once, last, over the finished SVG string. Escaping a fragment before it
 is assembled means you have to remember to do it again at every concatenation, and that is how

@@ -137,6 +137,10 @@ Two decisions are painful to reverse. Make them deliberately in phase 3.
   than an ugly right one.
 - When the user asks for something the model cannot answer yet, say so and name the phase it
   belongs to, rather than forcing it at the report layer.
+- Reviewing an existing report with its owner: one idea at a time, as a before and after picture
+  and one short question. Work in a backup copy, render off screen, and leave the owner's Desktop
+  and monitors alone. See `powerbi-project-and-tools`. Taste decisions go in `visual-decisions.md` in
+  `powerbi-report-design`.
 
 ## References in this skill
 

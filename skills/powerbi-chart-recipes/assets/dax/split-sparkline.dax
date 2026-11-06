@@ -43,5 +43,5 @@ VAR Svg =
 RETURN
     IF (
         COUNTROWS ( Plotted ) > 1,
-        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )
+        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( Svg, "%", "%25" ), "#", "%23" ), "'", """" )
     )

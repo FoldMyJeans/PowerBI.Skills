@@ -77,11 +77,9 @@ commands that make the split explicit, is in `references/refresh-cost-model.md`.
 
 Set the defaults while the file is still empty, because they are free now and expensive later.
 
-- Turn OFF auto date/time globally (File, Options and settings, Options, Time intelligence,
-  the Global page option labelled "Auto date/time for new files"). Left on, Power BI builds a
-  hidden calculated date table for EVERY date column in every Import table, each with six
-  calculated columns, and rebuilds all of them on every refresh. Build one date table instead
-  and mark it as a date table.
+- Turn OFF auto date/time globally (Options, Global, Time intelligence, "Auto date/time for new
+  files"). Left on, every date column gets a hidden calculated date table rebuilt on every
+  refresh. Build one date table instead and mark it.
 - Disable load on staging queries, and keep the number of loaded tables referencing the same
   expensive staging query low.
 - Keep the first argument of `Web.Contents` a literal string, with everything variable in
@@ -95,14 +93,12 @@ Full reasoning and the rest of the list in `references/refresh-cost-model.md`.
    on SharePoint, read the file directly, do not crawl the whole site (see below).
 2. Keep sources thin. Apply filters and column selection as early as possible so less data
    moves and folding has a chance.
-3. Check folding. In the Power Query editor, right click a step and look for "View Native
-   Query". If it is available, the work is being pushed to the source. If it greys out at a
-   step, everything after that step runs locally in the mashup engine.
+3. Check folding. Right click a step and look for "View Native Query". Where it greys out,
+   everything after that step runs locally in the mashup engine.
 4. For a REST or ServiceNow source, page with a stable cursor and a page size the source can
    assemble inside its own limits. See `references/connecting-to-sources.md`.
 5. When refresh is slow or fails, do not guess. Follow the diagnosis steps in
-   `references/refresh-troubleshooting.md` (watch the per table timer in Desktop, read the
-   Service refresh history detail, find the one table that eats the time).
+   `references/refresh-troubleshooting.md` and find the one table that eats the time.
 
 ## Rules of thumb
 
@@ -127,8 +123,9 @@ Full reasoning and the rest of the list in `references/refresh-cost-model.md`.
   counts against the 8, sends no failure email, and shares no transaction with the dataflow. See
   `pro-vs-premium-facts.md` in the `powerbi-project-and-tools` skill.
 - Referencing another loaded query (`Source = OtherQuery`) re-runs that query in full every
-  time. If three loaded tables reference the same expensive staging query, that staging
-  query, and its API calls, run 3 times. See `references/folding-and-duplication.md`.
+  time, API calls included. See `references/folding-and-duplication.md`.
+- A summary over several published models reads them through composite DirectQuery, which needs
+  no refresh ordering at all. See `references/composite-over-published-models.md`.
 
 ## References in this skill
 
@@ -139,7 +136,11 @@ Full reasoning and the rest of the list in `references/refresh-cost-model.md`.
 - `references/incremental-refresh.md`: RangeStart and RangeEnd in a REST request, one query per
   partition, the partition date and refresh window, and the Pro republish trap.
 - `references/m-hardening.md`: surviving schema drift, quoting field names with punctuation,
-  parsing durations and choice fields, text key joins, and turning one row into several.
+  text key joins, and turning one row into several.
+- `references/parsing-api-values.md`: durations, choice fields, ISO date text, proving a
+  `try ... otherwise null` parse ever returned a value, a diagnostic table, and exclusion lists.
+- `references/composite-over-published-models.md`: a summary report reading published models over
+  DirectQuery, the author consent prompt, tables added later, and a guard for renamed KPIs.
 - `references/folding-and-duplication.md`: query folding, and the "referencing a query
   re-runs it" duplication trap, with how to reduce it on Pro.
 - `references/refresh-troubleshooting.md`: a step by step for a slow or failing refresh, the

@@ -1,5 +1,8 @@
 // Bullet for a table or matrix row. Set the measure's Data Category to Image URL.
 // Replace [KPI Actual] and [KPI Target]. Bands are shares of Scale, so set Scale first.
+// Width and Height are the image size in the table. The image keeps its aspect ratio, so the
+// grid imageWidth alone cannot widen it. Set Width to the column width you want, for example 300 by 18.
+// The colours are literals. Swap them for the report palette.
 Bullet SVG =
 VAR Actual = [KPI Actual]
 VAR Target = [KPI Target]
@@ -19,16 +22,16 @@ VAR BarColour =
         "#333333"
     )
 VAR Bands =
-    "<rect x='0' y='2' width='" & BandLow * ToX & "' height='20' fill='#EDEDED'/>"
-        & "<rect x='" & BandLow * ToX & "' y='2' width='" & ( BandMid - BandLow ) * ToX & "' height='20' fill='#DDDDDD'/>"
-        & "<rect x='" & BandMid * ToX & "' y='2' width='" & ( Scale - BandMid ) * ToX & "' height='20' fill='#EDEDED'/>"
-VAR Bar = "<rect x='0' y='8' width='" & ActualX & "' height='8' fill='" & BarColour & "'/>"
-VAR Tick = "<rect x='" & TargetX - 1 & "' y='0' width='2' height='24' fill='#222222'/>"
+    "<rect x='0' y='2' width='" & BandLow * ToX & "' height='" & Height - 4 & "' fill='#EDEDED'/>"
+        & "<rect x='" & BandLow * ToX & "' y='2' width='" & ( BandMid - BandLow ) * ToX & "' height='" & Height - 4 & "' fill='#DDDDDD'/>"
+        & "<rect x='" & BandMid * ToX & "' y='2' width='" & ( Scale - BandMid ) * ToX & "' height='" & Height - 4 & "' fill='#EDEDED'/>"
+VAR Bar = "<rect x='0' y='" & Height / 3 & "' width='" & ActualX & "' height='" & Height / 3 & "' fill='" & BarColour & "'/>"
+VAR Tick = "<rect x='" & TargetX - 1 & "' y='0' width='2' height='" & Height & "' fill='#222222'/>"
 VAR Svg =
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " & Width & " " & Height & "'>"
         & Bands & Bar & Tick & "</svg>"
 RETURN
     IF (
         NOT ISBLANK ( Actual ),
-        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )
+        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( Svg, "%", "%25" ), "#", "%23" ), "'", """" )
     )

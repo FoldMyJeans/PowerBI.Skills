@@ -52,5 +52,5 @@ VAR Svg =
 RETURN
     IF (
         NOT ISBLANK ( [KPI Actual] ),
-        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )
+        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( Svg, "%", "%25" ), "#", "%23" ), "'", """" )
     )

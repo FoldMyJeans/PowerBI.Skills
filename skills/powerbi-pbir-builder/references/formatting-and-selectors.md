@@ -136,9 +136,9 @@ which also keeps the tab order clean because there are no decorative objects to 
 ```
 
 Both sit in `visualContainerObjects`. The pattern that works: a one line subtitle saying what
-the visual shows, and the full calculation rules behind an information icon in the header. End
-the subtitle with a pointer to it, for example "Rules under the header help icon", so a reader
-knows the detail exists. A matrix has no per column tooltip bucket, so this header tooltip is
+the visual shows, and the full calculation rules behind an information icon in the header. The
+subtitle does not point at the icon or tell the reader how to read the chart, see the
+`powerbi-report-design` skill. A matrix has no per column tooltip bucket, so this header tooltip is
 also where a per column legend goes when each column follows a different rule.
 
 ## Conditional formatting in JSON
@@ -157,7 +157,7 @@ also where a per column legend goes when each column follows a different rule.
         "max": { "color": { "Literal": { "Value": "'#D55E00'" } }, "value": { "Literal": { "Value": "1.2D" } } },
         "nullColoringStrategy": { "strategy": { "Literal": { "Value": "'asZero'" } } }
       } }
-    } } } } },
+    } } } } } },
     "selector": { "data": [ { "dataViewWildcard": { "matchingOption": 1 } } ] }
   }
 ]
@@ -201,42 +201,6 @@ column to paint. Either one alone silently does nothing.
 
 Write the two measures so their thresholds match. The font flips to white at the same band where
 the background crosses into dark. Change one, change the other.
-
-## Reference line
-
-```json
-"y1AxisReferenceLine": [{
-  "properties": {
-    "show":        { "expr": { "Literal": { "Value": "true" } } },
-    "displayName": { "expr": { "Literal": { "Value": "'100%'" } } },
-    "value":       { "expr": { "Literal": { "Value": "1D" } } },
-    "lineColor":   { "solid": { "color": { "expr": { "ThemeDataColor": { "ColorId": 1, "Percent": 0.5 } } } } },
-    "width":       { "expr": { "Literal": { "Value": "2D" } } },
-    "style":       { "expr": { "Literal": { "Value": "'dashed'" } } }
-  },
-  "selector": { "id": "af9ee49dad017971defe" }
-}]
-```
-
-Lives in `visual.objects`. Each line needs its own 20 character hex `selector.id` that you
-generate. Reusing one across visuals is fine, reusing it within one visual collapses two lines
-into one.
-
-## Table and matrix specifics
-
-```json
-"visualContainerObjects": {
-  "stylePreset": [{ "properties": { "name": { "expr": { "Literal": { "Value": "'Condensed'" } } } } }]
-}
-```
-
-The Style dropdown in Desktop is a preset name string. `'Condensed'` for a dense detail grid and
-`'AlternatingRowsNew'` for a short reference table are the two that earn their place.
-
-Column widths bind by selector, and the shape differs by visual. A table uses `metadata` with the
-`queryRef`. A matrix column generated from a data value uses the `scopeId` comparison form, and
-the grand total uses the `total` form. Write a width against the wrong form and it parses and
-never binds. Drag once in Desktop, save, then read back what it wrote.
 
 ## Watch for formatting that renders nothing
 

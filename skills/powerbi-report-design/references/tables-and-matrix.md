@@ -59,6 +59,23 @@ rather than impossibly wide.
   way to set precise widths in code is to drag them once in Desktop, save the PBIP, then read the
   written values back out. See the `powerbi-pbir-builder` skill.
 
+Grow to fit, or fixed widths, decided per visual:
+
+- Grow to fit only where the columns change. A matrix whose column headers are field values that
+  come and go with a slicer pick (service types, cost buckets), or a table whose columns a field
+  parameter swaps. Not a flat table with a fixed field list.
+- Fixed tables get a fixed width for every column, sized to fill the visual with no horizontal
+  scroll. Leave about 40 px for padding and the scrollbar gutter. In a 476 px table the columns
+  may total about 436 px. At 452 px it scrolled. Put the slack on the text column, and turn word
+  wrap on for headers and values.
+- Set every column. A wide detail table with only a couple of widths set still scrolled.
+
+What happened when grow to fit went onto every table and matrix of one report at once, with the
+saved widths dropped: small fixed tables stopped wrapping and grew a horizontal scrollbar, a
+matrix that fit before started scrolling, and a wide matrix lost its wrapped headers so fewer
+columns showed. Tables that already filled their width looked the same. Everything except the
+changing column visuals went back to fixed widths.
+
 ## Native sparklines
 
 A sparkline is a tiny line or column chart inside a table or matrix cell, showing a trend per

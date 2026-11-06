@@ -4,7 +4,7 @@ A `visual.json` describes one visual: its type, its data bindings (query roles),
 formatting. This file covers the type catalog and how to bind fields to it.
 
 Complete copyable files live in `templates-grids.md` (table and matrix) and
-`templates-single-value.md` (legacy card, KPI, gauge, textbox). The new card visual and measure
+`templates-single-value.md` (legacy card, KPI, gauge, textbox, image). The new card visual and measure
 bound titles are in `cards-and-dynamic-text.md`. Formatting and the selector grammar are in
 `formatting-and-selectors.md`. Filters and slicer sync are in `filters-and-sync.md`.
 
@@ -29,12 +29,15 @@ a data problem. For a row marked no, build the visual in Desktop once, save, and
 | Table | `tableEx` | `Values`, one projection per column, in the column order you want | yes |
 | Matrix | `pivotTable` | `Rows`, `Columns`, `Values` | yes |
 | Slicer | `slicer` | `Values` | yes |
+| List slicer (preview) | `listSlicer` | `Values`, the classic slicer's query carried over unchanged | yes |
+| Button slicer | `advancedSlicerVisual` | `Values` | yes |
+| Input slicer | `textSlicer` | `Values` assumed, not seen in a saved file | no |
 | Donut or pie | `donutChart`, `pieChart` | `Category`, `Y` | yes |
 | Gauge | `gauge` | `Y` (the value), `TargetValue` | yes |
 | KPI | `kpi` | `Indicator`, `TrendLine` | yes |
 | Image | `image` | none, the source is a formatting object, see below | yes |
 | Scatter | `scatterChart` | `Category`, `X`, `Y`, `Size` (optional) | no |
-| Waterfall | `waterfallChart` | `Category`, `Y`, `Breakdown` (optional) | no |
+| Waterfall | `waterfallChart` | `Category`, `Y`, `Breakdown` (optional) | yes for `Category` and `Y`. `Breakdown` not yet seen in a saved file |
 
 Two roles are easy to miss on a cartesian visual:
 
@@ -88,6 +91,11 @@ A field parameter table in the model can drive a role, so one slicer re-cuts the
 `index` is where in the role the swappable field sits and `length` is how many slots it
 occupies. The `projections` entry is the currently selected field, so it still has to be a real
 field. For the field parameter table's TMDL, see the `powerbi-dax` skill.
+
+The same block works on a table. Put the projection of the parameter's first field in the
+`tableEx` `Values` role, add the `fieldParameters` entry with `index` 0 and `length` 1 next to
+it, and the slicer swaps which column the table shows. A table whose columns change this way
+needs `growToFit` column sizing, see `formatting-charts-and-tables.md`.
 
 ## Worked example: a trend chart
 
@@ -209,28 +217,6 @@ Slicer specifics worth knowing:
 - `selfFilterEnabled` turns on the search box. Add it once a dimension passes roughly 30 members.
 - Turn the container `title` off and set the slicer's own `header.text` instead. The label then
   sits inside the control, which is how a 56 pixel tall slicer still says what it filters.
-
-## The image visual
-
-Not a data visual. The source is a formatting object pointing at a registered resource.
-
-```json
-"visual": {
-  "visualType": "image",
-  "objects": { "image": [{ "properties": { "sourceFile": { "image": {
-    "name": { "expr": { "Literal": { "Value": "'logo.png'" } } },
-    "url":  { "expr": { "ResourcePackageItem": {
-                "PackageName": "RegisteredResources", "PackageType": 1,
-                "ItemName": "logo12345.png" } } },
-    "scaling": { "expr": { "Literal": { "Value": "'Normal'" } } }
-  } } } }] }
-}
-```
-
-The `ItemName` must match an entry in `definition/report.json` under `resourcePackages`, in the
-`RegisteredResources` package, with `"type": "Image"`. Desktop writes that entry when you insert
-the image, so insert it once in Desktop rather than hand registering the asset. Turn the
-container border off so a logo has no box around it.
 
 ## Matrix, table, and the analytical visuals
 

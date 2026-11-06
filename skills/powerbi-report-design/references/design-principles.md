@@ -96,11 +96,17 @@ the rules above, not against them.
   headers) never uses an en dash or an em dash, use a hyphen, and never uses a semicolon. Canvas
   text is read at a glance, and punctuation that needs parsing costs more there than it does in
   a document.
-- Plain-English explanations, in two tiers. Every non-obvious visual carries a one line subtitle
-  saying what it shows, in plain words. Where the arithmetic itself needs explaining, the full
-  rules go behind the information icon in the visual header, and the subtitle ends by pointing at
-  it, for example "Rules under the header help icon". The subtitle stays short because the long
-  version has somewhere to live. See the `powerbi-pbir-builder` skill for both properties.
+- Plain titles and subtitles. A title names the chart in neutral words, with no analysis in it
+  ("Fixed and new by team", not "Team A lags on fixes"). The subtitle says what the chart is, in one
+  line. It does not explain how to read it ("hatching is the gap to 100%") or give instructions
+  ("hover for names", "rules under the header help icon"). Where the arithmetic itself needs
+  explaining, the rules go behind the information icon in the visual header. An executive page
+  goes further and drops explanation lines altogether. See the `powerbi-pbir-builder` skill for
+  both properties.
+- Say the period plainly. "YTD", not "this year". A month axis never skips a month, and a year
+  shows every month that has passed. The month table that does this is in `powerbi-dax`.
+- Count people, not raw rows, when groups differ in size. A raw count of overdue items by department
+  makes the biggest department look worst. Show people, and show the group size.
 - KPI card style, when there is a KPI. Compact gray fill (the secondaryBackground slot) with a
   dark border, a touch smaller than the full slot, and always a comparison versus the prior or
   latest month with an arrow, a sign, and a semantic color. Color encodes good versus bad, never
