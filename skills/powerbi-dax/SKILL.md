@@ -101,7 +101,10 @@ DAX Studio, the pbip and TMDL format, and the calculated table limitation use
   columns rather than a whole table, value filter behavior, collapsing duplicate rows before
   summing, and a cumulative total over a non date column.
 - `references/time-intelligence.md`: fair prior period comparisons when the latest period is partial,
-  and the status of calendar based time intelligence.
+  the latest complete month picker, reading snapshots by month, a month axis with no gaps, and the
+  preview calendar functions.
+- `references/on-time-and-snapshot-rates.md`: an on time rate with items still in their window, and a
+  fix rate between snapshots with its usual level.
 - `references/functions-and-calculation-groups.md`: DAX user defined functions, calculation groups on
   Pro, their traps for text measures, and how to choose between them.
 - `references/window-and-visual-calculations.md`: RANK and the window functions, visual calculations,

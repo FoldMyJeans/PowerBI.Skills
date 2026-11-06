@@ -90,3 +90,10 @@ visuals error.
 
 Sources: https://learn.microsoft.com/en-us/power-bi/transform-model/calculation-groups and
 https://learn.microsoft.com/en-us/analysis-services/tabular-models/calculation-groups
+
+## A dynamic format string for K units did not scale
+
+The goal was K units only from 1,000 up on a chart. The format `#,0,"K"` printed 9,221K on a data label
+instead of 9.2K. A one line `formatStringDefinition` in TMDL stopped the project opening, and the fenced
+block form loaded but still did not scale. The fix was fixed display units for the whole chart,
+`labelDisplayUnits` 1000 with one decimal, in `powerbi-chart-recipes`.

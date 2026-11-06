@@ -31,6 +31,10 @@ the table, like any other column.
   example is a value pulled across a relationship with RELATED, or a rank within the row's
   group.
 
+A sort column cannot read the column it sorts. A calculated `State Order` computed from `State`, set
+as the `sortByColumn` of `State`, failed the refresh with "A circular dependency was detected". Repeat
+the logic in the order column from the source columns, or build the order upstream in M.
+
 Rule of thumb: if you can compute it in M, do it in M. If you can express it as a measure, do
 that instead. A calculated column is the last resort of the three.
 

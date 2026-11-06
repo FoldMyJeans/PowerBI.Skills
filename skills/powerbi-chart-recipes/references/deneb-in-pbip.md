@@ -18,6 +18,10 @@ bound as `Name=Funnel[Stage]` reached the spec as `Name`, so a spec never has to
 model. The helper takes the visual schema from a file Desktop already wrote, so the report needs at
 least one visual.
 
+To replace an existing visual with a Deneb one, copy the old visual's `z`, `tabOrder` and
+`filterConfig` into the new `visual.json`, then set the title and subtitle in `visualContainerObjects`.
+The helper does not carry those over.
+
 ## What it writes
 
 Two things, both matching report files Desktop saved with Deneb in them.
@@ -97,6 +101,60 @@ to highlight is a Vega-Lite selection inside the visual and does not filter anyt
 
 Vega returns `rgb(...)` from a colour scale, so comparing it to a hex string is always false. Test the
 value instead. That mistake printed dark text on the darkest room of the floor plan.
+
+## Traps with no error message
+
+These drew something, just the wrong thing.
+
+- **A tooltip key called `title`** shows in the Power BI tooltip as a row literally named "title". Use a
+  real label such as `Name`.
+- **Hover state sticks.** Anything set in `encode.hover` must also be set in `encode.update`, or it
+  stays after the pointer leaves. A waffle kept black outlines on every square that had been hovered:
+
+  ```json
+  "update": {"stroke": {"value": null}, "strokeWidth": {"value": 0}},
+  "hover": {"stroke": {"value": "#242424"}, "strokeWidth": {"value": 1.5}}
+  ```
+
+- **Rows where every measure is blank never arrive.** Power BI drops them before Deneb sees the data. A
+  waffle of one square per person lost everyone with nothing overdue. Bind a measure that is never
+  blank, such as a record count, so every row comes through.
+- **The current month draws as 0%.** A month axis table includes the month in progress with a blank
+  value. Filter it out first with `{"type": "filter", "expr": "datum.Pct != null"}`, which a native chart
+  does by itself.
+- **Scrollbars from padding.** `"autosize": {"type": "none"}` with `"padding": 4` and the width from
+  `denebContainer` overflowed by the padding. Use `"padding": 0` and leave a margin in the layout math.
+- **Line breaks in a text measure.** A tooltip measure joined with `UNICHAR ( 10 )` shows on one line.
+  Split it in the spec with `split(datum.People, '\n')` and put each part under its own tooltip key.
+- **A zero bar cannot be hovered.** A column at 0 has no height. Add an invisible full height rect per
+  column, `fillOpacity` 0.001, that carries the tooltip.
+
+## Hatching a gap
+
+Vega has no pattern fill. A group per bar that clips diagonal rules from a `sequence` reads as hatching
+and stays light. The data table:
+
+```json
+{"name": "hatch", "transform": [{"type": "sequence", "start": 0, "stop": 220}]}
+```
+
+The mark, one group per row of a `gaps` table that holds the gap from the bar to 100%:
+
+```json
+{"type": "group", "from": {"data": "gaps"},
+ "encode": {"update": {
+   "x": {"scale": "x", "field": "ord"}, "width": {"scale": "x", "band": 1},
+   "y": {"scale": "y", "value": 1}, "y2": {"scale": "y", "field": "pct"},
+   "fill": {"value": "#D13438"}, "fillOpacity": {"value": 0.05}, "clip": {"value": true}}},
+ "marks": [{"type": "rule", "from": {"data": "hatch"},
+   "encode": {"update": {
+     "x": {"signal": "datum.data * 6 - 400"}, "y": {"value": 400},
+     "x2": {"signal": "datum.data * 6"}, "y2": {"value": 0},
+     "stroke": {"value": "#D13438"}, "strokeOpacity": {"value": 0.25}}}}]}
+```
+
+Inside the group the rules are in the group's own coordinates, so the 400 only has to exceed the
+tallest bar. The `stop` sets how far the lines reach across the widest bar.
 
 ## Sources
 

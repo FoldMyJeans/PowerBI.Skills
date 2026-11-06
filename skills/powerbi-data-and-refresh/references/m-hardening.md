@@ -102,54 +102,8 @@ Belt and braces after the typed transforms. It catches errors that slipped past 
 
 ## Parsing the values an API actually sends
 
-### A duration written as words
-
-```m
-DurationToHours = (t as any) as nullable number =>
-  let
-    Txt    = if t = null then null else Text.Lower(Text.Trim(Text.From(t))),
-    Tokens = if Txt = null or Txt = "" then {} else List.Select(Text.Split(Txt, " "), each _ <> ""),
-    Acc = List.Accumulate(
-      {0 .. List.Count(Tokens) - 2},
-      [d = 0, h = 0, m = 0, s = 0],
-      (st, i) =>
-        let
-          n = try Number.FromText(Tokens{i}) otherwise null,
-          u = Tokens{i + 1}
-        in
-          if n = null then st
-          else if Text.StartsWith(u, "day")    then [d = st[d] + n, h = st[h], m = st[m], s = st[s]]
-          else if Text.StartsWith(u, "hour")   then [d = st[d], h = st[h] + n, m = st[m], s = st[s]]
-          else if Text.StartsWith(u, "minute") then [d = st[d], h = st[h], m = st[m] + n, s = st[s]]
-          else if Text.StartsWith(u, "second") then [d = st[d], h = st[h], m = st[m], s = st[s] + n]
-          else st
-    )
-  in
-    if Txt = null then null
-    else Number.Round(Acc[d] * 24 + Acc[h] + Acc[m] / 60 + Acc[s] / 3600, 5),
-```
-
-Handles "2 days 3 hours 15 minutes" in any order and with any subset of units. The tempting
-alternative, a chain of `Text.BeforeDelimiter` calls, assumes the units arrive in a fixed order
-and silently returns the wrong number when they do not. Use the accumulator.
-
-### A choice field pulled as a display value
-
-```m
-{"Priority", each try Number.FromText(Text.Start(Text.Trim(Text.From(_)), 1)) otherwise null, Int64.Type}
-```
-
-With display values on, a ServiceNow choice comes back as `"1 - Critical"` rather than `1`.
-
-### A datetime from anywhere
-
-```m
-{"Start Date", each try DateTime.From(Text.Replace(Text.From(_), "T", " ")) otherwise null, type datetime}
-```
-
-`Text.From` first so a non text input survives, the `T` replacement covers both ISO 8601 and
-the space separated form, and `try ... otherwise null` keeps one bad value from erroring the
-whole column.
+Durations written as words, choice fields pulled as display values, dates sent as ISO text, and
+how to prove a parse ever worked live in `parsing-api-values.md`.
 
 ## Fail loudly where a silent wrong answer would be worse
 

@@ -1,6 +1,6 @@
-# Complete templates: legacy card, KPI, gauge, textbox
+# Complete templates: legacy card, KPI, gauge, textbox, image
 
-Four visuals that show one number or one block of text. The new card visual, `cardVisual`, is a
+Visuals that show one number, one block of text, or one picture. The new card visual, `cardVisual`, is a
 different shape and lives in `cards-and-dynamic-text.md`.
 
 Replace `<Measure>` and `<Title>`, give `name` a fresh 20 character hex string, and detect the
@@ -205,3 +205,35 @@ It is the one visual whose formatting does not follow the house grammar.
 A textbox holding a number that should update with the filters is a bug waiting to happen.
 Static text only. For a heading that reacts to a slicer, use a card with a measure, which is in
 `cards-and-dynamic-text.md`.
+
+## Image, `image`
+
+Not a data visual. The source is a formatting object pointing at a registered resource.
+
+```json
+"visual": {
+  "visualType": "image",
+  "objects": { "image": [{ "properties": { "sourceFile": { "image": {
+    "name": { "expr": { "Literal": { "Value": "'logo.png'" } } },
+    "url":  { "expr": { "ResourcePackageItem": {
+                "PackageName": "RegisteredResources", "PackageType": 1,
+                "ItemName": "logo12345.png" } } },
+    "scaling": { "expr": { "Literal": { "Value": "'Normal'" } } }
+  } } } }] }
+}
+```
+
+The `ItemName` must match an entry in `definition/report.json` under `resourcePackages`, in the
+`RegisteredResources` package, with `"type": "Image"`. Desktop writes that entry when you insert
+the image, so insert it once in Desktop rather than hand registering the asset. Turn the
+container border off so a logo has no box around it.
+
+A page background picture uses the same registered resource, set on the page's `background`
+with `scaling` `'Fill'`. A 1920 x 1080 JPG at quality 90, blended toward the page colour
+before upload, was 56 KB.
+
+For an image driven by a measure (an SVG from DAX), `image.sourceType` is `'imageUrl'` and
+`sourceUrl` is a `Measure` expression, with `imageScalingType` `'Fit'`. Set the container
+`padding` to 0 on all four sides and turn `background`, `border` and `title` off. With the
+default padding the picture scaled down and sat off centre. Frames that end just above the page
+edge left a faint 1 px line over a background picture, so run them to the page bottom.

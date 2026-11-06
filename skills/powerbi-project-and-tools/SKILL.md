@@ -74,6 +74,8 @@ republish from Power BI Desktop. See `references/licensing-cheatsheet.md`.
 - Deleting `.pbi\cache.abf` is also the safe move after any structural edit, adding or dropping
   a column or changing a partition source. Desktop then builds fresh from the TMDL instead of
   morphing stale cached data. The cost is one full refresh on the next open.
+- Dropping a table means removing its name from every file it appears in, not only its `.tmdl`.
+  See `references/removing-a-table-by-hand.md`.
 - Keep the pbip repo out of a OneDrive or SharePoint synced folder. OneDrive plus git in one
   folder can corrupt the repo, and Desktop cannot save a pbip cleanly into a synced folder.
 - Pick the tool for the job. Bulk measure edits and the Best Practice Analyzer go to Tabular
@@ -102,6 +104,10 @@ republish from Power BI Desktop. See `references/licensing-cheatsheet.md`.
 - `references/agent-verification.md`: the completion loop for an agent's edit, source checks,
   conformance validation, reload and screenshot, review, and numbers asserted with DAX, plus when
   Desktop can stay open, the fix budget, and the fake data fixture.
+- `references/removing-a-table-by-hand.md`: every file a table name lives in, and turning auto
+  date/time off in a model that already has it.
+- `references/offscreen-render.md`: rendering pages, refreshing over TMSL and saving with no window on
+  the person's monitors, plus the UI Automation steps for opening a slicer in a picture.
 - `references/licensing-cheatsheet.md`: a compact Pro versus Premium versus Fabric table.
 
 ## Related

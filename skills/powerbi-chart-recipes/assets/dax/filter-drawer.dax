@@ -5,11 +5,11 @@ VAR Svg =
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9' preserveAspectRatio='none'>"
         & "<rect width='16' height='9' fill='#000000' fill-opacity='0.45'/></svg>"
 RETURN
-    "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )
+    "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( Svg, "%", "%25" ), "#", "%23" ), "'", """" )
 
 Drawer Panel SVG =
 VAR Svg =
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 68' preserveAspectRatio='none'>"
         & "<rect width='36' height='68' fill='#FFFFFF'/></svg>"
 RETURN
-    "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( Svg, "#", "%23" ), "'", """" )
+    "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( Svg, "%", "%25" ), "#", "%23" ), "'", """" )

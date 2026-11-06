@@ -1,17 +1,17 @@
 ---
 name: powerbi-chart-recipes
 description: >-
-  Build unusual Power BI charts from ready recipes on Pro: beeswarm, calendar heatmap, waffle grid,
-  funnel Sankey, bump chart, butterfly or tornado chart, variance chart, KPI table with bullets and
-  sparklines, animated KPI card, floor plan heat map, filter drawer, ridgeline, 24 hour clock or
-  radial heatmap, and wall screen dark mode. Ships Deneb specs, DAX SVG measures, a helper that writes
-  a Deneb visual into a PBIP, and a fake data test report. Use whenever the user wants one of these
-  charts, asks for Deneb or Vega in a report, wants a chart Power BI does not have, a table with
-  inline charts, a slide out filter panel, a dark mode switch, or asks what a report could show.
-  Trigger on "Deneb", "Vega-Lite", "beeswarm", "calendar heatmap", "waffle", "funnel", "bump chart",
-  "butterfly chart", "opened vs closed", "variance chart", "bullet chart", "split
-  sparkline", "KPI card", "floor plan", "filter drawer", "ridgeline", "radial heatmap", "dark mode".
-  Assumes Power BI Pro only, no Fabric or Premium.
+  Build unusual Power BI charts from ready recipes on Pro: beeswarm, calendar heatmap, waffle,
+  funnel Sankey, bump, butterfly or tornado, variance chart, KPI table with bullets and sparklines,
+  animated KPI card, floor plan, filter drawer, ridgeline, 24 hour clock, wall screen dark mode, SVG
+  gauges, a KPI block with change pill, a waterfall bridge, and target tick marks. Ships Deneb specs,
+  DAX SVG measures, a helper that writes a Deneb visual into a PBIP, and a fake data test report. Use
+  whenever the user wants one of these charts, asks for Deneb or Vega, wants a chart Power BI does not
+  have, a table with inline charts, a dark mode switch, or asks what a report could
+  show. Trigger on "Deneb", "Vega-Lite", "beeswarm", "calendar heatmap", "waffle", "funnel",
+  "bump chart", "butterfly chart", "variance chart", "bullet chart", "sparkline", "KPI card",
+  "gauge", "waterfall", "target marker", "floor plan", "filter drawer", "ridgeline", "radial
+  heatmap", "dark mode". Assumes Power BI Pro only, no Fabric or Premium.
 ---
 
 # Power BI chart recipes
@@ -38,6 +38,10 @@ owner for that report.
 | Ridgeline | When does each source peak? Shape, not size. | Deneb | `assets/deneb/ridgeline.vl.json` |
 | 24 hour clock | Which hours and days run hot? | Deneb | `assets/deneb/alert-clock.vega.json` |
 | Wall screen dark mode | One switch for wall screen and desk | Native plus DAX | `assets/dax/theme-colours.dax` |
+| Gauges | How does each area score against its target? | DAX SVG | `assets/dax/gauge.dax` |
+| KPI block | What is the number, and did it get better? | DAX SVG | `assets/dax/kpi-block.dax` |
+| Waterfall bridge | How did we get from the last total to this one? | Native | `recipes-native-and-svg.md` |
+| Target ticks | Which categories reach their own target? | Native combo | `recipes-native-and-svg.md` |
 
 `assets/gallery` holds a screenshot from Desktop of each one on fake data. Show the owner that before
 building. `assets/fixtures` holds the fake rows behind each spec, which is also the shape of data the
@@ -83,12 +87,15 @@ needs the tenant to allow AppSource visuals. See `powerbi-project-and-tools` for
 
 ## References in this skill
 
-- `references/deneb-in-pbip.md`: writing a Deneb visual into a report, sizing, field names and the
-  errors these specs hit.
+- `references/deneb-in-pbip.md`: writing a Deneb visual into a report, sizing, field names, the
+  errors these specs hit, the traps with no error, and hatching.
 - `references/recipes-deneb.md`: fields, settings and limits for each Deneb chart.
-- `references/recipes-native-and-svg.md`: the KPI table, card, native butterfly, filter drawer and
-  dark mode, with the JSON each one needs.
-- `references/test-on-fake-data.md`: the fake data report, what the test covered, and what it did not.
+- `references/recipes-native-and-svg.md`: the KPI table, card, native butterfly, target ticks, labels
+  inside bars, stacked totals, waterfall bridge, filter drawer and dark mode, with the JSON each needs.
+- `references/recipes-svg-gauge-and-kpi.md`: the gauges and KPI block for an executive page, and how
+  to bind a picture measure to an image visual.
+- `references/test-on-fake-data.md`: the fake data report, using it as a test rig, what the test
+  covered, and what it did not.
 
 ## Scripts
 

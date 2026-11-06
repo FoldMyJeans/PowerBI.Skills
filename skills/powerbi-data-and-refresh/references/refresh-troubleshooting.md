@@ -109,7 +109,10 @@ If a model refreshes on one machine and fails on another, compare this block fir
 
 - A refresh is capped at 2 hours per attempt on Pro. The cap covers all the work in the attempt,
   and it applies to each attempt separately, not to the total across attempts.
-- 8 scheduled refreshes per day, at least 30 minutes apart. API triggered refreshes count.
+- 8 scheduled refreshes per day, at least 30 minutes apart. API triggered refreshes count, manual
+  refreshes do not. A schedule with 13 half hourly slots does not save. The save fails with a 400
+  from `UpdateRefreshSchedule`, which usually means more than 8 slots are still set, or the settings
+  page is stale. Reload the page, keep 8 or fewer slots, then save.
 - 1 GB model size. A model near the cap is slow to refresh and may fail.
 - 10 GB of uncompressed data processed during a refresh on shared capacity. If refresh fails on
   this, the fix is to import less.
