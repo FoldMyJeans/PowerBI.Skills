@@ -1,17 +1,13 @@
 # Formatting a visual, and the selector grammar
 
-How formatting is written into a `visual.json`, and how a formatting entry says which part of
-the visual it applies to. Getting the selector wrong is the most common reason a formatting
-change appears to do nothing at all, with no error.
+A wrong selector is the most common reason a formatting change does nothing, with no error.
 
 ## Two places formatting lives
 
-- `visual.objects` holds formatting that belongs to the visual TYPE. Axes, legend, data points,
-  matrix values, slicer mode.
-- `visual.visualContainerObjects` holds formatting that belongs to the CONTAINER around any
-  visual. Title, subtitle, border, padding, shadow, the header tooltip.
-
-The container surface is where a report's finished look comes from.
+- `visual.objects`: formatting of the visual TYPE. Axes, legend, data points, matrix values,
+  slicer mode.
+- `visual.visualContainerObjects`: formatting of the CONTAINER around any visual. Title,
+  subtitle, border, padding, shadow, header tooltip.
 
 ## Prerequisite: the report level switch
 
@@ -19,41 +15,38 @@ The container surface is where a report's finished look comes from.
 "settings": { "useStylableVisualContainerHeader": true }
 ```
 
-This lives in `definition/report.json`. Without it, the whole subtitle, divider, spacing, drop
-shadow, and header tooltip system silently does nothing. No error, no warning, just no effect.
-Check it before you write any container styling, and if it is missing, set it in Desktop by
-turning on the modern visual header rather than hand editing `report.json`.
+In `definition/report.json`. Without it, subtitle, divider, spacing, drop shadow and header
+tooltip silently do nothing. Check it before writing container styling, a new Fluent 2 report may already have it. If it is
+missing, turn
+on the modern visual header in Desktop rather than hand editing `report.json`.
 
 ## The selector grammar, five forms
 
-A formatting entry is an array. Each element has `properties` and, optionally, a `selector`. An
-element with no selector is the default for the whole visual. Add a selector to target
-something narrower.
+A formatting entry is an array of elements, each with `properties` and an optional `selector`.
+No selector means the whole visual.
 
 ```json
 "selector": { "id": "default" }
 ```
-Used by the card visual's value, label, and layout blocks. The card ignores an entry with no
-selector, so `default` is required there rather than optional.
+The card visual's value, label and layout blocks. The card ignores an entry with no selector, so
+`default` is required there.
 
 ```json
 "selector": { "id": "Row" }      // and { "id": "Column" }
 ```
-Matrix subtotals only. The row and column subtotal levels are formatted separately, so a matrix
-that styles both needs three entries: one bare entry carrying the on and off switches, then one
-per axis.
+Matrix subtotals only. Styling both axes takes three entries: one bare entry with the on and off
+switches, then one per axis.
 
 ```json
 "selector": { "metadata": "_Measures.Task Updates % of Grand Total" }
 ```
-Targets one measure or column by its `queryRef`, spelled exactly as the projection spells it.
-This is how a column width or a per measure font size binds.
+One measure or column by its `queryRef`, spelled exactly as the projection spells it. Column
+widths and per measure font sizes bind this way.
 
 ```json
 "selector": { "data": [ { "dataViewWildcard": { "matchingOption": 1 } } ] }
 ```
-Targets every data point. A gradient on chart data points needs this, otherwise it colors
-nothing.
+Every data point. A gradient on chart data points colours nothing without it.
 
 ```json
 "selector": { "data": [ { "scopeId": { "Comparison": {
@@ -61,11 +54,10 @@ nothing.
   "Left":  { "Column": { "Expression": { "SourceRef": { "Entity": "dim_activity" } }, "Property": "Activity" } },
   "Right": { "Literal": { "Value": "'Task'" } } } } } ] }
 ```
-Targets one category VALUE. This is how you label some series in a stacked chart and not
-others, and how a matrix stores a column width for a column that is generated from data rather
-than declared as a field.
+One category VALUE. Labels some series of a stacked chart and not others, and stores the width
+of a matrix column generated from data rather than declared as a field.
 
-A grand total column takes a shape of its own:
+A grand total column:
 
 ```json
 "selector": { "data": [ { "total": [ { "Column": { "Expression": { "SourceRef": { "Entity": "dim_epic" } }, "Property": "Category" } } ] } ] }
@@ -80,23 +72,22 @@ with no `id`, both parse fine and render nothing.
 "fontColor": { "solid": { "color": { "expr": { "ThemeDataColor": { "ColorId": 1, "Percent": 0 } } } } }
 ```
 
-`ColorId` indexes the theme: `0` is `background`, `1` is `foreground`, and `2` through `9` are
-`dataColors[0]` through `dataColors[7]`. `Percent` is a tint when positive and a shade when
-negative, as a fraction, so `0.6` is 60 percent lighter and `-0.25` is 25 percent darker.
+- `ColorId`: `0` is `background`, `1` is `foreground`, `2` through `9` are `dataColors[0]`
+  through `dataColors[7]`.
+- `Percent`: a fraction, tint when positive, shade when negative. `0.6` is 60 percent lighter,
+  `-0.25` is 25 percent darker.
+- Use it wherever the colour has a meaning in the theme, so the visual survives a theme swap.
 
-Prefer this over a literal hex everywhere the color has a meaning in the theme, so the visual
-survives a theme swap.
-
-A pale banded subtotal row, for example, is the bad color at 60 percent lighter rather than a
-hand picked pink:
+A pale banded subtotal row as the bad colour 60 percent lighter, not a hand picked pink:
 
 ```json
 "backColor": { "solid": { "color": { "expr": { "ThemeDataColor": { "ColorId": 5, "Percent": 0.6 } } } } }
 ```
 
-## The container card, the block that makes a report look finished
+## The container card block
 
-Applied to every chart, table, and matrix in the source report.
+One finished look, used on every chart, table and matrix in the report it came from. Use it when
+the report has no container style of its own. When it has one, copy that instead.
 
 ```json
 "visualContainerObjects": {
@@ -120,13 +111,11 @@ Applied to every chart, table, and matrix in the source report.
 }
 ```
 
-Note what is NOT here. No font family, size, weight, or color. Put those in the theme's
-`visualStyles` once, and every visual inherits them. See the `powerbi-report-design` skill for
-the theme block that pairs with this.
-
-`padding` at `2D` on all four sides is what lets an 8 pixel gutter still look airy. The border
-radius plus the shadow replace the background shapes people normally draw to group visuals,
-which also keeps the tab order clean because there are no decorative objects to exclude.
+- No font family, size, weight or colour here. Those go in the theme's `visualStyles` once (the
+  theme block is in the `powerbi-report-design` skill).
+- `padding` `2D` on all sides lets an 8 pixel gutter still look airy.
+- Border radius plus shadow replace drawn background shapes, so there are no decorative objects
+  to keep out of the tab order.
 
 ## Explaining a visual in two tiers
 
@@ -135,11 +124,10 @@ which also keeps the tab order clean because there are no decorative objects to 
 "visualHeaderTooltip": [{ "properties": { "text": { "expr": { "Literal": { "Value": "'Utilization percent = hours logged divided by available hours. Available hours = (sprint work days minus vacation and sick days) x 7.'" } } } } }]
 ```
 
-Both sit in `visualContainerObjects`. The pattern that works: a one line subtitle saying what
-the visual shows, and the full calculation rules behind an information icon in the header. The
-subtitle does not point at the icon or tell the reader how to read the chart, see the
-`powerbi-report-design` skill. A matrix has no per column tooltip bucket, so this header tooltip is
-also where a per column legend goes when each column follows a different rule.
+Both in `visualContainerObjects`. A one line subtitle says what the visual shows, and the full
+calculation rules sit behind the header information icon (wording rules are in the
+`powerbi-report-design` skill). A matrix has no per column tooltip, so a per column legend goes
+here too.
 
 ## Conditional formatting in JSON
 
@@ -163,11 +151,11 @@ also where a per column legend goes when each column follows a different rule.
 ]
 ```
 
-Three things that are easy to miss. The first array element must exist as the default data point
-placeholder. The `dataViewWildcard` selector is required or the rule colors nothing.
-`nullColoringStrategy` of `asZero` stops one blank stretching the whole ramp.
+- The first array element must exist, as the default data point placeholder.
+- Without the `dataViewWildcard` selector the rule colours nothing.
+- `nullColoringStrategy` `asZero` stops one blank stretching the whole ramp.
 
-Swap the stops for a target band, where being under and being over are both bad:
+Target band stops, where under and over are both bad:
 
 ```json
 "min": { "color": { "Literal": { "Value": "'#D55E00'" } }, "value": { "Literal": { "Value": "0.5D" } } },
@@ -177,8 +165,7 @@ Swap the stops for a target band, where being under and being over are both bad:
 
 ### A contrast safe matrix heatmap
 
-Two measures, one for the fill and one for the text, so the number stays readable as the cell
-darkens.
+One measure for the fill, one for the text, so the number stays readable as the cell darkens.
 
 ```json
 "values": [
@@ -196,15 +183,12 @@ darkens.
 ]
 ```
 
-This selector needs BOTH parts. The wildcard says every row, the metadata says which measure
-column to paint. Either one alone silently does nothing.
+The selector needs BOTH parts: the wildcard for every row, the metadata for which measure column.
+Either alone silently does nothing. Keep the two measures' thresholds in step, so the font flips
+to white at the band where the fill turns dark.
 
-Write the two measures so their thresholds match. The font flips to white at the same band where
-the background crosses into dark. Change one, change the other.
+## Formatting that renders nothing
 
-## Watch for formatting that renders nothing
-
-Copy and paste leaves dead overrides behind. A hidden title still carrying a full font and
-background block (usually with the text of the visual it was copied from), subtotal styling on a
-matrix whose subtotals are off, and two properties that contradict each other are all common.
-See `pbir-structure-and-safety.md` for how to find and strip them safely.
+Copy and paste leaves dead overrides: a hidden title still carrying a full font and background
+block (often with the copied visual's text), subtotal styling on a matrix with subtotals off, and
+contradicting properties. How to strip them safely is in `pbir-structure-and-safety.md`.

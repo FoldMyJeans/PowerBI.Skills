@@ -1,11 +1,8 @@
 # Rendering and refreshing without the person's screen
 
-The Desktop Bridge in `agent-verification.md` is the supported way to reload and screenshot. When it is
-not available, or when the person is working in Desktop on the same machine, an agent can still render
-pages, refresh the local model and save, without a window ever appearing on their monitors. This file
-is that route. The fake data rule in `agent-verification.md` applies to every screenshot taken here.
-
-## Never take over the person's monitors
+When the Desktop Bridge in `agent-verification.md` is not available, or the person is working in
+Desktop on the same machine, this route renders pages, refreshes the local model and saves with no
+window on their monitors. The fake data rule in `agent-verification.md` applies to every screenshot.
 
 Never maximize Desktop and never bring it to the front. A render that grabs the screen for two minutes
 while someone types is the fastest way to lose permission to render at all.
@@ -39,9 +36,9 @@ Signs a shot is not trustworthy:
 
 - The window title is still "Untitled - Power BI Desktop". The model has not loaded. This happened when
   other Desktop instances were starting at the same time. Raise the wait, do not use the shot.
-- A blank window. Enumerate every visible top level window of the process and capture each one. That is
-  how a hidden "Potential security risk" dialog and a "Something went wrong" dialog were found behind a
-  blank render. The engine still answers DAX while a dialog is up, so measures can be dumped by query.
+- A blank window. Enumerate every visible top level window of the process and capture each one. A
+  hidden "Potential security risk" dialog and a "Something went wrong" dialog sat behind blank renders.
+  The engine still answers DAX while a dialog is up, so measures can be dumped by query.
 - The script exits with code 1. Often that is only the cleanup of locked temp files, with every shot
   saved. Check the output folder before treating it as a failure.
 
@@ -56,9 +53,9 @@ Signs a shot is not trustworthy:
   `SelectionItemPattern.Select()` selects the visual, not the item, so slicer sync cannot be click
   tested that way.
 
-Small misalignments do not show to the eye. A 5 px offset between two slicers on one row was found by
-scanning one pixel column per slicer in the render, converting to page units with the canvas scale, and
-comparing box top and bottom against each visual's `y`.
+Small misalignments do not show to the eye. To catch a 5 px offset between two slicers on one row, scan
+one pixel column per slicer in the render, convert to page units with the canvas scale, and compare box
+top and bottom against each visual's `y`.
 
 ## Refresh and save with no clicks
 
@@ -84,12 +81,29 @@ tables and columns without calling any source, which is the cheap way to test a 
 
 The same connection runs DAX, so the numbers check in `agent-verification.md` can run here too.
 
+Check what a refresh did by each partition's `RefreshedTime`, not by the dialog. Desktop has
+refreshed only the table whose M changed. The detail is in `refresh-troubleshooting.md` in the
+`powerbi-data-and-refresh` skill.
+
+An ADOMD client DLL ships with the on-premises data gateway
+(`C:\Program Files\On-premises data gateway\Microsoft.AnalysisServices.AdomdClient.dll`) if no other
+copy is installed.
+
+## Keep the person's own Desktop minimized
+
+A minimized Desktop still answers DAX over ADOMD and UI Automation, so there is no reason to restore
+it. Keep it minimized while it loads with `ShowWindow(h, 7)` in the same 250 ms loop. Invoke buttons by
+Name or AutomationId (`save`, "Refresh now"). To watch the refresh dialog, look for the pane whose name
+ends `FloatingDialog/KoBrowserDialog/KoBrowserDialog.htm - Web content`, not for table names, which the
+Data pane also shows.
+
 ## Closing the person's Desktop before an edit
 
-Close it with `CloseMainWindow`, not by killing the process, then wait up to 30 seconds. A process
-still open after that is almost always an unsaved changes prompt. Ask the person about it. Then compare
-the project with your backup by content before copying anything in, so nothing they changed since is
-overwritten.
+Close it with `CloseMainWindow`, not by killing the process, then wait up to 30 seconds. On a minimized
+window `CloseMainWindow` and `WindowPattern.Close` were sometimes ignored, and invoking the title bar
+"Close" button through UI Automation worked. A process still open after that is almost always an
+unsaved changes prompt. Ask the person to close it. Then compare the project with your backup by content
+before copying anything in, so nothing they changed since is overwritten.
 
 ## Small scripting traps
 

@@ -1,9 +1,12 @@
 # Native and SVG recipes
 
-These need no third-party visual. Measures are in `assets/dax`. For the mechanics of SVG in a measure
-and its escaping, see `svg-from-dax.md` in `powerbi-dax`.
+No third-party visual needed. Measures are in `assets/dax`. `svg-from-dax.md` in `powerbi-dax` owns
+the mechanics of SVG in a measure and its escaping.
 
 ## KPI table with bullets and split sparklines
+
+Native option: table and matrix sparklines draw a plain trend with no DAX. Use the SVG pair when the
+row needs a bullet against target or a sparkline split by colour.
 
 Paste `bullet.dax` and `split-sparkline.dax`. Replace the placeholder measures and `'Date'[Month]`.
 Set Data Category to Image URL on both, then put them in a `tableEx` with the row label. Image size is
@@ -18,7 +21,7 @@ on the grid object:
 
 - The axis column must be numeric, because the sparkline subtracts it. Use a month index, not a name.
 - Turn off totals unless a total bullet means something. The table draws one by default.
-- SVG has no legend, so say what the tick and the colours mean in the title or tooltip.
+- SVG has no legend. Say what the tick and the colours mean in the title or tooltip.
 - Do not name a variable after a function. `VAR MinX` made the table show "Something's wrong with one or
   more fields" until it was renamed `LowX`, because `MINX` is a function.
 - In the bullet, set `Scale` and the bands to your KPI's range.
@@ -38,12 +41,13 @@ Paste `animated-kpi-card.dax`, set Data Category to Image URL, and bind it to an
 }}]}
 ```
 
-A one column `tableEx` also draws it, with a header and a scrollbar to hide, so prefer the image visual.
+A one column `tableEx` also draws it, but with a header and a scrollbar to hide.
 
-Each bar's real height is its base attribute, and the animation only runs from low to real without
-`fill='freeze'`. So a renderer that ignores animation shows correct bars. A design that sets height 0
-and animates up would draw empty bars there. Bars replay from the start on each redraw and cannot glide
-from their last state. For that, see `powerbi-custom-visuals`.
+- Each bar's real height is its base attribute, and the animation runs from low to real without
+  `fill='freeze'`. A renderer that ignores animation still shows correct bars. A design that sets
+  height 0 and animates up would draw empty bars there.
+- Bars replay from the start on each redraw and cannot glide from their last state. For that, see
+  `powerbi-custom-visuals`.
 
 ## Butterfly, native
 
@@ -74,9 +78,8 @@ Format string for Opened Left: #,0;#,0
 
 ## Target as tick marks on a combo chart
 
-Use this when the category axis has no order, for example members or companies. A target line that
-joins unordered categories has a slope that means nothing. On an ordered axis such as a trend, keep the
-dashed target line.
+For a category axis with no order, such as members or companies, where a target line's slope means
+nothing. On an ordered axis such as a trend, keep the dashed target line.
 
 Bars in `Y`, the target in `Y2` of `lineStackedColumnComboChart`. The marker properties go on the base
 `lineStyles` entry with no selector, and the series entry only turns the stroke off. A marker set on the
@@ -116,9 +119,9 @@ series entry alone did not draw.
   "bold": {"expr": {"Literal": {"Value": "true"}}}}}]
 ```
 
-A smaller `innerPadding` narrows the gap between categories and widens the bars. Fixed K units show
-145,191 as 145.2K, and 7 pt bold fits inside the bar. A format string that switches to K only above
-1,000 did not work in data labels. See dynamic format strings in `powerbi-dax`.
+A smaller `innerPadding` widens the bars. Fixed K units show 145,191 as 145.2K, and 7 pt bold fits
+inside the bar. A format string that switches to K only above 1,000 did not work in data labels. See
+dynamic format strings in `powerbi-dax`.
 
 ## Total at the end of a stacked bar
 
@@ -165,9 +168,13 @@ itself and labels it "Total". Colours are on the visual:
 ```
 
 Every rising bar takes the increase colour, the first one included, so the starting total reads as an
-increase. Here a fall is good, so the decrease colour is the green one.
+increase. Here a fall is good, so the decrease colour is green.
 
 ## Filter drawer
+
+Lighter native option: the list slicer's dropdown mode (preview, October 2026) keeps each slicer small
+on the page. `powerbi-pbir-builder` owns its template. Use the drawer when the slicers must leave the
+page entirely.
 
 The drawer is a page set to hidden, with a see-through button over the left to close it:
 
@@ -175,7 +182,8 @@ The drawer is a page set to hidden, with a see-through button over the left to c
 "visibility": "HiddenInViewMode"
 ```
 
-Layers from the bottom, on a page the same size as the report:
+Layers from the bottom, on a page the same size as the report. Scale the positions by 1.5 on a 1920 by
+1080 page.
 
 | Layer | Visual | Position on 1280 by 720 |
 | --- | --- | --- |
@@ -200,8 +208,8 @@ Open it with a button on each report page. Page navigation goes on the button's 
 - Draw the dim and panel as image measures. A `shape` visual written by hand ignored its fill and kept a
   thick grey outline. If you want a shape, add it in Desktop and read the JSON back.
 - A page cannot show another page, so the report is not visible behind the dim. If it must stay live,
-  use a bookmark that shows and hides a group on the same page instead. Capture bookmarks in Desktop and
-  read them back, because their state is not practical to hand write.
+  use a bookmark that shows and hides a group on the same page. Capture bookmarks in Desktop and read
+  them back, because their state is not practical to hand write.
 - Slicers reach other pages only through sync groups. See `filters-and-sync.md` in `powerbi-pbir-builder`.
 - In Desktop a button needs Ctrl and click.
 
@@ -225,7 +233,12 @@ Paste `theme-colours.dax`. Then bind colours to the measures:
 - The page's own background bound to `Colour Page` stayed white with a page filter set to Dark, so the
   backdrop is an image. It follows filters like any visual.
 - A `dataPoint.fill` with no selector was ignored on a line chart. It needs the `metadata` selector.
-- Every colour in every visual needs binding. That is the cost, so build this for a report family only if
-  a wall screen will really use it.
-- If the wall screen only ever shows dark, a copy of the report with a dark theme is far cheaper.
+  Since July 2026 a line chart with a Legend field also takes fx on series colours, which can read the
+  same colour measure.
+- Since October 2026 `plotArea.color` takes fx (with `colorTransparency`) on bar, column, line, area,
+  combo, ribbon, waterfall and scatter, so a chart's plot area can bind to the same measures.
+- Every colour in every visual needs binding. That is the cost, so build this only if a wall screen
+  will really use it.
+- If the wall screen only ever shows dark, a copy of the report on a dark theme is far cheaper. Desktop
+  has built in Dark and Soft dark themes since 2026.
 - Colour literals inside a Deneb spec or an SVG measure do not follow this unless they read the measures.

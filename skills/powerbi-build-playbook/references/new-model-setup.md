@@ -1,13 +1,12 @@
 # Creating the project and setting the day one defaults
 
-The manual Power BI Desktop steps that come before any skill can help. An agent cannot do these,
-they need a person with Desktop open. Hand them over as a checklist.
+Manual Power BI Desktop steps that need a person with Desktop open. Hand them over as a checklist.
 
 ## Check the project format, once per machine
 
-Microsoft lists PBIP and PBIR as generally available, so a current build should offer Power BI
-Project (.pbip) under File, Save as. If it does not, or you get no TMDL `definition/` folder (see
-below), look under File, Options and settings, Options, Preview features for:
+PBIP and PBIR are generally available (September 2026), so a current build offers Power BI Project
+(.pbip) under File, Save as. If it does not, or you get no TMDL `definition/` folder, look under
+File, Options and settings, Options, Preview features for:
 
 - Power BI Project (.pbip) save option
 - Store semantic model using TMDL format
@@ -22,33 +21,23 @@ File, Options and settings, Options, then Time intelligence. The setting appears
   every new file starts clean.
 - CURRENT FILE. Applies only to the file open right now.
 
-Both default to on. Do this before loading a single table.
+Both default to on. Do this before loading a single table. Left on, Power BI generates a hidden
+calculated date table for every date column in every import table, each with 6 calculated columns,
+and rebuilds all of them on every refresh. See the `powerbi-data-and-refresh` skill for the
+measured cost.
 
-Why it matters in one line: left on, Power BI generates a hidden calculated date table for every
-date column in every import table, each with 6 calculated columns, and rebuilds all of them on
-every refresh. See the `powerbi-data-and-refresh` skill for the measured cost.
-
-There is no tenant level enforcement. For a team, the realistic options are the per machine
-global setting, a `.pbit` template with it already off, or a Best Practice Analyzer rule as a
-review gate.
+There is no tenant level enforcement. For a team, the options are the per machine global setting, a
+`.pbit` template with it already off, or a Best Practice Analyzer rule as a review gate.
 
 ## Create the project
 
 1. Open Desktop, connect to the first data source, and load something. Desktop will not save a
    project with nothing in it.
 2. File, Save as, choose Power BI Project (.pbip).
-3. Save to a SHORT local path. Not OneDrive, not a SharePoint synced folder.
-
-On the path, two separate traps:
-
-- OneDrive plus git in one folder can corrupt the repo, and Desktop cannot save a pbip cleanly
-  into a synced folder.
-- Windows caps a path at 260 characters by default. PBIR nests
-  `<project>.Report\definition\pages\<20 hex>\visuals\<20 hex>\visual.json`, which adds roughly
-  70 characters before any file name. A project that saved fine can fail to OPEN after being
-  moved somewhere deeper, with Desktop reporting that it cannot read a `visual.json`.
-
-`C:\src\<project>` is a fine root. A path under a synced Documents folder is not.
+3. Save to a SHORT local path, not OneDrive and not a SharePoint synced folder. `C:\src\<project>`
+   is a fine root. OneDrive plus git can corrupt the repo, and PBIR's nesting can push a moved
+   project past the 260 character path limit so it fails to open. Both traps are in
+   `pbip-and-tmdl.md` in the `powerbi-project-and-tools` skill.
 
 ## What you should end up with
 
@@ -75,8 +64,8 @@ MyReport.Report/
 .gitignore                         Desktop writes this
 ```
 
-If you do not see a `definition/` folder full of `.tmdl` files, the project saved in another format.
-Check the TMDL option above and save again.
+No `definition/` folder full of `.tmdl` files means the project saved in another format. Check the
+TMDL option above and save again.
 
 ## Initialise git before the first real change
 
@@ -89,24 +78,23 @@ git commit -m "Initial pbip from Desktop"
 
 Desktop writes a `.gitignore` that excludes `.pbi\cache.abf` and `localSettings.json`. Check it
 exists before the first commit, because committing `cache.abf` puts the whole dataset in git
-history and it is painful to remove later.
-
-From here, work on a branch and open a pull request per change.
+history. From here, work on a branch and open a pull request per change.
 
 ## Set the report level switch for container styling
 
-Once the report exists, turn on the modern visual header so subtitles, dividers, shadows, and
-header tooltips work at all. In Desktop this is under File, Options and settings, Options, Report
-settings, and it writes `"useStylableVisualContainerHeader": true` into `report.json`.
+Turn on the modern visual header so subtitles, dividers, shadows, and header tooltips work at all.
+In Desktop this is under File, Options and settings, Options, Report settings, and it writes
+`"useStylableVisualContainerHeader": true` into `report.json`. Without it, every container styling
+property is accepted and silently ignored. See the `powerbi-pbir-builder` skill.
 
-Without it, every container styling property is accepted and silently ignored. See the
-`powerbi-pbir-builder` skill.
+Check `report.json` first. Whether a new report on the Fluent 2 base theme has it on by default is
+not known yet. If the setting is already true, there is nothing to do.
 
-## Apply the theme before building pages
+## Apply a theme before building pages
 
-View, Themes, Browse for themes, and pick the house theme JSON. Do this before adding visuals,
-so everything inherits rather than needing a restyle later. The theme lives in the
-`powerbi-report-design` skill.
+If the report has a look of its own, keep it. Otherwise View, Themes, Browse for themes, and pick
+the default theme JSON from the `powerbi-report-design` skill. Do this before adding visuals, so
+everything inherits rather than needing a restyle later.
 
 ## The handover checklist
 
@@ -117,6 +105,6 @@ Give the person this list and ask them to confirm each one.
 - [ ] Project saved as .pbip to a short local path, not OneDrive
 - [ ] `definition/` folder contains `.tmdl` files
 - [ ] `.gitignore` present, `git init` done, first commit made
-- [ ] Modern visual header on
-- [ ] House theme applied
+- [ ] Modern visual header on (checked in `report.json`)
+- [ ] Theme applied (the report's own, or the default)
 - [ ] Publish target workspace confirmed

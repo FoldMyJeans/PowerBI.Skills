@@ -1,19 +1,16 @@
 # Layout, z order, and schema versions
 
-Canvas sizes, the grid numbers a dense report uses, the z and tab order conventions
-Power BI Desktop itself writes, and how to avoid hardcoding a schema version.
-
-Where a range is given, pick one and hold it across every page. Consistency is what makes a
-report feel like one document rather than a folder of them.
+The grid numbers here are a default for a report with no layout of its own. When the report
+already has one, match it. Where a range is given, pick one value and hold it on every page.
 
 ## Canvas
 
-16 by 9, `1280 by 720` as the default. Use `1920 by 1080` only for a report meant to fill a
-large screen, and `320 by 240` for a tooltip page.
+16 by 9. Match the pages the report already has. Desktop makes new pages 1920 by 1080 on the
+Fluent 2 base theme (2026) and 1280 by 720 on older ones. The grid numbers below assume 1280.
+A tooltip page is `320 by 240`.
 
-Every `page.json` also carries a display option. `FitToPage` is the usual choice and it should
-be the same on every page. The schema requires four keys, `$schema`, `name`, `displayName` and
-`displayOption`, so a page file without `$schema` is invalid, not merely incomplete:
+`page.json` requires four keys, `$schema`, `name`, `displayName` and `displayOption`, so a page
+without `$schema` is invalid. Keep the same `displayOption` (usually `FitToPage`) on every page.
 
 ```json
 {
@@ -34,24 +31,19 @@ A page file may also carry `objects` (page level formatting, such as the canvas 
 `filterConfig` (see `filters-and-sync.md`), `visualInteractions`, `pageBinding` (marks the page
 as a tooltip or drillthrough target), `type`, `visibility` and `annotations`.
 
-## Margins and gutters: pick a density and commit
+## Margins and gutters: pick one density per report
 
-There are two workable systems. Both keep every value a multiple of 8.
+Both keep every value a multiple of 8. Do not mix them in one report.
 
-**Dense operational, 8 and 8.** Margin 8 on all four sides, gutter 8 between visuals. It fits
-far more on a page than it sounds like it should, because the container padding and border
-radius do the visual separation instead of white space. Full width content is `x: 8, width: 1264`. Full height content is
-`y: 8, height: 704`.
-
-**Airy executive, 24 and 16.** Margin 24, gutter 16. Better for a page with four or five
-visuals that someone reads from across a room.
-
-Do not mix them in one report.
+- **Dense operational, 8 and 8.** Margin 8 on all sides, gutter 8. Container padding and border
+  radius do the separation instead of white space. Full width is `x: 8, width: 1264`, full height
+  `y: 8, height: 704`.
+- **Airy executive, 24 and 16.** Margin 24, gutter 16. For four or five visuals read from across
+  a room.
 
 ### The vertical bands that follow from a header strip
 
-A row of slicers across the top, then content below it, produces three repeating layouts. The
-content starts exactly one gutter below the strip.
+Content starts one gutter below a slicer strip across the top.
 
 | Header strip height | Content `y` | Content `height` | Bottom edge |
 | --- | --- | --- | --- |
@@ -59,12 +51,12 @@ content starts exactly one gutter below the strip.
 | 64 | 80 | 632 | 712 |
 | 72 | 88 | 624 | 712 |
 
-A vertical stack of slicers down the left uses a 64 pixel pitch, that is 56 tall plus an 8 gap,
-so they sit at `y` 80, 144, 208, 272, 336.
+A vertical stack of slicers down the left uses a 64 pixel pitch (56 tall plus an 8 gap), so they
+sit at `y` 80, 144, 208, 272, 336.
 
 ### Content splits that recur
 
-On a 1280 canvas with an 8 margin, these are the divisions that land on the grid.
+On a 1280 canvas with an 8 margin:
 
 | Split | Values |
 | --- | --- |
@@ -81,16 +73,13 @@ work.
 
 ### A KPI row is optional
 
-A row of four cards at `y: 24, height: 120, width: 296`, spaced 312 apart, is a good summary
-page. It is not mandatory, and a report can be excellent without one. A report whose every page
-answers an operational question rather than reporting a headline number may carry no KPI row at
-all, and be better for it. Add the row when the page has a headline. Do not add it as
+Four cards at `y: 24, height: 120, width: 296`, spaced 312 apart. Add the row when the page has a
+headline number. An operational page that answers a question needs none. Never add it as
 decoration.
 
 ## Z order: match what Desktop writes
 
-Desktop bands z in thousands, and it puts the main content visual at `0` with chrome above it.
-Follow the same bands and a visual you add by hand lands where Desktop would have put it.
+Desktop bands z in thousands, with the main content visual at `0` and chrome above it.
 
 | Band | Holds |
 | --- | --- |
@@ -99,14 +88,13 @@ Follow the same bands and a visual you add by hand lands where Desktop would hav
 | 6000 to 9000 | images and logos |
 | 10000 and up | slicers and the header strip |
 
-Use this rather than inventing a scheme. A hand authored page that numbers 0 to 399 will produce
-a mixed and meaningless stack the moment Desktop touches the report and renumbers its own
+A hand authored page numbered 0 to 399 becomes a meaningless stack once Desktop renumbers its own
 visuals in thousands.
 
 ## Tab order: band it in hundreds
 
-Every visual carries `position.tabOrder`, and leaving it at the default gives the order visuals
-were added, which is almost never reading order.
+`position.tabOrder` left at the default follows the order visuals were added, rarely reading
+order.
 
 | Band | Holds |
 | --- | --- |
@@ -147,17 +135,13 @@ property inside either.
 }
 ```
 
-Useful for holding a filter on a page without showing the control. The field binding is the
-point: a slicer with no `query` filters nothing, so a hidden one without it is an invisible box
-that does nothing. Give it a tab order in the hidden band so keyboard users are not stopped on
-an invisible object.
+This holds a filter on a page without showing the control. Keep the `query`: a slicer without
+one filters nothing. Use the hidden tab order band so keyboard users are not stopped on it.
 
 ## Three file kinds, three different schemas
 
-`$schema` is required in all three, and each kind has its own family. They are not
-interchangeable, so never copy the URL out of a `visual.json` into a `page.json`.
-
-All three share the base `https://developer.microsoft.com/json-schemas/fabric/item/report`:
+`$schema` is required in all three and they are not interchangeable. Never copy a `visual.json`
+URL into a `page.json`. Base: `https://developer.microsoft.com/json-schemas/fabric/item/report`.
 
 | File | Path after the base | Required keys |
 | --- | --- | --- |
@@ -167,11 +151,9 @@ All three share the base `https://developer.microsoft.com/json-schemas/fabric/it
 
 ## Detecting the version instead of hardcoding it
 
-The `visualContainer` version changes as Desktop updates, so do not hardcode one you saw once.
-Read the versions already in the project and use the HIGHEST one present, not the first one you
-open. Desktop only bumps a file's version when it re-saves that file, so a real project carries
-a mix, and two visuals sitting side by side on the same page can carry different versions.
-Opening "one existing visual.json" gives a different answer depending on which you pick.
+Use the HIGHEST `visualContainer` version in the project, not the first file you open. Desktop
+bumps a file's version only when it re-saves that file, so two visuals on one page can carry
+different versions.
 
 ```powershell
 Get-ChildItem .\*.Report\definition -Recurse -Filter visual.json |
@@ -180,10 +162,8 @@ Get-ChildItem .\*.Report\definition -Recurse -Filter visual.json |
   Sort-Object -Unique
 ```
 
-If the project has no visuals yet, add one visual of any kind in Desktop, save, and read the
-version back. That is one click and it beats guessing.
+No visuals yet: add one in Desktop, save, and read the version back.
 
-One trap if you plan to validate against the URL: not every version in production is published.
-`visualContainer` 2.11.0 and 2.12.0 both return 404 at their own addresses, so a validator
-pointed at the URL in the file can fail on a perfectly good file. Validate against the newest
-version that does resolve, and treat a 404 as a publishing gap rather than a bad file.
+Validating against the URL: `visualContainer` 2.11.0 and 2.12.0 both returned 404 at their own
+addresses, so a validator pointed at the file's URL can fail a good file. Validate against the
+newest version that resolves, and treat a 404 as a publishing gap, not a bad file.

@@ -1,14 +1,14 @@
 # Verifying an agent's edit
 
-Valid PBIR can still render wrong, and a page that renders can still show a wrong number. So an edit
-is not done when the JSON parses. This file is the loop that closes that gap, and it owns the rule
-for when Desktop can stay open.
+An edit is not done when the JSON parses. Valid PBIR can render wrong, and a page that renders can
+show a wrong number. This file is the loop that closes that gap, and it owns the rule for when
+Desktop can stay open.
 
-The status, so you can weigh it. The loop comes from Microsoft docs and the CLI READMEs, and has not
-yet been run on a real report here. The local prerequisites list no capacity: Windows, Desktop, and
-one security option. That is not a statement that Pro is guaranteed, because nothing says Pro
-outright, so prove it once on a Pro machine. Microsoft's external editing page calls the bridge
-preview, while its CLI is at version 1.0.0.
+Status: the loop comes from Microsoft docs and the CLI READMEs, and has not yet been run on a real
+report here. The local prerequisites list no capacity (Windows, Desktop, one security option), but
+nothing says Pro outright, so prove it once on a Pro machine. Microsoft called the bridge preview in
+June 2026 and listed it under the agentic experiences that went GA in September 2026. Its Learn page
+(September 2026) no longer carries a preview label. The CLI is at version 1.0.0.
 
 ## Install, pinned
 
@@ -26,7 +26,7 @@ default, and an administrator can turn it off with a registry policy.
 
 ## Desktop open or closed
 
-There are two branches, and this is the only place that says so.
+Two branches, and this is the only place that says so.
 
 **No bridge in this session.** Close Desktop, edit, reopen. That is the rule in `pbip-and-tmdl.md`,
 and nothing below changes it. To render and refresh a copy without the bridge and without touching the
@@ -48,8 +48,8 @@ A reload also resets filters and some of the interface, and it does not reload `
 
 ### 1. Source checks
 
-Parse every JSON file you wrote. Check that each `Entity` and `Property` matches the model exactly,
-because a mismatch parses fine and renders an empty visual. If you touched TMDL, run the lineageTag
+Parse every JSON file you wrote. Each `Entity` and `Property` must match the model exactly. A
+mismatch parses fine and renders an empty visual. If you touched TMDL, run the lineageTag
 check in `pbip-and-tmdl.md`.
 
 ### 2. Conformance validation
@@ -90,7 +90,7 @@ Automation, as in `offscreen-render.md`, or ask the person to press Refresh.
 
 ### 4. Review each page
 
-A screenshot includes the filter pane when it is open, so review that too. Look for:
+A screenshot includes the filter pane when it is open, so review that too. Check:
 
 - Visuals fully inside their frame, with nothing clipped or overlapping.
 - Titles, labels, legends, and card values that are readable and not cut off or ending in an ellipsis.
@@ -100,12 +100,19 @@ A screenshot includes the filter pane when it is open, so review that too. Look 
 - Slicers that show selectable values.
 - The theme applied, with text that contrasts with its background.
 
-Whether the page is any good is a different question, and the `powerbi-report-design` skill owns it.
+Whether the page is any good is the `powerbi-report-design` skill's question.
+
+After a batch of visual edits, hand the files, the rules, and the theme schema to a separate reviewer
+agent that did not write them. On one batch of slicer edits it found a missing row padding, a row
+height never measured from a render, two drawers that opened past the page edge, a title colour and a
+font that did not match the classic slicers beside them, and a pill with no room.
+
+Write multi file edit scripts so every assertion runs before any file is written. A script that
+asserted file by file half applied once and could not be rerun.
 
 ### 5. Assert the numbers with DAX
 
-A screenshot of a wrong total looks fine, so the picture cannot be the last check. Before the change,
-write a short list of expected values taken from the source, not from the model: a few totals, one
+A screenshot of a wrong total looks fine. Before the change, write a short list of expected values taken from the source, not from the model: a few totals, one
 filtered slice, and every ratio at the total level. After the change, run them in DAX query view, DAX
 Studio, or the local modeling MCP in read only mode.
 
@@ -120,17 +127,17 @@ relationship shows up here and not in the picture.
 ## Stop rules
 
 - **Bound the fix loop.** Judgement: allow one round of fixes, rerun the whole loop, then report what you
-  saw instead of trying again. An unbounded loop burns time and can hide that the fault is not fixable
-  from the files. If nothing changed in the project, skip the loop. The idea of a fix budget and named
+  saw instead of trying again. An unbounded loop can hide that the fault is not fixable from the
+  files. If nothing changed in the project, skip the loop. The idea of a fix budget and named
   failures follows Agentic-PBIP-Template (MIT): https://github.com/Mofaji/Agentic-PBIP-Template
 - **Blocked is not done.** If Desktop is not running, the bridge is off, another project is open, or the
   reload failed, say which, and report the check as blocked. Do not claim the edit is complete.
 
 ## Use a fake data fixture
 
-Screenshots, query results, and model metadata reach whichever model provider the agent uses. Microsoft
-says that about metadata and query results on the MCP page, and a screenshot an agent reads goes the
-same way. PBIR files can also hold data values, for example a filter value in a `visual.json`.
+Screenshots, query results, and model metadata reach whichever model provider the agent uses (the MCP
+page says so for metadata and query results). PBIR files can also hold data values, for example a
+filter value in a `visual.json`.
 
 So run the loop on a small fixture PBIP with fake data (ABC Company) and the same table and column names
 as the real model. Use real data only when the person responsible for that data has decided to allow

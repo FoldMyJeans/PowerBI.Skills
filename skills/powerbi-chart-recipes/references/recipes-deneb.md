@@ -1,8 +1,8 @@
 # Deneb recipes
 
 Each section gives the fields the spec reads, then what to change. Bind them with
-`scripts/new_deneb_visual.py`, as `deneb-in-pbip.md` shows. The settings are at the top of each spec.
-The matching file in `assets/fixtures` shows the exact data shape.
+`scripts/new_deneb_visual.py` (see `deneb-in-pbip.md`). The settings are at the top of each spec. The
+matching file in `assets/fixtures` shows the exact data shape.
 
 ## Beeswarm, `beeswarm.vega.json`
 
@@ -11,14 +11,14 @@ Fields: `Name` (item key, so rows do not collapse), `Group`, `GroupOrder`, `Valu
 - Set `limit` and `limitLabel` for the SLA line. Dots past it are solid and the rest are faded.
 - `dotRadius` is 4. Lower it above a few hundred dots, because they spread until they overlap rows.
 - The colour range holds up to four groups in `GroupOrder`.
-- It is a force layout, so it recalculates on each filter and each resize. Test it at your real row
+- It is a force layout, so it recalculates on each filter and each resize. Test it at the real row
   count before committing to it.
 
 ## Calendar heatmap, `calendar-heatmap.vl.json`
 
 Fields: `Date`, `Value`. One row per day.
 
-- One row of the chart appears per year in the data. Filter to the years you want.
+- One row of the chart per year in the data. Filter to the years you want.
 - Fixed at 13 pixels a cell, about 800 wide with the legend. Change `step` to fit.
 - Weeks start on Monday.
 
@@ -26,9 +26,9 @@ Fields: `Date`, `Value`. One row per day.
 
 Fields: `Name`, `Value` (0 to 100, not 0 to 1).
 
-- A measure works for `Value`. One panel appears per `Name`, biggest first.
+- A measure works for `Value`. One panel per `Name`, biggest first.
 - Three panels fit a 480 wide visual. For more, reduce `width`, `height` and the mark `size`.
-- Use it for coverage out of a whole. It is meaningless for a value that can pass 100.
+- Coverage out of a whole only. Meaningless for a value that can pass 100.
 
 ## Funnel Sankey, `funnel-sankey.vega.json`
 
@@ -54,7 +54,8 @@ Fields: `Name`, `RowOrder`, `Left`, `Right`.
 
 - Set `leftTitle` and `rightTitle`. Both sides share one scale, so lengths compare honestly.
 - `gapShare` sets the width of the label gap. Raise it for long labels.
-- The native version in `recipes-native-and-svg.md` needs no third-party visual, with labels at the left.
+- Native option: the stacked bar in `recipes-native-and-svg.md` needs no third-party visual, with
+  labels at the left.
 
 ## Variance trio, `variance-trio.vl.json`
 
@@ -74,7 +75,7 @@ Fields: `Name`, `Path`, `LabelX`, `LabelY`, `Value`. One row per room.
 - A blank `Value` draws the room grey with no number. Use a measure, and keep the room rows from the
   room table so an empty room still draws.
 - Use a native slicer for floors, filtering the room table.
-- Synoptic Panel Lite by OKVIZ is the alternative with a map editor, if drawing paths is too much work:
+- If drawing paths is too much work, Synoptic Panel Lite by OKVIZ has a map editor:
   https://appsource.microsoft.com/en-us/product/power-bi-visuals/okvizcorp1634637213047.synopticpanelbyokviz-lite
 
 ## Ridgeline, `ridgeline.vl.json`
@@ -94,5 +95,5 @@ Fields: `Day`, `DayOrder`, `Hour` (0 to 23), `Value`. One row per day per hour.
 - The first day is the inner ring and midnight is at the top. Hours run clockwise.
 - Outer rings are bigger than inner ones for the same value, so colour carries the value, not area.
 - Square visuals suit it. The chart fits the smaller side.
-- This form is our own twist on published ring charts. The plain matrix heatmap reads more exactly, so
-  offer both.
+- This is our own twist on published ring charts. A native matrix heatmap reads more exactly, so offer
+  both.

@@ -1,15 +1,12 @@
 # Complete templates: legacy card, KPI, gauge, textbox, image
 
-Visuals that show one number, one block of text, or one picture. The new card visual, `cardVisual`, is a
-different shape and lives in `cards-and-dynamic-text.md`.
-
-Replace `<Measure>` and `<Title>`, give `name` a fresh 20 character hex string, and detect the
-`visualContainer` version rather than copying the one below.
+One number, one block of text, or one picture. The new card, `cardVisual`, is in
+`cards-and-dynamic-text.md`. Replace `<Measure>` and `<Title>`, give `name` a fresh 20 character
+hex string, and detect the `visualContainer` version rather than copying this one.
 
 ## Legacy card, `card`
 
-Still the right tool for a thin value strip, where the new card visual cannot go small enough.
-One role, `Values`, one projection.
+For a thin value strip, where `cardVisual` cannot go small enough. One role, `Values`.
 
 ```json
 {
@@ -55,20 +52,14 @@ One role, `Values`, one projection.
 }
 ```
 
-The two objects are easy to mix up. `labels` is the big number itself. `categoryLabels` is the
-small measure name underneath it, and turning it off is almost always right, because the
-container title is already saying what the number is. Leaving both on prints the same words
-twice.
-
-`labelDisplayUnits` of `1D` means no unit scaling, so 1200000 prints in full. Use `1000D` for
-thousands and `1000000D` for millions. Setting it to `0D` lets Power BI choose, which means the
-unit can change as the filter changes, and a card that switches between K and M mid session is
-worse than one that is simply long.
+- `labels` is the big number. `categoryLabels` is the small measure name under it. Turn that off
+  when the container title already names the number, or the same words print twice.
+- `labelDisplayUnits` `1D` is no scaling (1200000 prints in full), `1000D` thousands, `1000000D`
+  millions. `0D` lets Power BI choose, so the card can switch between K and M as filters change.
 
 ## KPI, `kpi`
 
-Two roles, and neither is named what you would guess. `Indicator` is the value, `TrendLine` is
-the series it is drawn against.
+`Indicator` is the value, `TrendLine` the series it is drawn against.
 
 ```json
 {
@@ -117,12 +108,11 @@ the series it is drawn against.
 }
 ```
 
-A KPI with no `TrendLine` renders as a bare number with no trend behind it, which is a card
-with extra steps. If there is no time axis to put behind it, use a card instead.
+With no `TrendLine` it renders as a bare number. No time axis means use a card.
 
 ## Gauge, `gauge`
 
-Roles are `Y` for the value and `TargetValue` for the target.
+`Y` is the value, `TargetValue` the target.
 
 ```json
 {
@@ -163,15 +153,13 @@ Roles are `Y` for the value and `TargetValue` for the target.
 }
 ```
 
-A gauge spends a lot of canvas to show one number against one target. It reads well on a wall
-display and poorly in a dense report, where a card with a variance measure says the same thing
-in a fifth of the space.
+A gauge suits a wall display. In a dense report a card with a variance measure says the same in a
+fifth of the space.
 
 ## Textbox, `textbox`
 
-No query at all. The content lives in a `paragraphs` structure under `general`, and the shape
-is deeper than the rest of this file, so build one in Desktop and read it back if you need
-anything beyond plain text.
+No query. Content is a `paragraphs` structure under `general`. For anything beyond plain text,
+build one in Desktop and read it back.
 
 ```json
 {
@@ -198,17 +186,14 @@ anything beyond plain text.
 }
 ```
 
-`paragraphs` is a plain array, not the `expr` and `Literal` wrapper every other property uses.
-Font sizes here are CSS style strings like `12pt`, not the bare `12D` doubles used elsewhere.
-It is the one visual whose formatting does not follow the house grammar.
-
-A textbox holding a number that should update with the filters is a bug waiting to happen.
-Static text only. For a heading that reacts to a slicer, use a card with a measure, which is in
-`cards-and-dynamic-text.md`.
+- `paragraphs` is a plain array, not the `expr` and `Literal` wrapper every other property uses.
+- Font sizes are CSS strings like `12pt`, not `12D` doubles.
+- Static text only. A heading that reacts to a slicer is a measure bound card or title, see
+  `cards-and-dynamic-text.md`.
 
 ## Image, `image`
 
-Not a data visual. The source is a formatting object pointing at a registered resource.
+The source is a formatting object pointing at a registered resource.
 
 ```json
 "visual": {
@@ -223,17 +208,14 @@ Not a data visual. The source is a formatting object pointing at a registered re
 }
 ```
 
-The `ItemName` must match an entry in `definition/report.json` under `resourcePackages`, in the
-`RegisteredResources` package, with `"type": "Image"`. Desktop writes that entry when you insert
-the image, so insert it once in Desktop rather than hand registering the asset. Turn the
-container border off so a logo has no box around it.
-
-A page background picture uses the same registered resource, set on the page's `background`
-with `scaling` `'Fill'`. A 1920 x 1080 JPG at quality 90, blended toward the page colour
-before upload, was 56 KB.
-
-For an image driven by a measure (an SVG from DAX), `image.sourceType` is `'imageUrl'` and
-`sourceUrl` is a `Measure` expression, with `imageScalingType` `'Fit'`. Set the container
-`padding` to 0 on all four sides and turn `background`, `border` and `title` off. With the
-default padding the picture scaled down and sat off centre. Frames that end just above the page
-edge left a faint 1 px line over a background picture, so run them to the page bottom.
+- `ItemName` must match an entry in `definition/report.json` under `resourcePackages`, in the
+  `RegisteredResources` package, with `"type": "Image"`. Desktop writes it when you insert the
+  image, so insert once in Desktop rather than hand registering. Container border off for a logo.
+- Page background picture: the same registered resource on the page's `background`, `scaling`
+  `'Fill'`. A 1920 x 1080 JPG at quality 90, blended toward the page colour before upload, was
+  56 KB.
+- Image from a measure (an SVG from DAX): `image.sourceType` `'imageUrl'`, `sourceUrl` a
+  `Measure` expression, `imageScalingType` `'Fit'`. Container `padding` 0 on all four sides,
+  `background`, `border` and `title` off. With default padding the picture scaled down and sat off
+  centre. Frames ending just above the page edge left a faint 1 px line over a background
+  picture, so run them to the page bottom.

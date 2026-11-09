@@ -15,11 +15,11 @@ description: >-
 
 # Power BI build playbook
 
-The order to build a Power BI model and report in, and which skill owns each phase. Use this
-when starting something new, or when you are not sure which skill answers a question.
+Checked against Power BI releases through October 2026.
 
-The order matters more than it looks. Several decisions are cheap before the first table loads
-and expensive afterwards, and two of them are one way doors.
+The order to build a Power BI model and report in, and which skill owns each phase. Several
+decisions are cheap before the first table loads and expensive afterwards, and two are one way
+doors.
 
 ## Which skill answers this
 
@@ -52,73 +52,39 @@ flowchart TD
     p5 -.->|"fact grain"| door
 ```
 
-### 1. Write down the questions first
-
-List the questions the report must answer, in the business's words. That list decides the facts,
-the dimensions, and the pages. Everything after this is downstream of it, and skipping it is why
-reports end up as a wall of numbers nobody reads.
-
-One question per page is the target. See `powerbi-report-design`.
-
-### 2. Inventory the sources
-
-For each source, note what it is, how it connects, and roughly how much data. Decide what can be
-filtered at the source, because on a non folding source that is the only filtering that saves
-time. See `powerbi-data-and-refresh`.
-
-### 3. Create the pbip, then set the day one defaults
-
-This is the phase every other skill assumes has already happened, and it needs a person in
-Desktop. See `references/new-model-setup.md` for the exact clicks.
-
-Turn auto date/time off BEFORE the first table loads. Left on, Power BI builds a hidden date
-table for every date column in every import table and rebuilds them all on every refresh.
-Turning it off later is a breaking change that strips date hierarchies out of live visuals. This
-is the highest value 5 seconds in the whole build.
-
-### 4. Build the data layer
-
-Staging queries load disabled, filters and column selection at the source, paging with a stable
-order key. Count the fan out as you go rather than after. See `powerbi-data-and-refresh`.
-
-### 5. Shape the model
-
-Grain of each fact in one sentence, dimensions split out, one to many relationships on clean
-keys, single cross filter direction, one date or period dimension, everything named and hidden
-properly. See `powerbi-modeling`.
-
-Do this before writing measures. A measure written against a bad model encodes the bad model.
-
-### 6. Write the measures
-
-Base measures first, then build on them. Every measure into `_Measures` with a display folder, a
-description, and a format string. Check every ratio at the total, not just on a row. See
-`powerbi-dax`.
-
-### 7. Apply the theme, then lay out the pages
-
-Theme first, so every visual you add inherits the look instead of being styled by hand. Then
-layout, chart choice, slicers, and navigation. See `powerbi-report-design`.
-
-If you are generating pages or many similar visuals, bring the design decision to
-`powerbi-pbir-builder` and write the JSON. Before a build, have a person review a short written spec
-per page (the question, the visuals, the fields, the expected numbers), and start the build after
-that review, not in the same breath. Desktop must be closed while you write, unless you are on the
-bridge branch in `agent-verification.md` in the `powerbi-project-and-tools` skill.
-
-### 8. Harden before you ship
-
-Accessibility pass with the verification greps, refresh timing in the Service and not just
-Desktop, Best Practice Analyzer, and remove what is unused. See `powerbi-report-design`,
-`powerbi-data-and-refresh`, and `powerbi-project-and-tools`.
-
-### 9. Document it
-
-Once it is real and stable. See `powerbi-doc-repo`.
+1. **Questions.** List the questions the report must answer, in the business's words. That list
+   decides the facts, the dimensions, and the pages. One question per page is the target. See
+   `powerbi-report-design`.
+2. **Sources.** For each source, note what it is, how it connects, and roughly how much data.
+   Decide what can be filtered at the source, because on a non folding source that is the only
+   filtering that saves time. See `powerbi-data-and-refresh`.
+3. **Create the pbip, set the day one defaults.** Every other skill assumes this happened, and it
+   needs a person in Desktop. The clicks are in `references/new-model-setup.md`. Turn auto
+   date/time off BEFORE the first table loads. Left on, Power BI builds and refreshes a hidden date
+   table for every date column.
+4. **Data layer.** Staging queries load disabled, filters and column selection at the source,
+   paging with a stable order key. Count the fan out as you go. See `powerbi-data-and-refresh`.
+5. **Model.** Grain of each fact in one sentence, dimensions split out, one to many relationships
+   on clean keys, single cross filter direction, one date or period dimension, everything named and
+   hidden properly. Do this before measures, because a measure written against a bad model encodes
+   the bad model. See `powerbi-modeling`.
+6. **Measures.** Base measures first, then build on them. Every measure into `_Measures` with a
+   display folder, a description, and a format string. Check every ratio at the total, not just on
+   a row. See `powerbi-dax`.
+7. **Theme, then pages.** Theme first, so every visual inherits the look. Use the report's own
+   theme if it has one, otherwise the default theme in `powerbi-report-design`. Then layout, chart
+   choice, slicers, and navigation. To generate pages or many similar visuals, take the design
+   decision to `powerbi-pbir-builder`. Before a build, have a person review a short written spec
+   per page (the question, the visuals, the fields, the expected numbers), and start the build
+   after that review, not in the same breath.
+8. **Harden.** Accessibility pass with the verification greps, refresh timing in the Service and
+   not just Desktop, Best Practice Analyzer, and remove what is unused. See
+   `powerbi-report-design`, `powerbi-data-and-refresh`, and `powerbi-project-and-tools`.
+9. **Document**, once it is real and stable. See `powerbi-doc-repo`.
 
 ## The one way doors
 
-Two decisions are painful to reverse. Make them deliberately in phase 3.
+Make both deliberately, in phase 3 and phase 5.
 
 1. Auto date/time. Free to turn off on an empty file. Turning it off later breaks every visual
    using a built in date hierarchy and every measure using the `Table[Date].[Year]` syntax.
@@ -130,9 +96,9 @@ Two decisions are painful to reverse. Make them deliberately in phase 3.
 - Do not start in the report. A page built before the model is a page you rebuild.
 - Get one page working end to end before building ten. The first page finds the modeling
   mistakes.
-- Close Power BI Desktop before any file edit, and reopen to verify. This applies to TMDL and to
-  PBIR JSON equally. The Desktop Bridge is the one other route, see `powerbi-project-and-tools`.
-- Commit early and branch per change. The pbip format is text, so use it.
+- Close Power BI Desktop before any file edit, TMDL or PBIR JSON, and reopen to verify. The
+  Desktop Bridge is the one other route, see `agent-verification.md` in `powerbi-project-and-tools`.
+- Commit early and branch per change.
 - Validate numbers against the source before styling anything. A beautiful wrong report is worse
   than an ugly right one.
 - When the user asks for something the model cannot answer yet, say so and name the phase it

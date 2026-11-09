@@ -1,7 +1,7 @@
 # Test on fake data
 
-`scripts/build_fixture.py` builds a PBIP with no real data in it, so a chart can be opened in Desktop and
-its screenshots shared. Use it before putting a new chart in a report, and to see a chart at a new size.
+`scripts/build_fixture.py` builds a PBIP with no real data, so a chart can be opened in Desktop and its
+screenshots shared. Use it before putting a new chart in a report, and to see a chart at a new size.
 
 ```powershell
 python scripts\build_fixture.py --from "C:\work\ABC Sales" --out "C:\work\chart-fixture"
@@ -17,21 +17,22 @@ chart, edit its spec, rebuild, and reopen. Do not publish it.
 ## Why it needs no refresh
 
 Every table is a `DATATABLE` calculated table in TMDL, with its rows in the file. Desktop works those out
-when the project opens, with no cache, credentials or data source. This is a fair way to build any fake
-model. It is the one PBIP here not started in Desktop, because no real source ever has to connect. For a
-real report still follow `powerbi-pbir-builder`, which starts from a PBIP Desktop saved.
+when the project opens, with no cache, credentials or data source. It is the one PBIP here not started
+in Desktop, because no real source has to connect. For a real report follow `powerbi-pbir-builder`,
+which starts from a PBIP Desktop saved.
 
 ## A test rig for one visual setting
 
-The fixture is also the cheap place to try a visual setting before it goes into a real report. A report
-over published semantic models shows a consent prompt after every outside edit, so each try on the real
-file costs the owner a click. A copy of a single source fake data PBIP shows no prompt.
+The cheap place to try a visual setting before a real report. A report over published semantic models
+shows a consent prompt after every outside edit, so each try on the real file costs the owner a click.
+A copy of a single source fake data PBIP shows no prompt.
 
 - Add a tiny `DATATABLE` calculated table for the fields the experiment needs, and its
   `ref table <name>` line in `model.tmdl`.
 - Put each experiment on its own page. Slicers on one field cross-filter each other and hide the result.
-- Switch the copy to the same base theme as the real report. A button slicer and a list slicer drew
-  differently under an older base theme, so theme dependent bugs do not show otherwise.
+- Switch the copy to the same base theme as the real report (Fluent 2, Classic 2026 or Classic 2018,
+  see `powerbi-report-design`). A button slicer and a list slicer drew differently under an older base
+  theme, so theme dependent bugs do not show otherwise.
 
 ## Traps building it hit
 
@@ -57,7 +58,7 @@ Numbers matched the fixture by eye. They were not asserted with DAX, since the d
 
 ## What it did not cover
 
-These were not done, so test them before relying on them. They are listed in the repo's test backlog.
+Not done, so test them before relying on them.
 
 - Publishing to the Service. So Deneb in a browser, in the app, and under a tenant's visual settings.
 - Export to PDF or PowerPoint, including whether the card's bars draw when animation does not run.

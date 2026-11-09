@@ -1,17 +1,15 @@
 # Virtual relationships and composite keys
 
-How to join two tables that have no physical relationship, and what to do when the source
-gives you no surrogate key to join on.
+Joining two tables that have no physical relationship, and what to do when the source gives you no
+surrogate key.
 
-## TREATAS, five forms
+## TREATAS forms
 
-`patterns.md` shows the basic form, TREATAS over `VALUES` of a dimension column.
-That is form A and it is not repeated here. These are the four forms that come up next.
+Form A, TREATAS over `VALUES` of a dimension column, is in `patterns.md`. These come up next.
 
 ### B. Two columns at once
 
-Pass pairs as pairs. One TREATAS takes a table expression with both columns, then both target
-columns in the same order.
+One TREATAS takes a table expression with both columns, then both target columns in the same order.
 
 ```dax
 PS Estimate Hours =
@@ -25,22 +23,21 @@ CALCULATE (
 )
 ```
 
-This is how you match on a composite grain (company plus epic) with no key column that holds
-both. For what is visible on the row, use `SUMMARIZE ( dim_work_item, dim_work_item[Company],
-dim_work_item[Epic Number] )` as the table expression. Form C below is the same choice.
+This matches a composite grain (company plus epic) with no key column holding both. For what is
+visible on the row, use `SUMMARIZE ( dim_work_item, dim_work_item[Company], dim_work_item[Epic Number] )`
+as the table expression (the same choice as form C).
 
-Two separate TREATAS arguments look the same and are not. Each one filters its own column, and
-filters on a table combine as an AND. So companies A and B with epics E1 and E2 also let (A, E2)
-through, even when no selected row holds that pair, and the estimate counts a pair the selection
-never had. It only bites when the target table holds such a pair, which is why it survives review.
-On one real model, two team and service pairs returned 1,635 hours as pairs and 6,405 hours as two
-separate arguments, nearly four times as much, with no error. EVALUATE both forms side by side in DAX
-query view before you trust either.
+Two separate TREATAS arguments are not the same. Each filters its own column and they combine as an
+AND, so companies A and B with epics E1 and E2 also let (A, E2) through even when no selected row
+holds that pair. It only bites when the target table holds such a pair, which is why it survives
+review. On one real model, two team and service pairs returned 1,635 hours as pairs and 6,405 hours as
+two separate arguments, nearly four times as much, with no error. EVALUATE both forms side by side in
+DAX query view before you trust either.
 
 ### C. VALUES or ALLSELECTED inside TREATAS
 
-This one choice is the whole difference between "the estimate for what is on this row" and
-"the estimate for the whole page".
+This choice is the whole difference between "the estimate for this row" and "the estimate for the
+whole page".
 
 ```dax
 Estimate (Row) =
@@ -56,10 +53,9 @@ CALCULATE (
 )
 ```
 
-Use VALUES for a numerator that walks the rows of a visual. Use ALLSELECTED for a denominator
-that must hold the user's full selection while the numerator moves. A model that needs both
-usually defines them within a few lines of each other, and the pair is easy to mix up later,
-so name them so the difference is visible at a glance.
+VALUES for a numerator that walks the rows of a visual. ALLSELECTED for a denominator that holds the
+user's full selection while the numerator moves. The pair usually sits a few lines apart and is easy
+to mix up later, so name them so the difference is visible.
 
 ### D. From a literal one element table
 
@@ -83,26 +79,21 @@ CALCULATE (
 )
 ```
 
-Keeping the list in a VAR means the same set can feed a filter and a residual calculation in
-the same measure without being typed twice.
+The VAR lets the same set feed a filter and a residual calculation in one measure without being typed
+twice.
 
 ## Fact to fact, at different grains
 
-TREATAS is usually taught as dimension to fact. It can also join two facts that sit at different
-grains, for example a work item grain effort table against a company and month grain estimate
-table. Shared dimensions are the first thing to try, and the `powerbi-modeling` skill has the three
-many to many cases. TREATAS is the route when no shared dimension can be built.
-
-A physical relationship would need a shared key column, which means inventing a synthetic key
-and storing it on both tables. The virtual relationship needs neither. It costs query time
-instead of model size, and it does not add an ambiguous path to the model diagram. When the
-two facts have no natural key in common, prefer the virtual join.
+TREATAS can join two facts at different grains, for example a work item grain effort table against a
+company and month grain estimate table. Try shared dimensions first (the three many to many cases are
+in `powerbi-modeling`). TREATAS is the route when no shared dimension can be built. A physical
+relationship would need a synthetic key stored on both tables. The virtual one costs query time
+instead of model size and adds no ambiguous path to the model.
 
 ## Building a composite key in memory, then joining with it
 
-This is the advanced form. The estimate table is keyed on a company plus month plus year
-string. The effort table has a sprint, not a month. The key is built at query time and then
-used as the relationship.
+The estimate table is keyed on a company plus month plus year string. The effort table has a sprint,
+not a month. The key is built at query time and used as the relationship.
 
 ```dax
 Estimated Effort (Chart Safe) =
@@ -128,23 +119,16 @@ RETURN
     )
 ```
 
-Read it in four steps.
-
-1. GENERATE crosses every sprint in context with every company in context. That gives the full
-   grid of pairs the visual is asking about.
-2. The scalar CALCULATE inside translates a sprint into its start date, which becomes a month
-   and a year. This is the grain change.
+1. GENERATE crosses every sprint in context with every company in context.
+2. The scalar CALCULATE turns a sprint into its start date, then a month and a year. This is the
+   grain change.
 3. ADDCOLUMNS and SELECTCOLUMNS materialize a one column table of key strings.
-4. TREATAS applies that table as a filter on the estimate table's key column.
-
-The result is a relationship that exists only for the duration of one query.
+4. TREATAS applies it as a filter on the estimate table's key column.
 
 ## KEEPFILTERS, or a silently wrong number
 
-A CALCULATE predicate on a column REPLACES any existing filter on that column. It does not add
-to it. So a predicate on `[Owner]` discards whatever was already filtering Owner, which
-includes the user's slicer selection. The rows keep moving, so nothing looks broken, but owners
-the user excluded are quietly back in the numbers.
+A CALCULATE predicate on a column REPLACES any existing filter on that column, including the user's
+slicer. Owners the user excluded are quietly back in the numbers, and nothing looks broken.
 
 ```dax
 CALCULATE (
@@ -153,15 +137,12 @@ CALCULATE (
 )
 ```
 
-KEEPFILTERS makes the predicate intersect with what is already filtered instead of replacing
-it. Nothing errors when you leave it out. You get a wrong number that looks plausible, which
-is why this one is worth checking by hand.
+KEEPFILTERS makes the predicate intersect with the existing filter. Leaving it out gives a plausible
+wrong number, so check this one by hand.
 
 ## LOOKUPVALUE for a column across a non relationship
 
-`measures-vs-calc.md` cites RELATED as a reason a calculated column earns its
-place. RELATED needs a relationship to traverse. When there is none and the value must sit
-physically on the row, LOOKUPVALUE is the answer.
+RELATED needs a relationship. When there is none and the value must sit on the row, use LOOKUPVALUE.
 
 ```dax
 Planned Capacity (Hours) =
@@ -172,19 +153,16 @@ LOOKUPVALUE (
 )
 ```
 
-Pairs of arguments after the first are (search column, search value), and they intersect. The
-usual calculated column caution still applies, so only do this when the value has to be
-groupable or sliceable.
+Pairs after the first argument are (search column, search value), and they intersect. Only do this
+when the value has to be groupable or sliceable.
 
 ## Composite string keys when the source has no surrogate key
 
-`powerbi-modeling` says to build surrogate integer keys upstream, which is right when you
-control the source. A ticketing API or a workbook a human maintains gives you none. When the
-key has to be a concatenated string, three things keep it from breaking.
+Build integer surrogate keys upstream when you control the source (`powerbi-modeling`). A ticketing
+API or a hand maintained workbook gives you none. When the key has to be a concatenated string:
 
 - Let a duplicate fail the refresh, and resist `Table.Distinct`. The rule and its one exception are
   in `relationships.md` in the `powerbi-modeling` skill.
-
 - TRIM every part of the key on both sides. A trailing space from a hand maintained sheet is
   invisible in the data view and produces a silent non match.
 
@@ -195,9 +173,7 @@ key has to be a concatenated string, three things keep it from breaking.
       & FORMAT ( fact_estimate_company_month[Year], "0000" )
   ```
 
-- Format numbers explicitly. `FORMAT ( [Year], "0000" )` guarantees the same string on both
-  sides. An implicit integer to text conversion can differ between a DAX column and an M step
-  or a locale.
+- Format numbers explicitly. `FORMAT ( [Year], "0000" )` gives the same string on both sides. An
+  implicit integer to text conversion can differ between a DAX column and an M step or a locale.
 
-This is a fallback. An integer surrogate key is still better, so use one whenever the source
-can produce it.
+An integer surrogate key is still better whenever the source can produce one.

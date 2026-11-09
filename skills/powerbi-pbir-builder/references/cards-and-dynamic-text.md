@@ -1,13 +1,12 @@
 # Cards and text that reacts to filters
 
-The two card visuals, and how to bind a title or a label to a measure so it states the number in
-context instead of repeating a field name. Includes the grain trap, which is the one way this
-pattern goes wrong, and it goes wrong quietly.
+The two card visuals, titles bound to a measure, and the grain trap that makes such a title
+quietly wrong.
 
-## The new card, confirmed shape
+## The new card, `cardVisual`
 
-The `Data` role carries the measure, and `displayName` on the projection is the label text shown
-next to the value.
+The `Data` role carries the measure. `displayName` on the projection is the label shown with the
+value.
 
 ```json
 "visual": {
@@ -45,21 +44,18 @@ next to the value.
 }
 ```
 
-What the live confirmation established:
-
 - Entries under `objects.value` and `objects.label` each need `"selector": { "id": "default" }`.
   The card ignores an entry with no selector.
-- The value `fontColor` accepts a `Measure` expression, so a measure returning a hex string
-  drives the card font color. This is how a semantic good or bad color reaches the card without a
-  hardcoded hex sitting in the report layer.
-- Watch overflow. A preformatted label like `439 v -35 vs last month` clips at 13pt inside a 200
-  by 112 card. 10pt plus `textWrap: true` fits with room to spare.
-- `ReferenceLabels` and `AdditionalMeasure` are the documented extra roles for when the
-  comparison is not baked into the measure string.
+- The value `fontColor` takes a `Measure` expression, so a measure returning a hex string brings
+  a semantic good or bad colour to the card with no hardcoded hex.
+- Overflow: a preformatted label like `439 v -35 vs last month` clips at 13pt inside a 200 by 112
+  card. 10pt plus `textWrap: true` fits with room to spare.
+- `ReferenceLabels` and `AdditionalMeasure` are the documented extra roles when the comparison is
+  not baked into the measure string.
 
 ## Several values in one card
 
-`cardVisual` holds multiple tiles, which is how one card shows a value with its delta.
+`cardVisual` holds multiple tiles, for example a value with its delta.
 
 ```json
 "objects": {
@@ -76,18 +72,16 @@ What the live confirmation established:
 }
 ```
 
-Per tile number formatting is a second `value` entry selected by the measure's `queryRef`, for
-example `"selector": { "metadata": "Sum(fact_effort.Effort (Hours))" }`, carrying
-`labelDisplayUnits` and `labelPrecision`.
+- Per tile number formatting: a second `value` entry selected by the measure's `queryRef`, for
+  example `"selector": { "metadata": "Sum(fact_effort.Effort (Hours))" }`, carrying
+  `labelDisplayUnits` and `labelPrecision`.
+- `layout.rectangleRoundedCurve` does nothing once `shapeCustomRectangle` is present. If both
+  appear with different values, the `shapeCustomRectangle` one wins and the other is leftover.
 
-Note that `layout.rectangleRoundedCurve` also exists and does nothing once
-`shapeCustomRectangle` is present. If you see both with different values, the
-`shapeCustomRectangle` one wins and the other is leftover.
+## A card inside a container border
 
-## A card that sits inside a container border
-
-When the container draws the box (title, subtitle, a rounded border), turn the card's own
-outline and fill off, or it draws a second box inside the first.
+When the container draws the box (title, subtitle, rounded border), turn the card's own outline
+and fill off, or it draws a second box inside the first.
 
 ```json
 "objects": {
@@ -105,27 +99,24 @@ outline and fill off, or it draws a second box inside the first.
 }
 ```
 
-The title is the question, the value is the number, and a measure bound subtitle carries the
-one line of context, for example `FORMAT ( [Passed], "#,0" ) & " of " & FORMAT ( [Records],
-"#,0" ) & " passed"`. That subtitle was the reliable way to get a context line under a card.
+The title is the question, the value is the number, and a measure bound subtitle is the reliable
+way to get one line of context under a card, for example `FORMAT ( [Passed], "#,0" ) & " of " &
+FORMAT ( [Records], "#,0" ) & " passed"`.
 
 ## The legacy card still has a job
 
-`cardVisual` has a minimum practical size. For a thin inline value strip tucked between two
-charts, roughly 208 by 32, the legacy `card` type is still the right tool. Set the title off,
-keep the category label off, and let the value carry itself.
+`cardVisual` has a minimum practical size. For a thin inline value strip between two charts,
+roughly 208 by 32, use the legacy `card` with the title and category label off.
 
-Do not reach for it as a KPI tile. For anything with a label, a comparison, or a semantic color,
-use `cardVisual`. A theme change can also break it. When one report moved to a house theme that
-styles container titles, every legacy `card` lost its value, because the title wrapped and
-filled the tile. Converting them to `cardVisual` fixed all of them.
+Not as a KPI tile. Anything with a label, a comparison or a semantic colour is `cardVisual`. A
+theme change can also break the legacy card: when one report moved to a theme that styles
+container titles, every legacy `card` lost its value because the title wrapped and filled the
+tile. Converting them to `cardVisual` fixed all of them.
 
 ## Binding a title to a measure
 
-A visual title does not have to be static text. Bind the title `text` to a measure returning a
-string and the title states the number in context and updates as slicers change.
-
-Write the measure blank safe, so it falls back to a plain label when there is no data:
+Bind the title `text` to a measure that returns a string, and the title states the number in
+context as slicers change. Write the measure blank safe:
 
 ```dax
 Title Effort vs Estimate =
@@ -138,11 +129,9 @@ IF (
 )
 ```
 
-The fallback string should be exactly what the title would have said if it were hardcoded. Then
-an empty selection degrades to a correct static title rather than to a blank bar.
-
-In the `visual.json`, set the title `text` to a measure reference instead of a literal. Only the
-`text` property changes, the rest of the title formatting stays as it was:
+The fallback is exactly the hardcoded title, so an empty selection degrades to a correct static
+title, not a blank bar. In the `visual.json` only the title `text` changes, to a measure
+reference:
 
 ```json
 "visualContainerObjects": {
@@ -164,10 +153,8 @@ In the `visual.json`, set the title `text` to a measure reference instead of a l
 }
 ```
 
-Name these measures `Title <Visual>`, after the visual they title rather than the number they
-compute. When the visual is deleted, the measure to delete is obvious.
-
-A title can also carry a conditional clause that disappears when there is nothing to report:
+Name these measures `Title <Visual>`, after the visual, so the measure to delete with the visual
+is obvious. A conditional clause can vanish when there is nothing to report:
 
 ```dax
 Title Team Utilization =
@@ -182,29 +169,24 @@ IF (
 )
 ```
 
-## The grain trap, read this before you ship one
+## The grain trap, check before you ship one
 
-A title is one string for the whole visual, so the title measure is evaluated at the visual total
-grain, not per category. That is fine for a measure that sums cleanly, like effort over estimate,
-where the total is a correct weighted ratio. It breaks for a per row ratio.
+A title (or a card) is one value for the whole visual, so its measure runs at the visual total
+grain, not per category. A ratio that sums cleanly, like effort over estimate, is fine. A per row
+ratio breaks.
 
-The classic failure is `DIVIDE ( SUM ( effort ), AVERAGE ( capacity ) )`. Correct per person, but
-at the all people level it reads the sum of everyone's effort over one average capacity, so the
-title shows a number roughly the head count times too high. A ratio that should sit near 90
-percent can render as over 1800 percent.
+`DIVIDE ( SUM ( effort ), AVERAGE ( capacity ) )` is correct per person, but at the all people
+level it is everyone's effort over one average capacity, roughly head count times too high. A
+ratio near 90 percent rendered as over 1800 percent.
 
-Fix it by aggregating at the right grain inside the measure:
+- Ratio sums cleanly: the weighted total, `DIVIDE ( SUM ( num ), SUM ( den ) )`.
+- Per row ratio: `AVERAGEX` over the entity, for example
+  `AVERAGEX ( VALUES ( dim_owner[Owner] ), [Per Person Ratio] )`.
 
-- If the ratio sums cleanly, use the weighted total, `DIVIDE ( SUM ( num ), SUM ( den ) )`.
-- If the ratio is per row and does not sum, average the per row values with `AVERAGEX` over the
-  entity, for example `AVERAGEX ( VALUES ( dim_owner[Owner] ), [Per Person Ratio] )`.
-
-The same trap applies to any measure shown as a single number, a card exactly as much as a title.
-The `powerbi-dax` skill has the full treatment, including the `HASONEVALUE` form that switches
-between the direct calculation at the leaf and the averaged one at every higher grain.
+The full treatment, including the `HASONEVALUE` form that switches between the leaf and the
+averaged calculation, is in the `powerbi-dax` skill.
 
 ## Alt text can be dynamic too
 
-Alt text takes the same measure binding, so a screen reader hears the current number rather than
-a generic description. Build the string the same way and bind it to the alt text property. See
-the `powerbi-report-design` skill for what the string should say.
+Alt text takes the same measure binding, so a screen reader hears the current number. What the
+string should say is in the `powerbi-report-design` skill.

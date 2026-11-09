@@ -1,8 +1,8 @@
 # Power BI documentation repo playbook
 
-The full process for turning a finished Power BI model into a redacted, shareable git repo.
-Plain engineer voice, no em or en dashes, no semicolons outside code. The redaction
-checklist below is the privacy rule, run it on every file before it is committed.
+Turning a finished Power BI model into a redacted, shareable git repo. Plain engineer voice, no em
+or en dashes, no semicolons outside code. Run the redaction checklist on every file before it is
+committed.
 
 ## Repository structure
 
@@ -26,11 +26,10 @@ README.md                    the showcase front door
 .gitignore
 ```
 
-One numbered knowledgebase doc per topic. The `reference/` folder holds the real code
-(redacted) so a reader can see exactly how each layer works.
-
-A repo can also ship the real source instead: TMDL for the model, one `.dax` file per measure
-in a few numbered folders, with a single README table (folder, description, count) as the index.
+The `reference/` folder holds the real code, redacted, so a reader sees exactly how each layer
+works. A repo can also ship the real source instead: TMDL for the model, one `.dax` file per
+measure in a few numbered folders, with a single README table (folder, description, count) as the
+index.
 
 ## The .gitignore (write this before the first commit)
 
@@ -58,26 +57,9 @@ CLAUDE.md
 00_LOCAL_REDACTION_MAP.md
 ```
 
-Never commit the pbix, pbip, or the exported model folders. They hold the real, unredacted
-data and code.
-
-## Daily changes via pull request
-
-After the first push, make each change on a branch and open a pull request. Do not commit
-straight to main. Merge on GitHub after review.
-
-```powershell
-git checkout -b my-change
-# make your edits
-git add -A
-git commit -m "what changed"
-git push -u origin my-change
-gh pr create
-```
+The pbix, pbip, and exported model folders hold the real, unredacted data and code.
 
 ## Redaction checklist (where Power BI hides real data)
-
-Power BI models bury real identifiers in several places. Check all of them.
 
 - Company name. In host names, and as literal display values inside logic, for example
   `if [Company] = "Real Co"` in M or `IF ( company = "Real Co", ... )` in DAX. Replace with
@@ -101,7 +83,7 @@ After writing, verify nothing slipped through, for example
 
 ## README as a showcase
 
-The README is the front door. Structure it as:
+Structure:
 
 - Title and one paragraph on what the model does.
 - The goal, framed so a reader sees why the problem was hard.
@@ -117,15 +99,16 @@ work speak.
 
 ## Verify before publishing
 
-Confirm every structural claim the README makes is true of the files shipped, folder counts,
-"the theme drives all styling" claims. One repo claimed its theme drove all styling but shipped
-no custom theme file at all, styling was inline. That drift undermines trust in a public repo.
+Confirm every structural claim the README makes is true of the files shipped (folder counts,
+"the theme drives all styling"). One repo claimed its theme drove all styling but shipped no
+custom theme file at all, the styling was inline.
 
 In a source-open repo, do not commit a raw `.pbix`, the TMDL and report JSON already are the
-source. Dedupe embedded images by hash so near-identical ones do not ship twice. If documenting
-an existing report, PBIR (`definition/`, JSON per page and visual) reads directly from a plain
-zip extract, the older single file `Report/Layout` is UTF-16 and harder to diff. Either way the
-data model itself is compressed and needs an external tool.
+source. Dedupe embedded images by hash so near-identical ones do not ship twice. To read an
+existing report, a pbix's PBIR (`definition/`, JSON per page and visual) reads directly from a
+plain zip extract. A pbix edited and saved by a September 2026 or later build is PBIR. An older one may still
+hold the single file `Report/Layout`, which is UTF-16 and harder to diff. Either way the data model
+itself is compressed and needs an external tool.
 
 ## Setting up and pushing the repo (Windows)
 
@@ -144,18 +127,18 @@ git commit -m "Initial commit: redacted <model> knowledgebase"
 git push -u origin main
 ```
 
-Create the GitHub repo as Private first. After this first push, make each change on a branch
-and open a pull request, then merge on GitHub after review. Never run `git init` twice in the
-same folder.
+Create the GitHub repo as Private first. Never run `git init` twice in the same folder. After
+this first push, make each change on a branch and open a pull request, then merge on GitHub
+after review.
 
 ## Keeping the docs in sync with the model
 
-When the model changes, the reference dump has to follow, and scripted syncing has one trap
-that has caused real overwrites twice. Select the fence to replace by section heading, code
-language, and index within that section, never by "the first fence after the heading" and
-never by "the first fence whose first line matches". Every M fence starts with `let`, and one
-table's section can hold an M fence and a DAX fence side by side, so both shortcuts silently
-overwrite the wrong block while reporting success.
+When the model changes, the reference dump has to follow. A scripted sync overwrote the wrong
+block twice. Select the fence to replace by section heading, code language, and index within that
+section, never by "the first fence after the heading" and never by "the first fence whose first
+line matches". Every M fence starts with `let`, and one table's section can hold an M fence and a
+DAX fence side by side, so both shortcuts silently overwrite the wrong block while reporting
+success.
 
 A cheap end to end check: extract every code fence from the docs and confirm each one still
 appears verbatim in the TMDL. A fence that does not match is drift, either a missed sync or a
@@ -163,8 +146,6 @@ block an earlier sync overwrote.
 
 ## Gotchas
 
-- Git plus OneDrive in one folder can corrupt the repo. Keep the repo local, outside any
-  OneDrive synced path.
-- The TMDL is the source of truth. Trust it over any older summary or diagram.
-- "Save as pbip" in Power BI switches the active file to the pbip. Be aware which file you
-  are now editing.
+- Keep the repo local, outside any OneDrive synced path.
+- "Save as pbip" in Power BI switches the active file to the pbip. Know which file you are now
+  editing.

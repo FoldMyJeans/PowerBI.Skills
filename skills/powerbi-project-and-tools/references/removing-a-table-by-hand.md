@@ -1,15 +1,13 @@
 # Removing a table by hand
 
-Deleting a table's `.tmdl` file is the smallest part of removing it. Its name lives in several other
-files, and a leftover reference either stops the project opening or leaves a dangling hierarchy on a
-visual. This file is the checklist, plus the one case that needs it most: turning auto date/time off
-in a model that already has it.
+A table's name lives in several files besides its `.tmdl`. A leftover reference either stops the
+project opening or leaves a dangling hierarchy on a visual. This is the checklist, plus turning auto
+date/time off in a model that already has it.
 
 ## Before you start
 
-Close Desktop. Back up the project folder or confirm it is committed. Check that no visual reads the
-table: grep the `.Report` folder for the table name first. A table some visual uses has to be
-replaced on that visual before it can go.
+Close Desktop. Back up the project folder or confirm it is committed. Grep the `.Report` folder for
+the table name. A table some visual uses has to be replaced on that visual before it can go.
 
 ## Every file a table name can appear in
 
@@ -36,9 +34,9 @@ For a remote table in a composite model, also add it to `PBI_RemovedChildren` an
 
 ## Turning auto date/time off in an existing model
 
-Turning the option off in Desktop on a model full of visuals is the safe route, and it breaks every
-visual that used a hierarchy level. Doing it by hand touches all of the files above. One source model
-had 8 `LocalDateTable_<guid>` tables and one `DateTableTemplate_<guid>`. The steps:
+Turning the option off in Desktop is the safe route, and it breaks every visual that used a hierarchy
+level. By hand it touches all of the files above. One source model had 8 `LocalDateTable_<guid>`
+tables and one `DateTableTemplate_<guid>`. The steps:
 
 - `model.tmdl`: set `annotation __PBI_TimeIntelligenceEnabled = 0` and drop each `ref table` line
   for the local date tables and the template.
@@ -55,11 +53,11 @@ had 8 `LocalDateTable_<guid>` tables and one `DateTableTemplate_<guid>`. The ste
   table with its own hierarchy first.
 - Delete `.pbi\cache.abf`.
 
-The leak matters beyond the model itself. A composite model built on a source model with auto
-date/time on gets each hidden date table as a DirectQuery proxy, with its own relationship.
+A composite model built on a source model with auto date/time on gets each hidden date table as a
+DirectQuery proxy, with its own relationship.
 
 ## Verify
 
-Reopen in Desktop. If a reference was missed, Desktop names the file and the line. The steps above
-were written from a by hand cleanup that had not yet been reopened in Desktop, so treat the first
-reopen as the test. Then run the completion loop in `agent-verification.md`.
+Reopen in Desktop. A missed reference makes Desktop name the file and the line. The steps above come
+from a by hand cleanup not yet reopened in Desktop, so treat the first reopen as the test. Then run
+the completion loop in `agent-verification.md`.

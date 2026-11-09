@@ -1,12 +1,8 @@
 # Connecting to sources
 
-Which connector for which source, and the shape of a clean staging query. Hosts and names here
-are placeholders. Replace `yourinstance` and `yourtenant` with the real values in the model, and
-keep real hosts out of any shared or committed file.
-
-For a paged REST API, the loop and its guards live in `rest-paging-pattern.md`. For
-the defensive transforms that keep a query alive when a source drifts, see
-`m-hardening.md`.
+Which connector for which source, and the shape of a clean staging query. Hosts are
+placeholders. Keep real hosts out of any shared or committed file. The paging loop is in
+`rest-paging-pattern.md`, drift tolerant transforms in `m-hardening.md`.
 
 ## Picking the connector
 
@@ -20,8 +16,6 @@ the defensive transforms that keep a query alive when a source drifts, see
 | Closed history you do not want to re-pull | Incremental refresh with the range in the request (`incremental-refresh.md`), or a static blob when the republish cost is unacceptable | Re-pulling closed history on every refresh |
 
 ## Reading an Excel file on SharePoint
-
-Read the file directly. Do not enumerate the site.
 
 ```m
 // GOOD: direct file read, fast
@@ -44,12 +38,9 @@ in
   File
 ```
 
-To get the exact direct URL, open the file location in the browser and use the path, or in the
-file details pane copy the Path field. Avoid the share link with the `?e=` parameter, it is not
-a clean path. Percent encode the spaces (`Shared%20Documents`). Literal spaces also work in
-practice, but one form per model keeps the URLs greppable.
-
-Do not use the SharePoint REST API for a normal file read:
+For the direct URL, use the path from the browser or the Path field in the file details pane.
+Not the share link with `?e=`, which is not a clean path. Percent encode spaces
+(`Shared%20Documents`). Literal spaces also work, but one form per model keeps URLs greppable.
 
 ```m
 // AVOID: REST GetFileById. The file id survives a move, but the credential test is fragile
@@ -58,42 +49,37 @@ Web.Contents("https://yourtenant.sharepoint.com/sites/Site",
   [RelativePath = "_api/web/GetFileById('<file-id>')/$value"])
 ```
 
-Set a `Timeout` on a workbook read the same way you would on an API call. A hung download costs
-the same refresh minutes as a hung request. The default and the budget are in
-`rest-paging-pattern.md`.
+Set a `Timeout` on a workbook read as on an API call. A hung download costs the same refresh
+minutes. The default and the budget are in `rest-paging-pattern.md`.
 
 ### Kind is Sheet or Table, and they differ
 
-`Excel.Workbook` returns both. A `Table` (a real Excel table object) arrives with headers already
-correct. A `Sheet` is the raw grid, so you promote headers yourself and you own whatever title
-rows sit above the data. Prefer a `Table` when the file has one.
+`Excel.Workbook` returns both. A `Table` (a real Excel table object) arrives with correct headers.
+A `Sheet` is the raw grid, so you promote headers yourself and own any title rows above the data.
+Prefer a `Table` when the file has one.
 
 ### Sheet layout and file format change the read time
 
-These are Chris Webb's measurements, not taken over SharePoint, so trust the direction more than
-the factor. Read from local disk, a small Excel table on a sheet shared with a lot of other data
-took 4,918 ms against 63 ms on its own sheet, and being a real Excel table did not avoid it
+Chris Webb's measurements, not over SharePoint, so trust the direction more than the factor. From
+local disk, a small Excel table on a sheet shared with a lot of other data took 4,918 ms against
+63 ms on its own sheet, and being a real Excel table did not avoid it
 (https://blog.crossjoin.co.uk/2023/11/12/excel-workbook-layout-and-the-performance-of-reading-data-with-power-query-in-power-bi/).
-In an older test that does not say where the files sat, the same data took 59 seconds from xlsx and
-9 from CSV (https://blog.crossjoin.co.uk/2018/08/02/comparing-the-performance-of-csv-and-excel-data-sources-in-power-query/).
-So keep each source table on its own sheet, and when a process you control writes the file, write
-CSV.
+In an older test, the same data took 59 seconds from xlsx and 9 from CSV
+(https://blog.crossjoin.co.uk/2018/08/02/comparing-the-performance-of-csv-and-excel-data-sources-in-power-query/).
+Keep each source table on its own sheet, and when a process you control writes the file, write CSV.
 
 ### Parquet is not a Pro speed fix
 
-Microsoft documents the Parquet connector as reading only from the local filesystem, Azure Blob
-Storage, and Azure Data Lake Storage Gen2. Small files from elsewhere may work through
-`Binary.Buffer`, at a possible performance cost, and larger ones fail with `Parquet.Document cannot
-be used with streamed binary values` (https://learn.microsoft.com/en-us/power-query/connectors/parquet).
-So Parquet on SharePoint is a small file trick. Chris Webb's 2021 tests, run against ADLS Gen2 rather
-than local disk, found the generated code for combining files faster on CSV than on Parquet, and the
-Parquet gain coming from loading only some columns, with no predicate pushdown
+The Parquet connector reads only from the local filesystem, Azure Blob Storage, and Azure Data Lake
+Storage Gen2. Small files from elsewhere may work through `Binary.Buffer`, and larger ones fail with
+`Parquet.Document cannot be used with streamed binary values`
+(https://learn.microsoft.com/en-us/power-query/connectors/parquet). Chris Webb's 2021 tests against
+ADLS Gen2 found combining files faster on CSV than on Parquet, with the Parquet gain coming only from
+loading some columns, and no predicate pushdown
 (https://blog.crossjoin.co.uk/2021/04/11/importing-data-from-adlsgen2-into-power-bi-summary-of-findings/).
 For a generated extract on Pro, write CSV.
 
 ### Do not hardcode a sheet or table name a business user can edit
-
-Four patterns for a workbook someone else maintains.
 
 ```m
 // Pick the sheet by a predicate on its name, not by literal match
@@ -131,34 +117,32 @@ Final       = Table.Combine(Transformed[Data2]),
 ```
 
 `Table.Skip` with a hard coded number breaks the first time someone inserts a row above the
-table. `Table.TransformColumnNames(..., each Text.Trim(_))` is the companion fix for headers
-that carry a trailing space.
+table. `Table.TransformColumnNames(..., each Text.Trim(_))` fixes headers with a trailing space.
 
-The same goes for columns. A business user inserts one worksheet column, every positional
-mapping to its right (`Column8`, `Column9` renames) shifts by one, and nothing errors. The
-model reads wrong numbers until somebody questions a total, which can take months. Map by
-header name whenever a header exists. Where a headerless block forces positional names, assert
-that a known marker value sits in its expected column and raise a clear `error` when it does
-not, the fail loud pattern in the m-hardening reference of this skill.
+Columns too. A business user inserts one worksheet column, every positional mapping to its right
+(`Column8`, `Column9` renames) shifts by one, and nothing errors. The model reads wrong numbers
+until somebody questions a total, which can take months. Map by header name whenever a header
+exists. Where a headerless block forces positional names, assert that a known marker value sits
+in its expected column and raise a clear `error` when it does not (the fail loud pattern in
+`m-hardening.md`).
 
 ## OData
 
-Use `OData.Feed` when the service really is OData, and start from the service root so Power Query
-can navigate and filter from there. This comes from Microsoft docs and has not yet been run on a
-real model here.
+Use `OData.Feed` when the service really is OData, from the service root so Power Query can
+navigate and filter from there. From Microsoft docs, not yet run on a real model here.
 
 - `Timeout` defaults to 600 seconds on `OData.Feed`, not the 100 seconds of `Web.Contents`.
 - `Concurrent` follows the service's `AsynchronousRequestsSupported` annotation, and runs
   sequentially if the service does not say.
-- `OmitValues = ODataOmitValues.Nulls` and `Implementation = "2.0"` are options worth testing one at
-  a time. No published benchmark turned up for either.
-- If the URL is more than the service root, select Skip Test Connection when you set up refresh. The
-  Service's credential test ignores the query options in the M.
-- Joins with OData or Web sources can be slow enough for the host to close the connection, with `An
-  existing connection was forcibly closed by the remote host`. Use a navigation column when you can,
-  otherwise `Table.Buffer` the smaller query before the merge.
-- On a SharePoint list or Project Online, a URL past about 2,100 characters fails with a 401. Start
-  from the root endpoint and filter in Power Query.
+- `OmitValues = ODataOmitValues.Nulls` and `Implementation = "2.0"` are worth testing one at a
+  time. No published benchmark for either.
+- If the URL is more than the service root, select Skip Test Connection when you set up refresh.
+  The Service's credential test ignores the query options in the M.
+- Joins with OData or Web sources can be slow enough for the host to close the connection, with
+  `An existing connection was forcibly closed by the remote host`. Use a navigation column when
+  you can, otherwise `Table.Buffer` the smaller query before the merge.
+- On a SharePoint list or Project Online, a URL past about 2,100 characters fails with a 401.
+  Start from the root endpoint and filter in Power Query.
 - Microsoft Graph is not supported through this connector.
 
 Sources: https://learn.microsoft.com/en-us/powerquery-m/odata-feed and
@@ -166,15 +150,15 @@ https://learn.microsoft.com/en-us/power-query/connectors/odata-feed
 
 ## Authentication notes (Pro)
 
-- ServiceNow REST: Basic (user and password) or OAuth. Set it once in Desktop, and again in the
-  Service under the dataset's data source credentials.
-- SharePoint and SharePoint files and Excel on SharePoint: Organizational account (OAuth).
-- Set privacy levels consistently. When two sources are combined in one query, mismatched
-  privacy levels throw a Formula.Firewall error. For a single tenant, Organizational on all
-  sources is usually right, and it does not cause the "operation cancelled" timeout error. The
-  model level override is in `refresh-troubleshooting.md`.
+- ServiceNow REST: Basic (user and password) or OAuth. Set it in Desktop, and again in the
+  Service under the model's data source credentials.
+- SharePoint, SharePoint files, Excel on SharePoint: Organizational account (OAuth).
+- Set privacy levels consistently. Mismatched levels on two sources combined in one query throw a
+  Formula.Firewall error. For a single tenant, Organizational on all sources is usually right, and
+  it does not cause the "operation cancelled" timeout. The model level override and Desktop's July 2026
+  preview firewall option are in `refresh-troubleshooting.md`.
 
-## The literal first argument rule, and its one safe exception
+## The literal first argument rule
 
 The first argument to `Web.Contents` must be a constant. That is what lets the Service bind one
 credential to one host and refresh on a schedule.
@@ -186,32 +170,23 @@ Web.Contents(WorkbookUrl)                                                       
 Web.Contents("https://" & host & "/api/" & table)                                          // breaks in the Service
 ```
 
-A `let` binding to a string constant is safe, and it reads better when the same URL is used
-twice. What breaks the Service is a URL it cannot resolve without running the query, which
-means anything built by concatenation or read out of data. Keep everything variable in
+A `let` binding to a string constant is safe. What breaks is a URL the Service cannot resolve
+without running the query: anything concatenated or read out of data. Keep everything variable in
 `RelativePath` and `Query`.
 
 ## Parameters, and the one place they bite
 
-Hardcoding a host in 6 queries means changing it in 6 places, and it guarantees that the
-day you point at a test instance you will miss one. Power Query parameters (Home, Manage
-Parameters) fix that, and the Service lets you change a parameter value in the semantic model
-settings without republishing the file, which is the part that makes them worth setting up.
+Power Query parameters (Home, Manage Parameters) stop a host being hardcoded in 6 queries, and the
+Service lets you change a parameter value in the semantic model settings without republishing.
 
-Parameterize freely:
+Parameterize freely: page size, row limits, any `Query` record value, filter values, cutoff
+dates, thresholds, the relative path when one host serves several tables, and `RangeStart` and
+`RangeEnd`, which incremental refresh requires by name.
 
-- Page size, row limits, and any `Query` record value.
-- Filter values, cutoff dates, and thresholds used in transformations.
-- The relative path, when the same host serves several tables.
-- `RangeStart` and `RangeEnd`, which incremental refresh requires by name.
-
-The exception is the one the rule above already describes. A parameter in the first argument to
-`Web.Contents` is the case that fails in the Service, because the analyzer cannot resolve the
-host without running the query. Concatenating a parameter into the URL fails the same way, and
-it fails at scheduled refresh rather than in Desktop, so you will not see it while building.
-
-When you need to swap environments, branch across whole literal calls instead of
-building a string:
+The exception: a parameter in the first argument to `Web.Contents`, or concatenated into the URL,
+fails in the Service because the host cannot be resolved without running the query. It fails at
+scheduled refresh, not in Desktop, so you will not see it while building. To swap environments,
+branch across whole literal calls:
 
 ```m
 // Each branch hands Web.Contents a literal, so the Service can still resolve both hosts.
@@ -220,14 +195,8 @@ Source = if UseTest
          else Web.Contents("https://prod-instance.example.com", [RelativePath = RelPath, Query = Q])
 ```
 
-The repetition is the point. Each branch hands `Web.Contents` a literal it can resolve, which
-is what a concatenated URL cannot do.
-
 ## A clean staging query
 
-Keep the raw pull in its own query, load disabled, do the reshape there, then let the model
-tables build from it.
-
-Then count how many things reference it. A referenced query re-runs in full every time,
-including its network calls, and that count is the number that decides your refresh time. The
-counting method and what to do about it are in `folding-and-duplication.md`.
+Keep the raw pull in its own query, load disabled, do the reshape there, and let the model tables
+build from it. Then count how many things reference it, because each reference re-runs it in full,
+network calls included. The method is in `folding-and-duplication.md`.
