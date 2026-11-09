@@ -55,6 +55,12 @@ foreach ($d in $skillDirs) {
     if ($desc.Length -eq 0)    { Add-Fail $skillMd 3 'description is empty or not a >- block' }
     if ($desc.Length -gt 1024) { Add-Fail $skillMd 3 "description is $($desc.Length) chars, cap is 1024" }
 
+    # Every skill says which Power BI release it was last compared against, so a stale one shows.
+    $months = 'January|February|March|April|May|June|July|August|September|October|November|December'
+    if ($raw -notmatch "Checked against Power BI releases through ($months) 20\d\d\.") {
+        Add-Fail $skillMd 0 "no 'Checked against Power BI releases through <Month> <YYYY>.' line"
+    }
+
     # Reference files stay loadable on their own. 250 lines is roughly 3k tokens, which is one
     # focused read on top of a SKILL.md. The cap is a proxy for the real rule, one topic per
     # reference. A file that needs more than this is usually covering two topics.

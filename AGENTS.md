@@ -23,7 +23,32 @@ Every skill and guideline assumes Power BI Pro. No Fabric, no Premium, no Premiu
 only Dataflow Gen1. When you add or change content, keep this lens. If something needs
 Premium or Fabric, say so plainly and give the Pro friendly alternative. The verified limits
 live in `skills/powerbi-project-and-tools/references/pro-vs-premium-facts.md`. Trust that
-file over memory or old blog posts, and re-verify against Microsoft Learn about once a year.
+file over memory or old blog posts, and check it against each month's release (below).
+
+## Current facts beat memory
+
+Power BI ships every month, and a limitation that was true six months ago is often gone. This repo
+is the source of truth for how to build, and Microsoft's current release notes are the source of
+truth for what exists. An agent's own training memory and community threads are neither.
+
+- Before stating that Power BI cannot do something, check this repo and the current month's
+  release (https://learn.microsoft.com/en-us/power-bi/fundamentals/whats-new). If they disagree,
+  the release wins, and the repo gets fixed.
+- For formatting properties, the newest report theme schema
+  (`reportThemeSchema-<version>.json` in microsoft/powerbi-desktop-samples) lists every property
+  that exists. Diff it against the previous version to see what a release added.
+- Each `SKILL.md` carries a "Checked against Power BI releases through" line. Move it only when the whole
+  skill was compared against the releases since the last date, not when one file changed.
+- The monthly upkeep: read that month's release, diff the theme schema, and fix any reference the
+  release made wrong in the same pull request.
+
+## Templates are options, not a house look
+
+The skills support every kind of report: a plain practical dashboard, a polished executive page,
+a creative one with charts inside tables or custom visuals, and routine operational pages. The
+default theme, the grid numbers, and the templates here are a starting point that works. Use them
+when the report has no look of its own, follow the report's existing look when it does, and never
+restyle a report toward the defaults as a side effect of another change.
 
 ## Writing rules (apply to every file here)
 
@@ -31,6 +56,10 @@ These govern files in this repo. They are not style advice for your own project'
 nothing here should be applied to a user's report, code, or writing unless they ask for it.
 
 - Plain engineer voice. Short direct sentences. Explain the why, not marketing filler.
+- Write for an agent that has a task in hand. Lead with the rule or the shape, then the one
+  detail that bites (the exact error, the number that was wrong). Cut background an agent already
+  knows, a story of how a fix was found once the fix is stated, and a restatement of a point made
+  a paragraph earlier.
 - Never use an em dash or an en dash. Use commas, periods, or parentheses.
 - Never use a semicolon outside a fenced code block. Split into two sentences.
 - No real company name. Use "ABC Company". No real people names, use a role. Use placeholder
@@ -136,7 +165,8 @@ It fails the build on: an em or en dash or a semicolon in prose (code fences are
 `SKILL.md` frontmatter `name` that does not match its folder, a description over 1024
 characters, a `SKILL.md` over 150 lines, a reference over 250 lines, any path reference that
 leaves its own skill folder, a real company name or tenant or instance host, a reference file
-that its own `SKILL.md` never mentions, and any JSON in the repo that does not parse.
+that its own `SKILL.md` never mentions, a `SKILL.md` without its "Checked against Power BI
+releases through" line, and any JSON in the repo that does not parse.
 
 Exit code 0 means clean. Do not commit on a red check.
 

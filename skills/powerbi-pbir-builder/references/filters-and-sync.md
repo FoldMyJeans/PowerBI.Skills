@@ -1,15 +1,12 @@
 # Filters and slicer sync
 
-The `filterConfig` block on a page or a visual, and how slicers are wired to move together across
-pages. These are the parts of PBIR that look cosmetic and change the numbers.
+`filterConfig` on a page or visual, and slicer sync across pages. Both look cosmetic and change
+the numbers.
 
 ## Excluding blanks from a category
 
-The most common filter you will write. A blank category shows up as an ugly empty bar or a broken
-point at the end of a trend line.
-
-A text column needs BOTH conditions. Excluding `null` alone leaves the empty strings behind, and
-an API that returns `""` where it means nothing is the usual source of them.
+A text column needs BOTH conditions. Excluding `null` alone leaves the empty strings, usually from
+an API that returns `""` for nothing.
 
 ```json
 "filterConfig": {
@@ -40,20 +37,17 @@ an API that returns `""` where it means nothing is the usual source of them.
 }
 ```
 
-The supporting keys matter:
-
-- `ordinal` sets the order filters stack in the filter pane. Give each one a distinct value.
-- `howCreated: "User"` marks a filter an author added, as opposed to one Desktop generated.
-- `filterSortOrder: "Custom"` keeps the pane in your `ordinal` order rather than resorting it.
-- Inside `From`, `Name` is a local alias and every `SourceRef` in the `Where` uses
-  `{ "Source": "<alias>" }`, not the entity name again.
-
-Fix the blanks upstream where you can. Normalizing `""` to `null` in M is one step and removes
-the need for half of this filter. See the `powerbi-data-and-refresh` skill.
+- `ordinal` is the stacking order in the filter pane. Give each filter a distinct value.
+- `howCreated: "User"` marks an author added filter, as opposed to one Desktop generated.
+- `filterSortOrder: "Custom"` keeps the pane in `ordinal` order.
+- In `From`, `Name` is a local alias. Every `SourceRef` in `Where` uses `{ "Source": "<alias>" }`,
+  not the entity name.
+- Better upstream: normalizing `""` to `null` in M removes half of this filter. See the
+  `powerbi-data-and-refresh` skill.
 
 ## Excluding a value by substring
 
-Useful for keeping an internal company out of a client list without hardcoding every client.
+Keeps an internal company out of a client list without listing every client.
 
 ```json
 {
@@ -73,13 +67,12 @@ Useful for keeping an internal company out of a client list without hardcoding e
 }
 ```
 
-Be careful with this one. A substring exclusion silently removes anything that happens to contain
-the string, so a new client whose name embeds it disappears with no warning. Prefer an explicit
-categorical exclusion, or a flag column in the model, when the list is stable.
+It also removes a new client whose name happens to contain the string, with no warning. Prefer
+an explicit categorical exclusion, or a flag column in the model, when the list is stable.
 
 ## A slicer's own filter
 
-A slicer carries a `Categorical` filter representing its current selection state.
+A slicer carries a `Categorical` filter for its selection state.
 
 ```json
 "filterConfig": {
@@ -98,21 +91,18 @@ A slicer carries a `Categorical` filter representing its current selection state
 }
 ```
 
-`isInvertedSelectionMode` set to `true` is how a slicer represents "nothing excluded yet". It is
-the real internal shape Desktop writes for a slicer with no selection, so keep it as shown rather
-than trying to express an empty selection some other way.
+`isInvertedSelectionMode` `true` is what Desktop writes for a slicer with no selection ("nothing
+excluded yet"). Keep it as shown rather than expressing an empty selection another way.
 
 ## Filter names are scoped to the visual
 
-The `name` on a filter only has to be unique inside that one visual's `filterConfig`. Desktop
-reuses the same id across visuals when you duplicate one, so duplicates across the report are
-normal and are not the same class of problem as a duplicate `lineageTag` in the model. Do not go
-"fixing" them. See the `powerbi-project-and-tools` skill for the model side rule, which is the
-opposite and is strict.
+A filter `name` only has to be unique inside one visual's `filterConfig`. Desktop reuses ids when
+you duplicate a visual, so duplicates across the report are normal. Do not "fix" them. A duplicate
+`lineageTag` in the model is the opposite, strict rule (the `powerbi-project-and-tools` skill).
 
 ## Syncing slicers across pages
 
-Sync is stored on each slicer as a `syncGroup`, at the `visual` level next to `visualType`.
+`syncGroup` sits on each slicer at the `visual` level, next to `visualType`.
 
 ```json
 "syncGroup": {
@@ -122,13 +112,10 @@ Sync is stored on each slicer as a `syncGroup`, at the `visual` level next to `v
 }
 ```
 
-Slicers sharing a group name, with both change flags on, move together.
-
-Name the group after the field AND the table it comes from, with punctuation and underscores
-stripped. `Companyfacteffort`, `Companyfacteps`, and `Companydimworkitem` are three separate
-groups for three Company slicers built on three different tables. That naming rule is what stops
-same named slicers on different tables cross driving each other, which produces filter behaviour
-nobody can explain later.
+Slicers sharing a group name, with both change flags on, move together. Name the group after the
+field AND its table, punctuation and underscores stripped. `Companyfacteffort`, `Companyfacteps`
+and `Companydimworkitem` are three groups for three Company slicers on three tables, so same
+named slicers on different tables never cross drive each other.
 
 Two ways a sync group fails without an error:
 
@@ -139,22 +126,17 @@ Two ways a sync group fails without an error:
   synced slicers on the same field can offer different values. A page can then be filtered to a
   value its own dropdown does not list. Give synced slicers the same visual filters.
 
-Leave search box slicers (`selfFilterEnabled`) out of sync groups. They are usually page specific
-and syncing a search term across pages is rarely what anyone wants.
+Leave search box slicers (`selfFilterEnabled`) out of sync groups. They are usually page
+specific.
 
 ## Parking a filter without showing the control
 
-A slicer can be hidden and still filter its page. The `isHidden` key and the tab order band to
-use are in `layout-and-schema-versions.md`.
-
-Use it sparingly. A filter nobody can see is a filter nobody can turn off, and the next person to
-open the report will spend an hour working out why a number looks wrong. When you use one, name
-the visual so its purpose is obvious, for example `vSprintFilterCarrier`, and note it in the page
-documentation.
+A hidden slicer still filters its page. The `isHidden` key and its tab order band are in
+`layout-and-schema-versions.md`. Use it sparingly: nobody can see or turn off that filter. Name
+the visual for its purpose (`vSprintFilterCarrier`) and note it in the page documentation.
 
 ## Page level versus visual level
 
-A `filterConfig` on `page.json` applies to every visual on the page. One on a `visual.json`
-applies to that visual only. Prefer the page level filter when the whole page answers one scoped
-question, because it is visible in the filter pane and a reader can see the scope. A pile of
-identical visual level filters is harder to audit and easy to update inconsistently.
+`filterConfig` on `page.json` applies to every visual on the page, on `visual.json` to that visual
+only. When the whole page answers one scoped question, prefer the page filter. It shows in the
+filter pane, and a pile of identical visual filters is hard to audit and drifts out of step.

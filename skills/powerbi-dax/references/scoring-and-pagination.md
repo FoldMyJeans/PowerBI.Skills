@@ -1,16 +1,11 @@
 # Scoring, tiering, and ranked pagination
 
-Two related but separate techniques. Part A turns raw metrics into a comparable 0 to 100 score
-and combines several into one composite. Part B takes a rank and slices it into pages for a
-leaderboard style visual. Both lean on patterns already covered in `patterns.md`,
-DIVIDE and RANKX, so this file builds on those rather than repeating them.
+Part A turns raw metrics into a comparable 0 to 100 score and combines several into one composite.
+Part B slices a rank into pages for a leaderboard. Both build on DIVIDE and RANKX in `patterns.md`.
 
 ## Part A: normalization and composite scoring
 
 ### Min-max normalize a metric to 0-100
-
-Scale a metric between the lowest and highest value currently in view, so every metric lands on
-the same 0 to 100 scale regardless of its native unit.
 
 ```dax
 Sales Score =
@@ -31,22 +26,18 @@ RETURN
     )
 ```
 
-The bounds come from CALCULATE and ALLSELECTED over the current page selection, computed fresh
-every time the measure runs, not typed in as literals. A hard coded `MinSales = 0` and
-`MaxSales = 100000` looks fine on the day you write it and goes quietly wrong the first month a
-product sells outside that range, every score above the old max clips at 100 and the report
-never tells you why. Dynamic bounds cannot go stale, because there is nothing stored to go
-stale.
-
-The `SalesRange = 0` guard covers the case where every item in view has the same value, a single
-selected product, or a metric that has not moved yet. Without it DIVIDE still returns blank on a
-zero denominator, but blank in the middle of a composite score below is worse than a neutral 50.
+- The bounds are computed from the current page selection every time, never typed as literals. A
+  hard coded `MinSales = 0` and `MaxSales = 100000` goes wrong the first month a product sells
+  outside that range: every score above the old max clips at 100 and the report never says why.
+- The `SalesRange = 0` guard covers every item in view having the same value (a single selected
+  product, a metric that has not moved). DIVIDE alone would return blank, and a blank inside the
+  composite below is worse than a neutral 50.
 
 ### Invert the scale for lower is better
 
-A metric like cost or a defect rate is better when it is lower, so flip the numerator before
-scaling. Mark the flip with a comment, the DAX itself does not visually signal that the scale
-was reversed.
+For cost or a defect rate, `MaxRate - CurrentRate` in the numerator, instead of
+`CurrentRate - MinRate`, is the entire inversion. Mark it with a comment, since nothing in the DAX
+signals the flip.
 
 ```dax
 Defect Score = -- inverted: lower defect rate scores higher
@@ -67,13 +58,7 @@ RETURN
     )
 ```
 
-`MaxRate - CurrentRate` in the numerator, instead of `CurrentRate - MinRate`, is the entire
-inversion. Everything else is the same shape as the non inverted measure above.
-
 ### Combine normalized scores into a composite
-
-Average the 0-100 scores with DIVIDE and a denominator counted from what is present,
-not a hard coded count of how many scores you expect to have.
 
 ```dax
 Product Composite Score =
@@ -85,14 +70,12 @@ RETURN
     DIVIDE ( ScoreSum, ScoreCount )
 ```
 
-Counting the valid scores instead of writing `/ 3` means one missing input score lowers the
-denominator along with the numerator, instead of dragging the composite down by silently
-averaging in a zero.
+Counting the valid scores instead of writing `/ 3` means a missing score lowers the denominator too,
+instead of silently averaging in a zero.
 
 ### Tier classification from the composite
 
-Rank the composite, then bucket the rank into thirds. This reuses the base RANKX pattern from
-`patterns.md`, adapted to drive a label instead of a number.
+Rank the composite, then bucket the rank into thirds.
 
 ```dax
 Product Tier =
@@ -112,10 +95,10 @@ RETURN
     )
 ```
 
-### A lighter alternative: four quadrant sign classification
+### A lighter alternative: four quadrant classification
 
-When two scores matter independently rather than blended into one composite, classify on
-whether each clears its own threshold instead of ranking the blend.
+When two scores matter independently, classify on whether each clears its own threshold instead of
+ranking a blend.
 
 ```dax
 Product Quadrant =
@@ -135,17 +118,14 @@ RETURN
     )
 ```
 
-Ship a paired color measure with a quadrant label, the same rule the measure naming taxonomy in
-`powerbi-modeling` already sets for any label measure, one color per label, not repeated here.
+Ship a paired color measure with a label measure, per the measure naming taxonomy in
+`powerbi-modeling`.
 
 ## Part B: ranking with pagination
 
-Start from the base RANKX form, `ALL`, `DESC`, `DENSE`, in `patterns.md`. This
-section only covers windowing that rank into pages, not the rank itself.
-
 ### A disconnected page table
 
-A small table with no relationship to the model, just page numbers and labels for a slicer.
+Page numbers and labels for a slicer, related to nothing.
 
 ```tmdl
 table cfg_LeaderboardPage
@@ -165,14 +145,13 @@ table cfg_LeaderboardPage
 			    Source
 ```
 
-Generate a real lineage tag per object in Desktop, do not copy the ones above. Every lineage tag
-must be unique across the whole model, a duplicate breaks the pbip on open.
+Generate real lineage tags in Desktop, do not copy these. Every lineage tag must be unique across the
+whole model, and a duplicate breaks the pbip on open.
 
 ### Read the selection and gate the rank
 
-SELECTEDVALUE with a default keeps the leaderboard on page 1 before anyone touches the slicer.
-Compute the page window once as VARs, MinRank and MaxRank derived from a single PageSize
-constant, and gate the rank measure through them.
+SELECTEDVALUE with a default keeps the leaderboard on page 1 before anyone touches the slicer. MinRank
+and MaxRank derive from one PageSize VAR.
 
 ```dax
 Sales Rep Rank In Page =
@@ -186,18 +165,18 @@ RETURN
     IF ( CurrentRank >= MinRank && CurrentRank <= MaxRank, CurrentRank, BLANK () )
 ```
 
-Bind the visual's row filter or a rank column to this measure. Rows outside the current page
-return blank and drop out of a matrix that has "show items with no data" turned off, which is
-what makes it read as a real page instead of the whole list with some ranks blanked out.
+Bind the visual's row filter or a rank column to this measure. Rows outside the page return blank
+and drop out of a matrix with "show items with no data" off, so it reads as a real page. DENSE ties
+can overfill a page. RANK with a name tie break (`window-and-visual-calculations.md`) gives exact
+page sizes.
 
 ## Anti-patterns
 
-- **Hard coded normalization bounds.** A literal min and max looks correct until new data lands
-  outside the old range, then every score silently clips.
-- **A page size literal repeated across measures.** Typing `10` in three different measures
-  means a page size change is three edits and three chances to leave one stale. Derive MinRank
-  and MaxRank from one PageSize VAR per measure, or a single source measure every page measure
-  reads.
-- **Mixing a 0-100 scale and a 0-1 ratio with no naming signal.** Suffix a 0-100 score `Score`
-  and a 0-1 ratio `Ratio`, every time. A measure named `Sales Score` that actually returns 0.82
-  reads as broken the first time someone puts a percent format string on it.
+- **Hard coded normalization bounds.** Every score silently clips once new data lands outside the
+  old range.
+- **A page size literal repeated across measures.** A page size change becomes three edits and three
+  chances to leave one stale. Derive MinRank and MaxRank from one PageSize VAR per measure, or one
+  source measure every page measure reads.
+- **A 0-100 scale and a 0-1 ratio with no naming signal.** Suffix a 0-100 score `Score` and a 0-1
+  ratio `Ratio`. A `Sales Score` that returns 0.82 reads as broken the first time someone puts a
+  percent format on it.

@@ -15,114 +15,102 @@ description: >-
 
 # Power BI PBIR builder
 
-Write report pages and visuals directly into an existing PBIP project's `.Report\definition`
-folder, instead of clicking through Power BI Desktop by hand. Useful for generating many
-similar visuals (a row of KPI cards, a page per region), or for scripting a layout once you
-know the pattern.
+Checked against Power BI releases through October 2026.
 
-Read this before any other reference in this skill: PBIR is a strict, brittle JSON format.
-A single wrong bracket or an unknown property can stop the whole report from opening. Treat
-every edit here as something to do carefully, not casually.
+Write pages and visuals straight into an existing PBIP's `.Report\definition` folder. Worth it
+for many similar visuals (a row of KPI cards, a page per region) or a layout you script once.
+PBIR is strict JSON: one wrong bracket or one unknown property can stop the whole report from
+opening.
 
 ## When to use
 
-Use this to ADD pages or visuals to a PBIP project that already exists. For choosing which
-chart fits a question, picking colors, and general layout rules, use `powerbi-report-design`
-first and bring the decision here to implement. For the model behind the visuals, use
-`powerbi-modeling` and `powerbi-dax`. For safely hand editing the semantic model's TMDL, and
-the general pbip safety rules, use `powerbi-project-and-tools`.
+Only to ADD pages or visuals to a PBIP that exists. Chart choice, colour and layout rules come
+from `powerbi-report-design`, then get implemented here. The model behind the visuals is
+`powerbi-modeling` and `powerbi-dax`. TMDL hand editing and general pbip safety are
+`powerbi-project-and-tools`.
 
-## Critical constraints, read first
+## Critical constraints
 
-1. **Never create a PBIP from scratch.** Power BI Desktop generates boilerplate (`report.json`,
-   `.platform`, `version.json`, real GUIDs, theme registration) that is version specific and
-   not practical to hand write. Always start from a PBIP the user already saved from Desktop.
-2. **Power BI Desktop must be closed** while you write files. Desktop holds the project open
-   and will overwrite your changes from its in memory copy on save, or the files may be locked.
-   With the Desktop Bridge there is a second branch, see `agent-verification.md` in the
+1. **Never create a PBIP from scratch.** Desktop writes `report.json`, `.platform`,
+   `version.json`, real GUIDs and the theme registration, all version specific. Start from a PBIP
+   the user saved from Desktop.
+2. **Desktop must be closed** while you write. It overwrites your changes from its in memory copy
+   on save, or locks the files. The Desktop Bridge branch is in `agent-verification.md` in the
    `powerbi-project-and-tools` skill.
-3. **Back up first.** Copy the `.Report` folder, or make sure it is committed to git, before
-   writing anything.
-4. **Validate after writing.** Parse every JSON file you wrote before telling the user to
-   reopen Desktop. A missing comma or bracket blocks the whole report from loading. Parsing is the
-   first check, not the last, see the workflow below.
-5. **Prefer the theme over bespoke visual formatting.** Put color and font choices in the
-   report's theme JSON (see `house-default-theme.json` in the `powerbi-report-design` skill) rather than repeating them
-   in every `visual.json`. Change it once, it applies everywhere. One exception: classic
-   slicer `dropdown` properties in the theme were ignored by Desktop in one report and applied
-   in another. Render one page after a theme change and set them per visual if nothing moved.
+3. **Back up first.** Copy the `.Report` folder or commit it to git.
+4. **Parse every JSON file you wrote** before the user reopens Desktop. A missing comma blocks the
+   whole report. Parsing is the first check, not the last (workflow step 7).
+5. **Theme before per visual formatting.** Colour and font go in the report's theme JSON once, not
+   in every `visual.json`. When the report has no theme of its own, start from
+   `house-default-theme.json` in the `powerbi-report-design` skill. Classic slicer `dropdown`
+   properties in a theme were ignored in one report, so render one page after a theme change (see
+   `references/slicer-templates.md`).
 
 ## Workflow
 
-1. Confirm a PBIP already exists and Power BI Desktop is closed. If there is no PBIP yet,
-   stop and have the user create one: open Desktop, connect the data source, File, Save As,
-   Power BI Project (.pbip).
-2. Read `references/pbir-structure-and-safety.md` for the folder layout and the safe editing
-   steps.
-3. Detect the schemas already in use. The three file kinds use three different schemas, so
-   take each from an existing file of the same kind, and for `visual.json` use the highest
-   version in the project rather than the first one you open. Do not hardcode a version,
-   Desktop's version changes over time. See `references/layout-and-schema-versions.md`.
-4. Pick the visual type and query roles for what the user wants. Read
-   `references/visual-types-and-patterns.md` for the catalog and worked examples. For a table,
-   matrix, card, KPI, gauge, or textbox, start from the complete file in
+1. Confirm a PBIP exists and Desktop is closed. No PBIP: the user opens Desktop, connects the
+   source, then File, Save As, Power BI Project (.pbip).
+2. Read `references/pbir-structure-and-safety.md` for the folder layout and the safety checklist.
+3. Detect the schemas in use. Three file kinds, three schemas. Take each from a file of the same
+   kind, and for `visual.json` use the highest version in the project. Never hardcode one. See
+   `references/layout-and-schema-versions.md`.
+4. Pick the visual type and query roles from `references/visual-types-and-patterns.md`. For a
+   table, matrix, card, KPI, gauge or textbox, start from the complete file in
    `references/templates-grids.md` or `references/templates-single-value.md`.
-5. Work out layout using `references/layout-and-schema-versions.md`, which follows the same
-   8 pixel grid as the `powerbi-report-design` skill. Check that `report.json` has
-   `"useStylableVisualContainerHeader": true` before writing any container styling, because
-   without it subtitles, dividers, shadows, and header tooltips silently do nothing.
-6. Write the files: the page folder, `page.json`, each visual's folder and `visual.json`,
-   then update `pages/pages.json` to add the new page to `pageOrder`.
-7. Validate every JSON file you wrote parses cleanly, then run the completion loop in
-   `agent-verification.md` in the `powerbi-project-and-tools` skill: conformance validation, reload
-   and screenshot through the Desktop Bridge, the review checklist, and the expected numbers asserted
-   with DAX. Valid JSON can still render wrong, and a page that renders can still show a wrong total.
-8. Report what the loop showed, and name any step that was blocked rather than claiming it is done.
-   Without the bridge, tell the user the files are written, Desktop must stay closed until now, and
-   to reopen the `.pbip` to see the result, then to run the same review and number checks.
+5. Lay out with `references/layout-and-schema-versions.md` (the same 8 pixel grid as
+   `powerbi-report-design`). Before any container styling, check that `report.json` has
+   `"useStylableVisualContainerHeader": true` (a new Fluent 2 report may already have it). Without
+   it, subtitles, dividers, shadows and header tooltips silently do nothing.
+6. Write the page folder, `page.json`, each visual folder and `visual.json`, then add the page to
+   `pageOrder` in `pages/pages.json`.
+7. Parse every file, then run the completion loop in `agent-verification.md` in the
+   `powerbi-project-and-tools` skill: conformance validation, reload and screenshot through the
+   Desktop Bridge, the review checklist, and the expected numbers asserted with DAX. Valid JSON can
+   render wrong, and a page that renders can show a wrong total.
+8. Report what the loop showed and name any step that was blocked. Without the bridge, tell the
+   user the files are written, to reopen the `.pbip` now, and to run the same review and number
+   checks.
 
 ## Rules of thumb
 
-- Name pages and visuals descriptively (`pgOverview`, `vSalesBarChart`), not with random IDs.
-  The `name` field inside a JSON file must match its folder name exactly.
-- `Entity` and `Property` values in a field reference are the exact table and column or
-  measure name from the semantic model, case sensitive. Check the TMDL if unsure.
-- A slicer, chart axis, or table needs at least one query role filled (for example `Category`
-  and `Y` for a bar chart, `Values` for a slicer). See the catalog for the exact roles.
-- Keep conditional formatting logic in a model or extension measure that returns a color
-  string, referencing the theme's semantic `good` and `bad` colors, rather than a hardcoded
-  hex value repeated in many visuals.
-- If the user wants a variance or actual versus plan style chart, that is a legitimate pattern
-  (IBCS calls it a comparison chart), but use the house theme's colors for it, not a borrowed
-  palette. See `powerbi-report-design` for the color rules.
-- A title or a card can be bound to a measure that returns a string, so it updates with the
-  filters. Watch the grain, the measure is read at the whole visual level, so a per row ratio
-  measure overstates unless you aggregate it (a weighted total, or `AVERAGEX` over the entity). See
-  `references/visual-types-and-patterns.md`.
+- Descriptive names (`pgOverview`, `vSalesBarChart`), not random IDs. The `name` inside a file
+  must equal its folder name exactly.
+- `Entity` and `Property` in a field reference are the exact model names, case sensitive. Check
+  the TMDL.
+- A slicer, chart axis or table needs at least one query role filled (`Category` and `Y` for a
+  bar chart, `Values` for a slicer). Exact roles are in the catalog.
+- Conditional formatting: a model or extension measure that returns a colour string, built on the
+  theme's semantic `good` and `bad` colours, not a hex repeated across visuals.
+- A variance or actual versus plan chart (IBCS calls it a comparison chart) is fine. Colour it from
+  the report's theme, not a borrowed palette. Colour rules are in `powerbi-report-design`.
+- A title or card bound to a string measure updates with the filters. It is read at the whole
+  visual grain, so a per row ratio overstates unless aggregated (a weighted total, or `AVERAGEX`
+  over the entity). See `references/cards-and-dynamic-text.md`.
 
 ## References in this skill
 
-- `references/pbir-structure-and-safety.md`: the PBIR folder layout, the files you write
-  versus the files only Desktop can generate, and the full safe editing checklist.
-- `references/visual-types-and-patterns.md`: the visual type catalog and query roles, field
-  reference shapes, letting a field parameter drive a chart or a table, and worked JSON for a
-  trend chart and a slicer.
-- `references/formatting-and-selectors.md`: where formatting lives, the selector forms and
-  why the wrong one silently does nothing, referencing a theme color with `ThemeDataColor`, the
-  container card that makes a report look finished, and gradients.
-- `references/formatting-charts-and-tables.md`: line series colour, data labels on stacked
-  bars, reference lines, and table and matrix column widths with `columnAdjustment`.
-- `references/cards-and-dynamic-text.md`: the new card's shape, the legacy card's
-  remaining job, titles bound to a measure, and the grain trap that overstates them.
-- `references/filters-and-sync.md`: the `filterConfig` shapes including excluding blanks
-  properly, and slicer sync group naming.
-- `references/slicer-templates.md`: the classic underline dropdown, the list slicer with a wide
-  open list, the button slicer with its state selectors, and the traps each one hit.
-- `references/templates-grids.md`: complete copyable `visual.json` files for a table and a
-  matrix, with the column, header, and subtotal formatting each one needs.
-- `references/templates-single-value.md`: complete copyable files for the legacy card, KPI,
-  gauge, and textbox, including the textbox's own formatting grammar, plus the image visual,
-  a page background picture, and an image bound to an SVG measure.
-- `references/layout-and-schema-versions.md`: canvas, the grid densities with real numbers,
-  the z and tab order bands Desktop writes, hiding a visual, and reading the schema
-  version already in use instead of hardcoding one.
+- `references/pbir-structure-and-safety.md`: folder layout, the files you write versus the files
+  only Desktop generates, `pages.json`, the safety checklist, and respecting a hand tuned layout.
+- `references/visual-types-and-patterns.md`: visual type catalog and query roles (with what was
+  seen in a saved file and what is a guess), field references, field parameters, and worked JSON
+  for a trend chart and a slicer.
+- `references/formatting-and-selectors.md`: where formatting lives, the selector forms and why
+  the wrong one silently does nothing, `ThemeDataColor`, the container card block, and gradients.
+- `references/formatting-charts-and-tables.md`: line series colour, data labels on bars,
+  reference lines, table and matrix column widths (the 2026 width model), and chart properties
+  added in 2026.
+- `references/cards-and-dynamic-text.md`: the new card's shape, the legacy card's remaining job,
+  titles bound to a measure, and the grain trap that overstates them.
+- `references/filters-and-sync.md`: `filterConfig` shapes including excluding blanks properly,
+  and slicer sync group naming.
+- `references/slicer-templates.md`: the classic underline dropdown, the date picker and slider,
+  the button slicer with its state selectors, and the traps each one hit.
+- `references/list-slicer-dropdown.md`: the list slicer in dropdown mode, a wide open list from a
+  narrow box. Template, the Fit to space row trap, sizing from the data, and converting a classic
+  slicer.
+- `references/templates-grids.md`: complete `visual.json` files for a table and a matrix.
+- `references/templates-single-value.md`: complete files for the legacy card, KPI, gauge and
+  textbox, plus the image visual, a page background picture, and an image bound to an SVG measure.
+- `references/layout-and-schema-versions.md`: canvas and `page.json`, grid densities with real
+  numbers, the z and tab order bands Desktop writes, hiding a visual, and detecting the schema
+  version instead of hardcoding one.

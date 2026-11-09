@@ -1,22 +1,18 @@
 # DAX patterns
 
-Copy ready patterns that are correct and come up constantly. Change the table and column names
-to match the model. Every ratio uses DIVIDE. Everything time based assumes a real Date table
-that is marked as a date table (see `powerbi-modeling`).
+Copy ready patterns. Rename tables and columns to match the model. Everything time based assumes a
+real Date table marked as a date table (`powerbi-modeling`).
 
-Names used below: `Sales` is the fact table, `'Date'` is the Date dimension, `Product` is a
-dimension, and `Budget` is a fact at a higher grain. `[Total Sales]` is the base measure defined
-first, and the later patterns reuse it.
+Names used below: `Sales` is the fact, `'Date'` the Date dimension, `Product` a dimension, `Budget` a
+fact at a higher grain. `[Total Sales]` is the base measure, and the later patterns reuse it.
 
 ## Base measure
 
-Start every model with plain aggregations, then build on them.
+Define each plain aggregation once and reference it everywhere else. Do not repeat the SUM.
 
 ```dax
 Total Sales = SUM ( Sales[SalesAmount] )
 ```
-
-Define the base once and reference `[Total Sales]` everywhere else. Do not repeat the SUM.
 
 ## Safe division
 
@@ -28,13 +24,13 @@ DIVIDE (
 )
 ```
 
-DIVIDE returns blank when the denominator is zero or blank, so no divide by zero error. Pass a
-third argument if you want something other than blank, for example `DIVIDE ( a, b, 0 )`, after
-reading its cost in `ratios-and-totals.md`.
+DIVIDE returns blank on a zero or blank denominator. A third argument such as `DIVIDE ( a, b, 0 )`
+has a cost, read `ratios-and-totals.md` first.
 
 ## Percent of total
 
-Remove the filter on the dimension in the denominator so it becomes the total.
+ALL gives percent of the grand total, ignoring any filter on Product. ALLSELECTED gives percent of
+what the user selected on the page.
 
 ```dax
 Sales % of All Products =
@@ -44,9 +40,6 @@ DIVIDE (
 )
 ```
 
-ALL gives percent of the grand total across every product, ignoring any filter on the Product
-table. Use ALLSELECTED instead when you want percent of what the user has selected on the page.
-
 ```dax
 Sales % of Selected =
 DIVIDE (
@@ -55,9 +48,9 @@ DIVIDE (
 )
 ```
 
-## Year over year
+For percent of a parent in a matrix, release specific columns instead, see `ratios-and-totals.md`.
 
-Shift the date filter back one year, then compare. SAMEPERIODLASTYEAR and DATEADD both work.
+## Year over year
 
 ```dax
 Sales PY =
@@ -69,14 +62,15 @@ CALCULATE (
 
 ```dax
 Sales YoY % =
-DIVIDE (
-    [Total Sales] - [Sales PY],
-    [Sales PY]
-)
+VAR CurrentSales = [Total Sales]
+VAR PriorSales =
+    CALCULATE ( [Total Sales], SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+VAR Result = DIVIDE ( CurrentSales - PriorSales, PriorSales )
+RETURN
+    Result
 ```
 
-DATEADD is the flexible form when you need a different offset (a quarter, a month, several
-years).
+DATEADD takes any offset (a quarter, a month, several years).
 
 ```dax
 Sales PY (DATEADD) =
@@ -85,6 +79,9 @@ CALCULATE (
     DATEADD ( 'Date'[Date], -1, YEAR )
 )
 ```
+
+When the latest period is only part done, a prior period measure compares it with a whole period.
+The fair form is in `time-intelligence.md`.
 
 ## Year to date
 
@@ -96,13 +93,9 @@ TOTALYTD (
 )
 ```
 
-TOTALYTD accumulates from January 1 of the current year to the current date in the filter. Add
-a year end date as the last argument for a non calendar fiscal year. When the latest period is only
-part done, a prior period measure compares it with a whole period. See `time-intelligence.md`.
+Add a year end date as the last argument for a fiscal year.
 
 ## Running total
-
-Accumulate from the start of the visible range up to the current date.
 
 ```dax
 Sales Running Total =
@@ -115,8 +108,8 @@ CALCULATE (
 )
 ```
 
-ALLSELECTED keeps outer slicers in play. MAX reads the last date of the current cell, so each
-row shows the total up to and including that date.
+ALLSELECTED keeps outer slicers in play. MAX reads the last date of the current cell. The same shape
+over any ordered column is in `ratios-and-totals.md`.
 
 ## Ranking
 
@@ -131,18 +124,12 @@ RANKX (
 )
 ```
 
-RANKX walks the table in the first argument and ranks each item by the expression. ALL sets the
-population to rank over. The empty third argument means rank the current item. DESC puts the
-largest first, and DENSE avoids gaps after ties.
-
-For a 0-100 score, a composite of several scores, a tier or quadrant label, or windowing this
-rank into pages for a leaderboard, see `scoring-and-pagination.md`. For a tie break on several
-columns, see RANK in `window-and-visual-calculations.md`.
+ALL sets the population. The empty third argument ranks the current item. DENSE leaves no gaps after
+ties. For a tie break on several columns and blank on totals, use RANK
+(`window-and-visual-calculations.md`). For scores, tiers, and paging a rank, see
+`scoring-and-pagination.md`.
 
 ## Virtual relationship with TREATAS
-
-Filter a table that has no physical relationship, by transferring the current selection onto
-its column.
 
 ```dax
 Budget Amount =
@@ -155,19 +142,15 @@ CALCULATE (
 )
 ```
 
-TREATAS applies the values of the first argument as a filter on the column in the second. Here
-the Date slice drives the Budget table even though the two are not related in the model. It is
-the lightweight way to relate at a different grain without a physical relationship. A budget held
-by month repeats the whole month on a day level visual, so return blank below the fact's grain, as
-in the higher grain case in `many-to-many.md` in the `powerbi-modeling` skill.
+The Date slice filters Budget with no physical relationship. A budget held by month repeats the whole
+month on a day level visual, so return blank below the fact's grain, as in the higher grain case in
+`many-to-many.md` in the `powerbi-modeling` skill. More forms in `virtual-relationships.md`.
 
 ## KPI label with an arrow and a semantic color
 
-The KPI card convention (see the `powerbi-report-design` skill) wants a value, an arrow, a
-delta versus the prior period, and a color that encodes good versus bad, never up versus down.
-That is a pair of measures, not one: a label string the card shows as its value, and a hex
-string measure the card binds to its font color (the JSON binding is in the
-`powerbi-pbir-builder` skill).
+A pair of measures: a label string the card shows as its value, and a hex string the card binds to
+its font color (binding JSON in `powerbi-pbir-builder`). Color encodes good versus bad, never up
+versus down (the KPI card convention is in `powerbi-report-design`).
 
 ```dax
 KPI Criticals Label =
@@ -193,52 +176,20 @@ RETURN
     SWITCH ( TRUE (), ISBLANK ( Prev ) || Diff = 0, "#605E5C", Diff > 0, "#C0504D", "#4F6228" )
 ```
 
-UNICHAR 9650 is the up triangle, 9660 down, 9644 a flat bar. For open criticals rising is bad,
-so up gets the bad color. Flip the color branch, not the arrow, for a metric where rising is
-good. The `ISBLANK ( Prev )` guards matter: on the first month of data the comparison clause
-drops and the color goes neutral, instead of reading as a rise from zero in the bad color.
-
-One note on the hex values. They are a dark green and a brick red rather than the theme's
-semantic pair, which is what happens when a report predates its own palette. For new work take
-the good and bad colors from the theme instead (the
-`powerbi-report-design` skill owns the palette). That pairing matters here because color is the
-only signal separating good from bad in this measure, and a green and red pair is the one a
-colorblind reader is least able to tell apart.
-
-## VAR for readable and faster measures
-
-Name each step with VAR. Each variable is evaluated once and then reused, so the measure is
-easier to read and often faster.
-
-```dax
-Sales YoY % =
-VAR CurrentSales = [Total Sales]
-VAR PriorSales =
-    CALCULATE ( [Total Sales], SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
-VAR Result = DIVIDE ( CurrentSales - PriorSales, PriorSales )
-RETURN
-    Result
-```
-
-A VAR captures the context where it is declared, not where it is used later. That is usually
-what you want, and it removes repeated subexpressions.
+- UNICHAR 9650 is the up triangle, 9660 down, 9644 a flat bar.
+- Rising open criticals is bad, so up gets the bad color. For a metric where rising is good, flip
+  the color branch, not the arrow.
+- The `ISBLANK ( Prev )` guards keep the first month neutral instead of reading as a rise from zero
+  in the bad color.
+- The hex values come from a report that predates its palette. Take the good and bad colors from
+  the report's theme instead (`powerbi-report-design` owns the palette). Color is the only signal
+  here, and green against red is the pair a colorblind reader separates worst.
 
 ## Common mistakes
 
-- Time intelligence with no Date table. DATEADD, SAMEPERIODLASTYEAR, and TOTALYTD need a real
-  Date dimension with contiguous dates, marked as a date table. Without it they return blank or
-  silently wrong numbers. Build the Date table in `powerbi-modeling`.
-- A calculated column where a measure belongs. If it aggregates or reacts to slicers, it is a
-  measure. A calculated column bloats the model and does not respond to filters. See
-  `measures-vs-calc.md`.
-- Forgetting DIVIDE. Plain `/` returns Infinity or NaN on a zero denominator, which shows up as
-  an error or a broken visual. Use DIVIDE for every ratio whose denominator could be zero or blank.
-  With a constant denominator, plain `/` is the better choice.
-- Measures scattered across fact and dimension tables. Where a measure lives does not change its
-  result, but loose measures are hard to find. Keep them in one _Measures table (see
-  `powerbi-modeling`).
+- Plain `/` on a zero denominator returns Infinity or NaN, which shows as an error or a broken
+  visual.
 - A count that returns blank. `COUNTROWS` on no rows is blank, so a card reads "(Blank)" and a
-  colour rule testing `= 0` never fires. Add `+ 0` to a count that should show "0 people".
-- Expecting row context to filter. Being on a row does not restrict what a measure sees. Wrap it
-  in CALCULATE to turn the row into a filter (context transition). See
-  `measures-vs-calc.md`.
+  color rule testing `= 0` never fires. Add `+ 0` to a count that should show "0 people".
+- A calculated column where a measure belongs. A column does not respond to slicers.
+- Expecting row context to filter. See `measures-vs-calc.md`.

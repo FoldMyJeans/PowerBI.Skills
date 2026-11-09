@@ -1,8 +1,7 @@
 # Formatting charts and tables
 
-Per visual formatting that is specific to one visual family: line and bar series, data labels,
-reference lines, and table and matrix columns. The selector grammar these entries use is in
-`formatting-and-selectors.md`. Read that first if an entry here appears to do nothing.
+Per family formatting. If an entry here does nothing, check the selector against
+`formatting-and-selectors.md`.
 
 ## Series colour on a line chart
 
@@ -17,6 +16,24 @@ the measure's `queryRef` did.
 ```
 
 Labels below the points: `labels` with `labelPosition` `'Under'`.
+
+## Stacked column plus line combo
+
+`lineStackedColumnComboChart` with `Category`, `Y` (the column measure), `Series` (the column that
+stacks) and `Y2` (the line measure). This worked in Desktop 2.159:
+
+- Colour each stack segment with a `dataPoint` `fill` entry per series value, its selector a `data`
+  `scopeId` Comparison on the `Series` column (the form is in `formatting-and-selectors.md`).
+- Hide one segment's labels with a `labels` entry `showSeries` false under the same selector.
+- Colour the line with a `metadata` selector naming the `Y2` measure's `queryRef`, as above.
+- `valueAxis.secShow` false hides the second axis when the line shares the scale's meaning.
+
+## Row wide font colour in a table
+
+A colour measure on `values.fontColor` colours one column per entry. To colour the whole row, write
+one `values` entry per column, each with `fontColor` set to the colour measure and a `metadata`
+selector naming that column's `queryRef` (plus `dataViewWildcard` `matchingOption` 1). A single
+entry coloured only one column.
 
 ## Data labels on bars
 
@@ -43,9 +60,8 @@ Labels below the points: `labels` with `labelPosition` `'Under'`.
 }]
 ```
 
-Lives in `visual.objects`. Each line needs its own 20 character hex `selector.id` that you
-generate. Reusing one across visuals is fine, reusing it within one visual collapses two lines
-into one.
+In `visual.objects`. Each line needs its own generated 20 character hex `selector.id`. Reuse
+across visuals is fine. Reuse within one visual collapses two lines into one.
 
 ## Table and matrix specifics
 
@@ -55,15 +71,14 @@ into one.
 }
 ```
 
-The Style dropdown in Desktop is a preset name string. `'Condensed'` for a dense detail grid and
-`'AlternatingRowsNew'` for a short reference table are the two that earn their place.
+Desktop's Style dropdown as a preset name. `'Condensed'` for a dense detail grid,
+`'AlternatingRowsNew'` for a short reference table.
 
 ### Column widths
 
-Column widths bind by selector, and the shape differs by visual. A table uses `metadata` with the
-`queryRef`. A matrix column generated from a data value uses the `scopeId` comparison form, and
-the grand total uses the `total` form. Write a width against the wrong form and it parses and
-never binds. Drag once in Desktop, save, then read back what it wrote.
+The selector differs by visual: a table uses `metadata` with the `queryRef`, a matrix column
+generated from a data value uses the `scopeId` comparison form, the grand total the `total` form.
+The wrong form parses and never binds. Drag once in Desktop, save, and read back what it wrote.
 
 ```json
 "columnWidth": [{
@@ -76,10 +91,36 @@ For an implicit measure the `queryRef` includes the aggregation, for example
 `"Sum(fact_effort.Effort (Hours))"`. Set a width for every column. A 12 column table with only 2
 widths set still scrolled. All 12, totalling 1,211 px in a 1,264 px visual, fit.
 
-`columnHeaders.columnAdjustment` takes `'fitToContent'`, `'growToFit'` or `'fixedWidth'` (report
-theme schema names). Use `'growToFit'` only on a visual whose columns change with a slicer or a
-field parameter. Fixed tables get `'fixedWidth'`, `wordWrap` true on headers and values, and one
-width per column summing to the visual width minus about 40 px. Never set `growToFit` in the
-theme. On one report it stopped text wrapping and added a horizontal scrollbar to every small
-fixed table. The design rule and the width budget are in `tables-and-matrix.md` in the
-`powerbi-report-design` skill.
+The 2026 width model, all in `columnHeaders` (Desktop's Visual, Layout, Column width):
+
+- `columnAdjustment` is the Auto-size behavior: `'fitToContent'` (the default since January 2026),
+  `'growToFit'` or `'fixedWidth'`.
+- `defaultColumnWidth` (px) sets every column, including new ones, when the behavior is
+  `'fixedWidth'`.
+- `customColumnWidth` true turns on the per column `columnWidth` entries above. Setting it false
+  clears them all. On a matrix, `customColumnWidthGranularView` sets widths per leaf column.
+- Widths take fx, so a measure or a what-if slider can drive them.
+- `autoSizeColumnWidth` is the pre 2026 toggle. It is still in the theme schema, but do not pair it
+  with the new keys until you have read what Desktop writes on your build.
+
+Use `'growToFit'` only on a visual whose columns change with a slicer or a field parameter. Fixed
+tables get `'fixedWidth'`, `wordWrap` true on headers and values, and one width per column summing
+to the visual width minus about 40 px. Never set `growToFit` in the theme. On one report it stopped
+text wrapping and added a horizontal scrollbar to every small fixed table. The design rule and
+width budget are in `tables-and-matrix.md` in the `powerbi-report-design` skill.
+
+## Chart properties added in 2026
+
+Names from the report theme schema (2.159, October 2026). Set one in Desktop and read the file back
+before writing it into many visuals.
+
+- `plotArea.color` (fx capable) and `colorTransparency`: a fill behind the plot on bar, column,
+  line, area, combo, ribbon, waterfall and scatter charts.
+- `valueAxis.roundRange` false: the axis starts flush with the data, and data labels no longer
+  stretch it.
+- `categoryAxis.outerPadding`: space at the chart edges, as a percent of a category.
+- `categoryAxis.initialScrollPosition` `'end'`: a long axis opens on the latest period.
+- `categoryAxis.autoExpand` true: several fields picked in a field parameter build an expanded
+  axis hierarchy.
+- Series colours by legend take fx (bar, column, pie, donut, line). See `conditional-formatting.md`
+  in the `powerbi-report-design` skill.

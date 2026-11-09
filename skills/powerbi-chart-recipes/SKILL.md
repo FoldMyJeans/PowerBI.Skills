@@ -16,9 +16,10 @@ description: >-
 
 # Power BI chart recipes
 
-A toolbox of charts that can be built on demand. Having a recipe here does not mean a report should
-use it. Check `visual-decisions.md` in `powerbi-report-design`, then agree the chart with the report
-owner for that report.
+Checked against Power BI releases through October 2026.
+
+Charts to build on demand. A recipe here is an option, not a requirement. Check `visual-decisions.md`
+in `powerbi-report-design`, then agree the chart with the report owner.
 
 ## Pick a recipe
 
@@ -43,16 +44,20 @@ owner for that report.
 | Waterfall bridge | How did we get from the last total to this one? | Native | `recipes-native-and-svg.md` |
 | Target ticks | Which categories reach their own target? | Native combo | `recipes-native-and-svg.md` |
 
-`assets/gallery` holds a screenshot from Desktop of each one on fake data. Show the owner that before
-building. `assets/fixtures` holds the fake rows behind each spec, which is also the shape of data the
-spec expects.
+`assets/gallery` has a Desktop screenshot of each on fake data, to show the owner before building.
+`assets/fixtures` holds the fake rows behind each spec, which is the data shape the spec expects.
 
 ## Decide the route first
 
-Native and DAX SVG need nothing installed. Deneb is a free certified third-party visual. Plan on one or
-two third-party visuals per report, more if the owner asks. See `powerbi-report-design`. Every Deneb
-chart in one report counts as the same visual. Test publish to My workspace the first time a report
-takes Deneb, because that step has not been run here.
+- Native and DAX SVG need nothing installed. Deneb is a free certified third-party visual.
+- Plan on one or two third-party visuals per report, more if the owner asks (see
+  `powerbi-report-design`). Every Deneb chart in one report counts as the same visual.
+- Test publish to My workspace the first time a report takes Deneb. That step has not been run here.
+- Check native first. 2026 releases added options that cover part of some recipes: plot area fill
+  with fx (October), series colour fx on line charts with a legend (July), sentence format tooltips
+  (June), donut centre value (August), and a Gantt chart (preview, October). The design side is in
+  `powerbi-report-design`, and the JSON names, including the donut and Gantt, are in
+  `powerbi-pbir-builder`.
 
 ## Workflow
 
@@ -62,19 +67,19 @@ takes Deneb, because that step has not been run here.
    the recipe says so, because a spec cannot fix a wrong grain.
 3. Try it first on fake data if the chart is new to this report. See `references/test-on-fake-data.md`.
 4. Close Desktop and back up the report.
-5. Build. For Deneb run `scripts/new_deneb_visual.py`. See `references/deneb-in-pbip.md`. For the
+5. Build. For Deneb run `scripts/new_deneb_visual.py` (see `references/deneb-in-pbip.md`). For the
    others paste the DAX and write the visual with `powerbi-pbir-builder`.
 6. Reopen in Desktop. Check the total against the model with DAX, because a chart that draws can still
    show a wrong number. `powerbi-project-and-tools` has the verification loop.
-7. Add alt text and a plain tooltip, per `powerbi-report-design`. Log the owner's reaction in
-   `visual-decisions.md`.
+7. Add alt text and a plain tooltip, per `powerbi-report-design`. On a native visual a sentence format
+   tooltip (`visualTooltip.sentenceTemplate`, June 2026 GA) gives that with no DAX or tooltip page.
+   Log the owner's reaction in `visual-decisions.md`.
 
 ## Rules of thumb
 
-- Colours in the specs and measures are the house palette, written as literals so they survive being
-  copied. A different theme means changing them in the spec.
-- Numbers on these charts are often read one by one, so keep labels on the chart rather than only in
-  tooltips.
+- Colours in the specs and measures are the default palette, written as literals so they survive
+  being copied. A report with its own theme means changing them in the spec to match it.
+- Keep labels on the chart, not only in tooltips. These numbers are often read one by one.
 - Do not use the clock or the ridgeline to compare size. Rings differ in area and each ridge has its
   own scale.
 - A floor plan shows where sensitive rooms are. Check who can see the report before building one.
@@ -82,20 +87,19 @@ takes Deneb, because that step has not been run here.
 
 ## Pro vs Premium
 
-Every recipe here is Pro safe. Nothing needs Fabric, Premium or XMLA. Deneb is a certified visual and
-needs the tenant to allow AppSource visuals. See `powerbi-project-and-tools` for licensing facts.
+Every recipe here is Pro safe. Nothing needs Fabric, Premium or XMLA. Deneb needs the tenant to allow
+AppSource visuals. `powerbi-project-and-tools` owns the licensing facts.
 
 ## References in this skill
 
-- `references/deneb-in-pbip.md`: writing a Deneb visual into a report, sizing, field names, the
-  errors these specs hit, the traps with no error, and hatching.
+- `references/deneb-in-pbip.md`: writing a Deneb visual into a report, sizing, errors, silent traps,
+  hatching.
 - `references/recipes-deneb.md`: fields, settings and limits for each Deneb chart.
-- `references/recipes-native-and-svg.md`: the KPI table, card, native butterfly, target ticks, labels
-  inside bars, stacked totals, waterfall bridge, filter drawer and dark mode, with the JSON each needs.
-- `references/recipes-svg-gauge-and-kpi.md`: the gauges and KPI block for an executive page, and how
-  to bind a picture measure to an image visual.
-- `references/test-on-fake-data.md`: the fake data report, using it as a test rig, what the test
-  covered, and what it did not.
+- `references/recipes-native-and-svg.md`: KPI table, card, native butterfly, target ticks, bar labels,
+  stacked totals, waterfall, filter drawer and dark mode, with the JSON each needs.
+- `references/recipes-svg-gauge-and-kpi.md`: gauges and KPI block, and binding a picture measure to an
+  image visual.
+- `references/test-on-fake-data.md`: the fake data report, the test rig, what was and was not tested.
 
 ## Scripts
 

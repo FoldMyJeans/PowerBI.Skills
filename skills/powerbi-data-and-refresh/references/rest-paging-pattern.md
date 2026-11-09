@@ -1,11 +1,8 @@
 # The REST paging pattern
 
-The canonical loop for pulling a paged REST API into Power Query, plus the guards a production
-pull needs. The guards are the part worth reading twice. A loop without them works on
-the first run and fails quietly on the run that matters.
-
-Hosts are placeholders. Replace `yourinstance` with the real value in your own model and keep
-real hosts out of anything shared.
+The loop for pulling a paged REST API into Power Query, plus the guards. A loop without the
+guards works on the first run and fails quietly on the run that matters. Hosts are placeholders,
+keep real ones out of anything shared.
 
 ## The loop, complete
 
@@ -80,87 +77,69 @@ in
 ## The empty page guard, and why it is not optional
 
 `FetchPage` must return a table with a declared column list when the page is empty.
+`Table.ExpandRecordColumn` infers nothing from a zero row table, so a page past the end comes back
+with no columns. `Table.Combine` then errors or silently drops columns, and the failure surfaces
+much later as a broken relationship or a blank visual.
 
-`Table.ExpandRecordColumn` infers nothing from a zero row table, so a page past the end comes
-back with no columns at all. `Table.Combine` then either errors or silently produces a table
-missing columns, and the failure surfaces much later as a broken relationship or a blank
-visual. Returning a hand declared `#table(Cols, {})` keeps every page schema identical, so the
-combine is safe.
+Declare the list once as `Cols` and use it in all four places (the expand, the empty branch in
+`FetchPage`, the empty branch in the loop, the empty branch in `Combined`). A drifted copy of that
+list is the usual way this breaks after an edit.
 
-Declare the column list once as `Cols` and use it in all four places (the expand, the empty
-branch inside `FetchPage`, the empty branch in the loop, and the empty branch in `Combined`). A
-drifted copy of that list is the usual way this breaks after an edit.
-
-There is one case the guard inside `FetchPage` cannot catch on its own. If the very first page
-comes back empty, because a filter matched nothing, the loop's own condition is false on its
-first evaluation, so `List.Generate` returns an empty list and no page is ever collected.
-`Table.Combine` on an empty list gives a table with no columns, and every downstream step
-fails on a column that is not there. That is why `Combined` tests `List.IsEmpty` first. A query
-that legitimately matches no rows should produce an empty table with the right shape, not a
-broken one.
+The `FetchPage` guard cannot catch an empty FIRST page (a filter that matched nothing). The loop
+condition is false on its first evaluation, `List.Generate` returns `{}`, and `Table.Combine({})`
+gives a table with no columns. That is why `Combined` tests `List.IsEmpty` first.
 
 ## The row ceiling has to be loud
 
-`PageSize * MaxPages` is a ceiling, and a ceiling you cross silently is worse than no ceiling.
-Without the guard, a source that grows past it returns a short table, every measure keeps
-working, every visual keeps rendering, and the numbers are quietly incomplete.
+`PageSize * MaxPages` is a ceiling. Without the guard, a source that grows past it returns a short
+table, every visual keeps rendering, and the numbers are quietly incomplete.
 
-The guard is a single test: did we stop because we ran out of pages, and was the last page
-still full? Either alone is fine. A full last page after a natural stop cannot happen, and
-running out of pages on a short last page means the data ended where we did. Together they mean
-there was more and we did not fetch it, so the refresh should fail and say so.
+The test: did we run out of pages, and was the last page still full? Either alone is fine.
+Together they mean there was more data and we did not fetch it, so the refresh fails and says so.
 
 ## Stop without a wasted request
 
-The `next` function checks whether the page it already has came back short. If it did, the
-next state is filled with an empty table and no request goes out. The alternative, fetching
-first and testing afterwards, always spends one extra round trip discovering the end. On an
-endpoint with a 10 minute timeout that one request is worth removing.
-
-Do not write the loop so that it computes the next page before deciding whether to continue.
+The `next` function checks whether the page it already has came back short. If so, the next state
+gets an empty table and no request goes out. Fetching first and testing afterwards always spends
+one extra round trip discovering the end, which on a 10 minute timeout is worth removing.
 
 ## Page size, and the symptom that means lower it
 
-Start at 10000 for a ServiceNow Table API, which is also its own default cap for
-`sysparm_limit`. That is a working production value, not a guess.
+Start at 10000 for a ServiceNow Table API, which is also its default cap for `sysparm_limit`.
 
-Lower it when you see "the operation was cancelled" or "the exception was raised by the
-IDbCommand interface". Those mean the source could not assemble the page inside its own
-transaction limit and cancelled it, which is more likely when `sysparm_display_value` is on
-and the table has many reference fields. Drop to a few thousand and raise `MaxPages` by the
-same factor so the row ceiling does not change. Silently truncating data is worse than a slow
-refresh.
+Lower it on "the operation was cancelled" or "the exception was raised by the IDbCommand
+interface". The source could not assemble the page inside its own transaction limit, which is more
+likely with `sysparm_display_value` on and many reference fields. Drop to a few thousand and raise
+`MaxPages` by the same factor so the row ceiling does not change.
 
 ## Set Timeout on purpose, on every Web.Contents
 
-`Web.Contents` gives up on a request after 100 seconds when you set nothing. So
-`Timeout = #duration(0, 0, 10, 0)` raises the limit, it does not protect you from a stall. Set a
-value because a page or a download really needs it. https://learn.microsoft.com/en-us/powerquery-m/web-contents
+`Web.Contents` gives up after 100 seconds when you set nothing, so
+`Timeout = #duration(0, 0, 10, 0)` raises the limit. It does not protect you from a stall.
+https://learn.microsoft.com/en-us/powerquery-m/web-contents
 
-Budget it. The worst case for one paged query is `Timeout` times `MaxPages`, against 2 hours for the
-whole attempt. The values above allow 10 minutes times 20 pages, 200 minutes, before fan out multiplies
-it (see `folding-and-duplication.md`). If the product passes 2 hours, lower one or shrink the pull.
-
-Retries are built in, so do not write your own loop. `Web.Contents` retries 408, 429, 503, 504, and 509
-up to three times with exponential back off, or waits for a `Retry-After` in seconds, from 0.5 to 120.
-Those waits come out of the same budget. https://learn.microsoft.com/en-us/power-query/handling-status-codes
-
-Single calls and workbook reads usually get no `Timeout`, and a read that hangs costs just as much
-refresh time, so make it a decision everywhere. Microsoft does not say whether the value covers a whole
-streaming download or only the wait for a first response, so test a large workbook.
+- Budget it. The worst case for one paged query is `Timeout` times `MaxPages`, against 2 hours for
+  the whole attempt. The values above allow 10 minutes times 20 pages, 200 minutes, before fan out
+  multiplies it (`folding-and-duplication.md`). If the product passes 2 hours, lower one or shrink
+  the pull.
+- Retries are built in, do not write your own. `Web.Contents` retries 408, 429, 503, 504, and 509
+  up to three times with exponential back off, or waits for a `Retry-After` in seconds, from 0.5 to
+  120. Those waits come out of the same budget.
+  https://learn.microsoft.com/en-us/power-query/handling-status-codes
+- Single calls and workbook reads usually get no `Timeout`, and a hung read costs as much, so decide
+  it everywhere. Microsoft does not say whether the value covers a whole streaming download or only
+  the wait for a first response, so test a large workbook.
 
 ## No paging is a decision, not a default
 
-A single `Web.Contents` with no `sysparm_limit` and no loop returns whatever the source's
-default row cap is, with no error when it truncates. That is fine for a small reference table
-and silently wrong the day the table grows. If you skip paging, write the row count assumption
-in a comment next to the call so the next person can check it.
+A single `Web.Contents` with no `sysparm_limit` and no loop returns the source's default row cap,
+with no error when it truncates. Fine for a small reference table, silently wrong the day it grows.
+If you skip paging, write the row count assumption in a comment next to the call.
 
 ## Reference fields come back as records
 
-With `sysparm_display_value = "true"` a reference field arrives as a record, not text, and
-sometimes as a plain scalar depending on the field and the row. Flatten it before anything
-else touches the column.
+With `sysparm_display_value = "true"` a reference field arrives as a record, and sometimes as a
+plain scalar depending on the field and the row. Flatten it before anything else touches it.
 
 ```m
   ToDisplayValue = (x as any) as any =>
@@ -174,16 +153,14 @@ else touches the column.
   ),
 ```
 
-`Value.Is(x, type record)` handles the mixed case. `List.Intersect` against the real column
-names means a field disappearing at the source does not break the query.
-
-`sysparm_exclude_reference_link = "true"` is what stops each reference arriving as a
-`{link, value}` pair, so keep it on. It cuts payload as well as work.
+`Value.Is(x, type record)` handles the mixed case. `List.Intersect` means a field disappearing at
+the source does not break the query. Keep `sysparm_exclude_reference_link = "true"` on. It stops
+each reference arriving as a `{link, value}` pair and cuts payload.
 
 ## Building the filter from a table instead of one long string
 
-Once a pull carries more than a handful of filters, concatenating them by hand stops being
-reviewable. Hold them as data and compile the encoded query.
+Past a handful of filters, hand concatenation stops being reviewable. Hold them as data and
+compile the encoded query.
 
 ```m
   FilterTable = Table.FromRows({
@@ -212,26 +189,23 @@ reviewable. Hold them as data and compile the encoded query.
                       & "^ORDERBYsys_id",
 ```
 
-Every filter stays server side, which is the whole point. This is a query string and not a
-URL, so the literal first argument rule for `Web.Contents` is untouched.
-
-One ServiceNow gotcha to know: `^OR` binds tighter than `^`, so the order of the rows changes
-the meaning. Group the OR rows together and put them first, as above.
+Every filter stays server side. It is a query string, not the URL, so the literal first argument
+rule for `Web.Contents` is untouched. ServiceNow gotcha: `^OR` binds tighter than `^`, so row order
+changes the meaning. Group the OR rows together and put them first, as above.
 
 ## What the source should be doing, not you
 
 - `sysparm_fields` projects columns. Never pull a field you drop later.
-- `sysparm_query` carries every filter you can express server side. Filtering in M after a
-  full pull is the most common reason a REST model is slow, because nothing folds.
-- A date floor in the query string is the simple way to bound a pull. It works, and the cost is
-  that the window grows forever unless someone edits it. Put the date in one named constant at the
-  top so that edit is one line. To stop re-pulling closed history, `RangeStart` and `RangeEnd` can
-  go in the same query string, see `incremental-refresh.md`.
+- `sysparm_query` carries every filter you can express server side. Filtering in M after a full
+  pull is the most common reason a REST model is slow.
+- A date floor in the query string bounds a pull, but the window grows forever unless someone edits
+  it. Keep the date in one named constant at the top. To stop re-pulling closed history,
+  `RangeStart` and `RangeEnd` can go in the same query string, see `incremental-refresh.md`.
 
 ## Freezing history instead of re-pulling it
 
-For a range that will never change again, a static blob costs nothing on every refresh.
-Power Query writes this shape itself when you use Enter data, and it holds a surprising amount.
+For a range that will never change again, a static blob costs nothing on every refresh. Power
+Query writes this shape itself for Enter data.
 
 ```m
   Frozen = Table.FromRows(
@@ -242,8 +216,7 @@ Power Query writes this shape itself when you use Enter data, and it holds a sur
     {"Sprint", "Owner", "Planned Hours"})
 ```
 
-Used well, this splits a pull in two: closed periods frozen in the model, and a live query
-that only has to cover the open ones. It is the manual version of incremental refresh. Incremental
-refresh can work on a non folding source when the date range goes in the request, so read
-`incremental-refresh.md` first. Keep the freeze for when the republish cost described there is
-unacceptable, because a frozen range survives a republish and a partition does not.
+This splits a pull in two: closed periods frozen in the model, a live query covering the open ones.
+It is the manual version of incremental refresh, so read `incremental-refresh.md` first. Keep the
+freeze for when the republish cost described there is unacceptable, because a frozen range survives
+a republish and a partition does not.

@@ -1,27 +1,22 @@
 # External tools
 
-These are the free tools worth having around a Power BI model on Pro. All of them edit your LOCAL
-pbip or pbix file, which is fully allowed on Pro. Read the XMLA note near the end before you try
-to point any of them at a published dataset.
+The free tools worth having around a Power BI model on Pro. All of them edit your LOCAL pbip or
+pbix, which is fine on Pro. Read the XMLA boundary below before pointing one at a published model.
 
 ## Tabular Editor 2 (free, open source)
 
 https://tabulareditor.com/
 
-- Fast model and measure editing. Create, rename, and bulk edit measures, columns, and display
-  folders far quicker than in Desktop.
-- Reads and writes TMDL. Works directly on the pbip `definition` folder, or connected to the
-  local Analysis Services model that Desktop runs while it is open.
-- Best Practice Analyzer. A rules engine that flags modeling problems, for example measures with
-  no format string, columns that should be hidden, missing keys on dimension tables, and
-  relationships on high cardinality columns. Load the community Microsoft BestPracticeRules JSON
-  from the `microsoft/Analysis-Services` repo to get a solid default rule set.
-- Note. The free tool is Tabular Editor 2. Tabular Editor 3 is a paid product. You do not need 3
-  for BPA or TMDL editing.
+- Create, rename, and bulk edit measures, columns, and display folders far quicker than in Desktop.
+- Reads and writes TMDL. Works on the pbip `definition` folder, or connected to the local Analysis
+  Services model that Desktop runs while it is open.
+- Best Practice Analyzer (BPA). Load the community Microsoft BestPracticeRules JSON from the
+  `microsoft/Analysis-Services` repo for a default rule set.
+- Tabular Editor 3 is paid. You do not need it for BPA or TMDL editing.
 
-Expect the Microsoft rule set to flag some house conventions. A noisy report gets ignored, and an
-agent may "fix" a deliberate choice, so read hits on these rules as expected. This list is from reading
-rule names against the conventions, and has not been run yet.
+Expect the Microsoft rule set to flag some conventions the skills use. A noisy report gets ignored, and an
+agent may "fix" a deliberate choice, so read hits on these rules as expected. This list is from
+reading rule names against the conventions, and has not been run yet.
 
 | Rule | What it will flag |
 | --- | --- |
@@ -37,15 +32,10 @@ rule names against the conventions, and has not been run yet.
 
 https://daxstudio.org/
 
-- Author and run DAX queries against a model. The place to develop and test a measure in
-  isolation.
-- Server Timings and Query Plan. Run a query and see where the time goes, storage engine versus
-  formula engine, so you can tell why a measure is slow.
-- VertiPaq Analyzer is built in. It shows column level storage: which columns and tables eat the
-  model size, their cardinality, and how they encode. This is the tool for size and refresh
-  tuning. Find the fat, high cardinality column, then drop it, split it, or lower its precision.
-- Use this when the model is near the 1 GB Pro cap or refresh is slow and you need to know which
-  column or table to attack.
+- Author and run DAX queries. The place to test a measure in isolation.
+- Server Timings and Query Plan show storage engine versus formula engine time.
+- VertiPaq Analyzer is built in: column level size, cardinality, and encoding. Use it when the
+  model is near the 1 GB Pro cap or refresh is slow, to find the column or table to attack.
 
 ### Cutting size once VertiPaq Analyzer names the culprit
 
@@ -66,7 +56,7 @@ Beyond dropping, splitting, or lowering the precision of a column:
   - That column can no longer go on the rows or columns of an Excel PivotTable.
   - A single column DISTINCTCOUNT, MIN, or MAX can get slower, per Data Mozart.
   - TREATAS once needed the hierarchy. Chris Webb's 2022 note says that was fixed, and a 2024 comment on
-    his post reports errors in some cases. This pack leans on TREATAS, so rerun those measures.
+    his post reports errors in some cases. The skills lean on TREATAS, so rerun those measures.
 
   Sources: https://docs.tabulareditor.com/en/kb/bpa-set-isavailableinmdx-false.html,
   https://blog.crossjoin.co.uk/2018/07/02/isavailableinmdx-ssas-tabular/, and
@@ -76,26 +66,23 @@ Beyond dropping, splitting, or lowering the precision of a column:
 
 https://bravo.bi/
 
-- Analyze model size. A lighter, friendlier view than VertiPaq Analyzer for a quick look.
-- Format DAX. Uses the DAX Formatter engine to clean up measure formatting in place.
-- Generate a Date table. Builds a correct Date dimension and can wire it into the model. Handy
-  when you need a proper date table fast.
+- Model size, a lighter view than VertiPaq Analyzer.
+- Format DAX in place with the DAX Formatter engine.
+- Generate a Date table and wire it into the model.
 
 ## Measure Killer (free single file tier)
 
 https://measurekiller.com/
 
-- Finds unused measures and columns across the model and the report, so you can strip dead weight
-  and shrink the model.
+- Finds unused measures and columns across the model and the report.
 - The free tier works on a single local file. Tenant wide or multi report analysis is paid.
 
-## The local modeling MCP (optional, read only first)
+## The modeling MCP (optional, read only first)
 
 https://learn.microsoft.com/en-us/power-bi/developer/mcp/power-bi-authoring-mcp
 
 Microsoft's local Power BI Authoring MCP server lets an agent read and edit a model open in Desktop or
-a PBIP on disk, and run DAX to see results. It is optional. This is from Microsoft docs and the README,
-and has not yet been run here.
+a PBIP on disk, and run DAX. This is from Microsoft docs and the README, and has not yet been run here.
 
 - Start read only. `--readonly` blocks writes. Time a measure audit against a TMDL grep, then check
   `git status` shows no changes before you consider write access.
@@ -103,11 +90,16 @@ and has not yet been run here.
   software is subject to a separate proprietary EULA, and the server blocks its tools until someone
   accepts. An agent can call `accept_eula`, and `--accepteula` skips the prompt. Do not let an agent
   decide that.
-- Back up, and work in a PBIP under git, so every agent change is a diff you can review.
+- Work in a PBIP under git, so every agent change is a diff you can review.
 - Model metadata and query results reach your LLM provider.
-- It does modeling only, no report pages or diagram layouts. DAX queries stop at 100,000 rows. It does
-  not run on macOS. Connecting to a workspace model needs the XMLA endpoint at Read Write on a capacity,
-  which is not Pro.
+- Modeling only, no report pages or diagram layouts. DAX queries stop at 100,000 rows. Not on
+  macOS. Connecting the local server to a workspace model needs the XMLA endpoint at Read Write on a
+  capacity, which is not Pro.
+- The local server is GA. A hosted server (preview, September 2026) at
+  `https://api.fabric.microsoft.com/v1/mcp/powerbi/authoring` works on workspace models without
+  XMLA and needs a tenant setting and Write on the model. Its page names no capacity, so whether it
+  reaches a Pro workspace model is untested. It cannot see Desktop or files on disk. Register one
+  server or the other, never both.
 
 Microsoft's sample registers it as `@latest`. Adapted to the policy below, with the version pinned and
 writes blocked:
@@ -126,7 +118,7 @@ writes blocked:
 
 ## Tool risk policy
 
-Agent tools run code on your machine and can see your model. The house line:
+Agent tools run code on your machine and can see your model.
 
 - Pin versions. No `@latest` and no bare `npx -y <package>`, which fetches whatever is newest on each
   start.
@@ -136,22 +128,18 @@ Agent tools run code on your machine and can see your model. The house line:
 - No auto update on work machines.
 - A person accepts any EULA, never an agent.
 
-## The XMLA boundary, the critical license note
+## The XMLA boundary
 
-Repeat this every time, because it is the thing that breaks on Pro. All these tools edit your
-LOCAL pbip or pbix file, and that is fully fine on Pro. The moment you point one of them at a
-dataset that is already PUBLISHED in a Pro workspace and try to WRITE changes, you need the XMLA
-write endpoint. XMLA read and write on a published dataset is Premium, Premium Per User, or
-Embedded. It is not on Pro.
+Pointing a tool at a model PUBLISHED in a Pro workspace and saving changes needs the XMLA write
+endpoint, which is Premium, Premium Per User, or Embedded. That save fails on Pro. So with a tool:
 
-So on Pro the loop is:
-
-1. Edit the local pbip or pbix with the tool.
+1. Edit the local pbip or pbix.
 2. Save the file.
 3. Republish from Power BI Desktop.
 
-Do not expect to connect Tabular Editor to the Service and save changes to a Pro dataset. That
-save will fail. See `licensing-cheatsheet.md` and `pro-vs-premium-facts.md`.
+Web modeling in the Service is the one documented Pro route to edit a published model, with no
+undo. See
+`pro-vs-premium-facts.md`.
 
 ## Which tool for which job
 
@@ -160,7 +148,7 @@ save will fail. See `licensing-cheatsheet.md` and `pro-vs-premium-facts.md`.
   VertiPaq Analyzer.
 - Quick size check, format DAX, generate a Date table: Bravo.
 - Find and remove unused measures and columns: Measure Killer.
-- Let an agent run DAX and read the model: the local modeling MCP, read only first.
+- Let an agent run DAX and read the model: the modeling MCP, read only first.
 - Check an agent's report edit rendered and the numbers hold: the loop in `agent-verification.md`.
 
 ## See also

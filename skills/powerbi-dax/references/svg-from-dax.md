@@ -1,18 +1,12 @@
 # SVG measures in DAX
 
-A measure can build a small SVG chart as a string and hand it to Power BI as an image, with no
-custom visual. This covers the DAX to build the shape, scale it into a fixed viewBox, and wrap
-it as a data URI that Desktop and the service will actually render.
-
-Seen in practice: a sparkline trend per row of a matrix, built entirely from measures, with the
-column set to Data Category Image URL. No custom visual, no external tool, and it survives
-export to PDF because it is just an image.
+A measure can build a small SVG chart as a string and hand it to Power BI as an image, with no custom
+visual. Typical use: a sparkline per row of a matrix, with the measure set to Data Category Image URL.
+It survives export to PDF because it is just an image.
 
 ## Assemble a point table
 
-Start from a small table of one point per category on the axis. Use ADDCOLUMNS over the axis
-you want to plot, usually a date or a category column, and compute the value at each point with
-CALCULATE so it responds to filter context.
+One point per axis value, computed with CALCULATE so it responds to filter context.
 
 ```dax
 VAR Points =
@@ -24,9 +18,8 @@ VAR Points =
 
 ## Scale into a fixed viewBox
 
-An SVG viewBox is a fixed pixel canvas. Real values almost never land inside it, so scale every
-point from its own min and max into the canvas width and height. Name the canvas size and
-padding as VARs once, do not repeat the numbers at every use.
+Scale every point from its own min and max into the canvas. Name the canvas size and padding as
+VARs once.
 
 ```dax
 VAR ViewboxWidth = 120
@@ -58,16 +51,13 @@ VAR ScaledPoints =
     )
 ```
 
-The `MonthRange = 0` and `SalesRange = 0` guards matter. A product with one month of data or a
-perfectly flat series has a zero range, and dividing by that range without the guard returns an
-error for the whole measure instead of a flat line. When the range is zero, park the point at
-the middle of the axis rather than fail.
+The `MonthRange = 0` and `SalesRange = 0` guards matter. One month of data or a flat series has a
+zero range, and without the guard the whole measure errors instead of drawing a flat line. Park the
+point mid axis instead.
 
 ## Turn the points into a path string
 
-CONCATENATEX walks the scaled table in order and joins each point into the space separated
-list an SVG `points` attribute expects. Sort by the axis column so the line is not drawn out of
-order.
+Sort by the axis column so the line is not drawn out of order.
 
 ```dax
 VAR PointsString =
@@ -82,9 +72,6 @@ VAR PointsString =
 
 ## Wrap it as a data URI
 
-Build the SVG markup as one string, then wrap it as a `data:` URI so the measure needs no file
-and no image host.
-
 ```dax
 VAR SvgBody =
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " & ViewboxWidth & " " &
@@ -96,45 +83,36 @@ RETURN
     "data:image/svg+xml;utf8," & EscapedSvg
 ```
 
-Three escapes, all required, and the order matters:
+Three escapes, all required, in this order:
 
-- `%` becomes `%25`, first. A bare `%` in a data URI starts a percent escape. Any SVG that prints a
-  percentage ("87%") rendered faded until this was added. It goes first because the next
-  escape writes `%` characters of its own, which must not be escaped again.
-- `#` becomes `%23`. A raw `#` inside a data URI reads as the start of a URI fragment, so
-  everything after the first `#` (the stroke color above) gets silently cut from the image.
-- The single quote used to delimit SVG attributes becomes a literal double quote. Single quotes
-  are valid in SVG, so this one is harmless on its own, and it is required the moment the
-  finished URI is dropped into another attribute that is itself single quoted, for example an
-  `<img src='...'>` built by an HTML measure. There the first inner `'` closes the src early and
-  the image breaks. Swap it every time rather than remembering which route the string took.
+- `%` becomes `%25`, first. A bare `%` starts a percent escape. Any SVG that prints a percentage
+  ("87%") rendered faded until this was added. It goes first because the next escape writes `%`
+  characters that must not be escaped again.
+- `#` becomes `%23`. A raw `#` starts a URI fragment, so everything after the first `#` (the stroke
+  color above) is silently cut.
+- The single quote becomes a literal double quote. Harmless alone, required the moment the URI goes
+  into another single quoted attribute, such as `<img src='...'>` in an HTML measure, where the first
+  inner `'` closes the src early. Swap it every time.
 
-Numbers written into coordinates need a point, never a decimal comma. Format them with an explicit
-locale, `FORMAT ( x, "0.0", "en-US" )`, so a model opened under another locale still draws.
+More rules that bit:
 
-The image keeps the aspect ratio of its viewBox. In a table, `grid` `imageWidth` and `imageHeight`
-set the box, but a 160 by 24 viewBox in a 330 wide box only centred a small bar. Make the viewBox
-match the shape you want on screen (300 by 18 filled the column).
-
-Run the SUBSTITUTE chain once, last, over the finished SVG string. Escaping a fragment before it
-is assembled means you have to remember to do it again at every concatenation, and that is how
-half the string ends up escaped and half does not.
+- Run the SUBSTITUTE chain once, last, over the finished string. Escaping fragments before assembly
+  is how half the string ends up escaped.
+- Numbers in coordinates need a point, never a decimal comma. Use an explicit locale,
+  `FORMAT ( x, "0.0", "en-US" )`, so a model opened under another locale still draws.
+- The image keeps its viewBox aspect ratio. In a table, `grid` `imageWidth` and `imageHeight` set
+  the box, but a 160 by 24 viewBox in a 330 wide box only centred a small bar. Make the viewBox
+  match the shape you want on screen (300 by 18 filled the column).
 
 ## Unique ids when a chart repeats per row
 
-A gradient or a filter needs an `id`, and SVG ids are just DOM ids. Whether that matters depends
-on which route you took.
+A gradient or filter needs an `id`. On the Image URL route each row is its own document, so repeated
+ids do not collide. On the HTML route every row renders into one shared document, `url(#grad)`
+resolves to the first one, and every later row silently gets the wrong fill.
 
-On the Image URL route each row loads as its own image, an isolated document, so two rows can
-both use `id="grad"` and neither notices. On the HTML route every row renders into one shared
-document, so identical ids collide and the browser resolves `url(#grad)` to whichever it saw
-first. Every row after the first then picks up the wrong fill, silently.
-
-Suffix every id with something unique to the row anyway, usually a key column already on the
-table. It costs nothing on the Image URL route and it means the measure keeps working if the
-report later moves to an HTML visual. A measure has no row context of its own, so read that key
-with SELECTEDVALUE rather than naming the column bare, which returns an error instead of a
-value.
+Suffix every id with a key unique to the row anyway. It costs nothing on Image URL and keeps working
+if the report moves to an HTML visual. Read the key with SELECTEDVALUE, because a bare column name in
+a measure errors.
 
 ```dax
 VAR RowId = "grad" & SELECTEDVALUE ( Product[Product Key] )
@@ -145,54 +123,36 @@ VAR GradientDef =
 VAR AreaFill = "<polygon fill='url(#" & RowId & ")' points='" & PointsString & "' />"
 ```
 
-Do this even for a chart you are sure only ever shows one row today. The day it lands in a
-matrix with a category on rows, a static id turns into a silent rendering bug that only shows up
-in the report, never in a spot check of the measure text.
+A static id passes every spot check of the measure text and only breaks in the report, the day the
+measure lands in a matrix with a category on rows.
 
 ## Two ways to render it
 
-- **Data Category = Image URL, no custom visual.** Set the measure's Data Category to Image URL
-  in the model, then bind it into a table or matrix image column, or a card's image well. This
-  is the house default. It ships with Desktop, needs no import, and export to PDF renders it as
-  a normal image.
-- **A third party HTML rendering visual.** Some report pages already carry a third party visual
-  that renders raw HTML, and an SVG data URI drops straight into an `<img>` tag inside that HTML.
-  That is a heavier dependency for the same picture, so reach for it only when the page is
-  already paying for that visual. See `html-from-dax.md` in this skill for the HTML
-  side of that pattern.
+- **Data Category = Image URL, no custom visual.** Set the measure's Data Category to Image URL,
+  then bind it into a table or matrix image column or a card's image well. The default route: it
+  ships with Desktop and exports to PDF as a normal image.
+- **A third party HTML rendering visual.** An SVG data URI drops into an `<img>` tag inside its HTML.
+  A heavier dependency for the same picture, so use it only when the page already carries that
+  visual. See `html-from-dax.md`.
 
 ## Check the string before you trust the visual
 
-A broken data URI usually renders as a blank cell, which tells you nothing about what went
-wrong. Copy the measure's value out of a table visual (or DAX Studio) and paste it straight into
-a browser address bar. A valid data URI starting with `data:image/svg+xml` renders the shape in
-the tab, and a bad one throws whatever the escaping mistake produced, which is much faster to
-read than guessing from a blank cell in the report.
+A broken data URI renders as a blank cell. Copy the measure's value out of a table visual (or DAX
+Studio) and paste it into a browser address bar. A valid `data:image/svg+xml` URI draws the shape,
+and a bad one shows the escaping mistake.
 
-## Alt text
+## Alt text and animation
 
-Once the image is on the report, it needs alt text like any other visual. That convention, and
-how to write it, belongs to `powerbi-report-design`. Point a card or matrix image column at its
-guidance rather than inventing wording here.
-
-## Keep animation off the load bearing path
-
-SVG supports SMIL, the `<animate>` tag, for inline animation with no JavaScript. It works, but
-it renders inconsistently across the canvas Power BI uses on the web, in Desktop, and in
-export to PDF, and a renderer that does not support it just shows the static end state. Treat
-animation as a nice to have polish layer, never as the thing that carries information the
-report depends on.
+- Alt text for the image follows `powerbi-report-design`.
+- SVG SMIL (`<animate>`) renders inconsistently across the web, Desktop, and export to PDF, and an
+  unsupported renderer shows the static end state. Never let animation carry information.
 
 ## Anti-patterns
 
-- **Half done escaping.** Handling `#` but not the quote (or the reverse) passes a spot check on
-  a simple shape and then breaks the first time a color or a second attribute pushes a quote
-  later into the string.
-- **Magic pixel numbers repeated inline.** Typing `120`, `40`, and `4` at every point instead of
-  naming `ViewboxWidth`, `ViewboxHeight`, and `Padding` once. Change the canvas size later and
-  you are hunting through the whole measure for every place a number needs to move.
-- **A static id that collides once the visual repeats.** Works in a single card, breaks silently
-  the day the measure lands on a matrix row.
-- **Importing an external font inside the SVG string.** A font URL is a network call. It either
-  fails silently in the service and the shape falls back to a default font, or it fails an
-  export to PDF entirely. Stick to a font already on the machine rendering it.
+- **Half done escaping.** Handling `#` but not the quote (or the reverse) passes on a simple shape
+  and breaks once a color or a second attribute pushes a quote later into the string.
+- **Magic pixel numbers inline.** Typing `120`, `40`, and `4` at every point instead of naming
+  `ViewboxWidth`, `ViewboxHeight`, and `Padding` once.
+- **A static id that collides once the visual repeats.**
+- **An external font URL inside the SVG.** It is a network call that fails silently in the service
+  (default font) or fails an export to PDF. Use a font already on the rendering machine.

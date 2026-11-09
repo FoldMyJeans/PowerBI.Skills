@@ -1,11 +1,11 @@
 # Making a Sankey readable
 
-A Sankey has no crossings only when it is a strict tree, where each block has one parent, like an
-income statement. Three business fields such as team, service type and activity cut across each
-other, so some crossing is real information. The goal is to remove what is avoidable.
+A Sankey has no crossings only when it is a strict tree (each block has one parent). Three business
+fields such as team, service type and activity cut across each other, so some crossing is real
+information. Remove what is avoidable.
 
-The numbers below come from one real model, with 27,642 hours across 5 teams, 6 service types and 5
-activities. Your data will differ, so measure yours.
+The numbers below come from one model with 27,642 hours across 5 teams, 6 service types and 5
+activities. Measure your own data.
 
 ## Measure before arguing
 
@@ -15,7 +15,7 @@ meaning both flows are at least 0.5 percent of the hours.
 
 ## Column order
 
-There are six orders of three fields. Test them, because the answer is not obvious.
+Test all six orders of three fields. The answer is not obvious.
 
 | Column order | Crossing hours | Visible crossings |
 | --- | --- | --- |
@@ -28,16 +28,15 @@ crossings and also reads in the order people think, so it stayed. Reversed order
 
 ## Block order
 
-This was the biggest single win. Sorting by hours, with activities placed near their main service,
-scored 18,792 crossing hours and 20 visible crossings. The best order for the same columns scored 10,224 and 11, which is 46 percent fewer
-crossing hours.
+The biggest single win. Sorting by hours, with activities near their main service, scored 18,792
+crossing hours and 20 visible crossings. The best order for the same columns scored 10,224 and 11,
+46 percent fewer crossing hours.
 
-Blocks are few, so search exhaustively rather than using a heuristic. Fix each order of the middle
-column, then each outer column can be solved on its own. Precompute a penalty per pair of outer
-blocks once per middle order, and pre-build the permutations once, or the search costs hundreds of
-milliseconds on every update.
+Blocks are few, so search exhaustively, not by heuristic. Fix each order of the middle column, then
+solve each outer column on its own. Precompute a penalty per pair of outer blocks once per middle
+order, and pre-build the permutations once, or the search costs hundreds of milliseconds per update.
 
-Two choices to make on top:
+On top of that:
 
 - **Flip to read well.** An order and its mirror score the same. Flip so the biggest middle block is
   near the top.
@@ -59,10 +58,9 @@ consistent order inside each block so that ribbons between the same two blocks n
 
 ## Narrow on click, do not grey out
 
-The first version kept everything on screen and dimmed what was not selected, and overlaid the chosen
-part. It still looked busy, and showed labels like "Incident 0". Narrowing is cleaner: selecting a
-block keeps only the hours passing through it and rescales them to fill the height. Zeros disappear
-and the chart often becomes a near tree.
+Selecting a block keeps only the hours passing through it and rescales them to fill the height. Zeros
+disappear and the chart often becomes a near tree. Dimming the rest and overlaying the chosen part
+still looked busy, and showed labels like "Incident 0".
 
 ## Filtering on the chart, without a slicer
 

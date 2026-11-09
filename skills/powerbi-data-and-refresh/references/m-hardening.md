@@ -1,16 +1,11 @@
 # Hardening an M query
 
-The transforms that keep a query alive when the source drifts, plus the parsing helpers that
-come up on every API and every business owned workbook.
-
-A query that works today and breaks in 3 months usually breaks for one of four reasons: a
-column disappeared, a value arrived in a shape the query did not expect, a blank came through
-as `""` instead of `null`, or a text key stopped matching because of a stray space. Each has a
-standard answer below.
+Transforms that keep a query alive when the source drifts. A query that works today and breaks in
+3 months usually breaks for one of four reasons: a column disappeared, a value arrived in an
+unexpected shape, a blank came through as `""` instead of `null`, or a text key stopped matching
+because of a stray space. Parsing API values is in `parsing-api-values.md`.
 
 ## Survive a column that disappears
-
-Three forms, because they solve different problems and only the first is widely known.
 
 ```m
 // A. Selecting or renaming: intersect what you want with what is there
@@ -40,17 +35,16 @@ NonEmpty =
 
 Form B is the one people miss. `MissingField.Ignore` only applies to the select and rename
 functions. A `Table.SelectRows` predicate that names a vanished column throws "The field
-'opened_at' of the record wasn't found", which at least names the column.
+'opened_at' of the record wasn't found".
 
-Do not confuse it with "The key did not match any rows in the table". That comes from a record
-key lookup, the `Source{[Item = "Sheet1", Kind = "Sheet"]}` shape, and means a worksheet or
-table was renamed, not a column.
+Different error: "The key did not match any rows in the table" comes from a record key lookup, the
+`Source{[Item = "Sheet1", Kind = "Sheet"]}` shape, and means a worksheet or table was renamed, not
+a column.
 
 ## Quote a field name that has punctuation in it
 
-A bare `[Effort (Hours)]` is a parse error, not a runtime error, so the query does not fail at
-refresh time, the whole `.pbip` refuses to open, reporting `Invalid identifier`. This bites in
-`each` expressions and record constructors.
+A bare `[Effort (Hours)]` is a parse error, not a runtime error. The whole `.pbip` refuses to open,
+reporting `Invalid identifier`. It bites in `each` expressions and record constructors.
 
 ```m
 // wrong, will not parse
@@ -65,17 +59,14 @@ each List.Sum({[#"Days Unavailable (Days)"], [#"Sick Days (Days)"], 0})
 [ Owner = [Initial Owner], #"Effort (Hours)" = [#"Initial Effort (Hours)"] ]
 ```
 
-A space alone is fine, so `[Initial Owner]` does not need quoting. Parentheses, slashes, and a
-leading digit do. When in doubt, quote it, the hash form is always valid.
-
-The `List.Sum({a, b, 0})` shape above is worth stealing on its own. It tolerates a null in
-either input and the trailing `0` guarantees a number rather than a blank.
+A space alone is fine (`[Initial Owner]`). Parentheses, slashes, and a leading digit need the hash
+form, which is always valid, so quote when in doubt. The `List.Sum({a, b, 0})` shape tolerates a
+null in either input, and the trailing `0` guarantees a number rather than a blank.
 
 ## Normalize blanks before load
 
-An API that returns `""` where it means nothing will give you a column that is neither blank
-nor useful. `""` and `null` behave differently in DAX `ISBLANK` and in relationships, so fix it
-once at the end rather than in every downstream measure.
+`""` and `null` behave differently in DAX `ISBLANK` and in relationships. Fix it once, as one of the
+last steps, rather than in every downstream measure.
 
 ```m
 NormalizeBlanks = Table.TransformColumns(
@@ -87,7 +78,7 @@ NormalizeBlanks = Table.TransformColumns(
 ),
 ```
 
-`v is text` guards the columns that are not text. Run this as one of the last steps.
+`v is text` guards the columns that are not text.
 
 ## Catch anything that still errored
 
@@ -97,13 +88,8 @@ Result = Table.ReplaceErrorValues(Final, {
 })
 ```
 
-Belt and braces after the typed transforms. It catches errors that slipped past a
-`try ... otherwise` earlier in the chain, and it means one bad row does not fail the refresh.
-
-## Parsing the values an API actually sends
-
-Durations written as words, choice fields pulled as display values, dates sent as ISO text, and
-how to prove a parse ever worked live in `parsing-api-values.md`.
+Catches errors that slipped past a `try ... otherwise` earlier, so one bad row does not fail the
+refresh.
 
 ## Fail loudly where a silent wrong answer would be worse
 
@@ -115,12 +101,10 @@ MonthColsCheck =
   else Source,
 ```
 
-Use this where an assumption, once broken, would produce a plausible but wrong number rather
-than an obvious failure. Put the observed values in the message so the refresh error tells you
-what changed instead of just that something did.
-
-The same idea in the small: `try ... otherwise error "a useful sentence"` beats
-`try ... otherwise null` when null would quietly propagate.
+Use it where a broken assumption would produce a plausible but wrong number. Put the observed
+values in the message so the refresh error says what changed. In the small:
+`try ... otherwise error "a useful sentence"` beats `try ... otherwise null` when null would
+quietly propagate.
 
 ## Joining on text people typed
 
@@ -139,18 +123,17 @@ Filled   = Table.TransformColumns(Expanded, {
 }),
 ```
 
-The last step matters more than it looks. Leave the non matches as null and those rows vanish
-from every sliced total without anyone noticing. Named buckets show up in a slicer and get
-questioned, which is what you want.
+Leave the non matches as null and those rows vanish from every sliced total without anyone
+noticing. Named buckets show up in a slicer and get questioned.
 
-If the join key must stay unique for a model relationship, end the query with
-`Table.Distinct(Source, {"Task Number"})` and say why in a comment. A duplicate on the one side
-turns a relationship many to many at refresh time.
+If the join key must stay unique for a model relationship, `Table.Distinct(Source, {"Task Number"})`
+is safe only when the duplicates are identical rows. A duplicate on the one side fails the refresh,
+and that rule, with when not to dedupe, is in the `powerbi-modeling` skill.
 
 ## A join a merge cannot express
 
-Matching a date to the range it falls inside is not an equality join, so `Table.NestedJoin`
-cannot do it.
+Matching a date to the range it falls inside is not an equality join, so `Table.NestedJoin` cannot
+do it.
 
 ```m
 Buffered = Table.Buffer(dim_sprint),
@@ -166,14 +149,14 @@ WithSprint = Table.AddColumn(Source, "Sprint",
   type text),
 ```
 
-`Table.Buffer` is required, not an optimization. Without it the lookup table is re-evaluated
-once per fact row. Note the `(row) =>` lambda instead of `each`, so `row[...]` and the inner
-`each [...]` unambiguously refer to different tables.
+`Table.Buffer` is required, not an optimization. Without it the lookup table is re-evaluated once
+per fact row. The `(row) =>` lambda instead of `each` keeps `row[...]` and the inner `each [...]`
+pointing at different tables.
 
 ## Turning one row into several
 
-When one source row should become one fact row per participant, and the columns are
-heterogeneous rather than a clean unpivot:
+When one source row should become one fact row per participant, and the columns are heterogeneous
+rather than a clean unpivot:
 
 ```m
 WithList = Table.AddColumn(Source, "OwnerEffort", each List.RemoveNulls({
@@ -186,8 +169,8 @@ Exploded = Table.ExpandListColumn(WithList, "OwnerEffort"),
 Final    = Table.ExpandRecordColumn(Exploded, "OwnerEffort", {"Owner", "Effort (Hours)"}, {"Owner", "Effort (Hours)"}),
 ```
 
-`List.RemoveNulls` means a row with only one valid participant produces exactly one output row,
-not one plus a blank.
+`List.RemoveNulls` means a row with one valid participant produces exactly one output row, not one
+plus a blank.
 
 ## Sorting a numeric suffix
 
@@ -197,8 +180,6 @@ Recent = Table.SelectRows(Source, each
   in n <> null and n >= 85),
 ```
 
-Text comparison puts "Sprint 9" after "Sprint 85". Parse the number. Leaving the upper bound off
-means future values keep flowing with no maintenance.
-
-Note the `try ... otherwise` inside the predicate. A `Table.SelectRows` predicate that errors on
-a single row kills the whole filter, so the guard is required rather than defensive.
+Text comparison puts "Sprint 9" after "Sprint 85", so parse the number. No upper bound means future
+values keep flowing. The `try ... otherwise` is required: a `Table.SelectRows` predicate that errors
+on one row kills the whole filter.

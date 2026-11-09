@@ -2,8 +2,7 @@
 
 Two DAX SVG measures for a one page summary with no tables: a row of 270 degree gauges, and a KPI
 block with a change pill. Both are pictures, so they draw the same in Desktop, the Service and an
-export, with nothing installed. For the mechanics of SVG in a measure, see `svg-from-dax.md` in
-`powerbi-dax`.
+export, with nothing installed. `svg-from-dax.md` in `powerbi-dax` owns the SVG mechanics.
 
 ## Binding a picture measure to an image visual
 
@@ -33,6 +32,10 @@ Set the measure's Data Category to Image URL, then:
   Extending the frames to the page bottom removed it.
 
 ## Gauges, `assets/dax/gauge.dax`
+
+Native option: for one score ring with the number in the middle, a donut with a centre value
+(`centerValue`, August 2026 GA) needs no SVG. Do not use the July only keys such as `valueFontColor`,
+which were removed in theme schema 2.157 (August). The SVG gauge stays for a row of gauges with target ticks.
 
 One measure draws a gauge per row of a `DATATABLE` (code, label, colour, slot) with `CONCATENATEX`.
 Each gauge is a grey track arc from 225 degrees to minus 45, a value arc to `225 - 270 * score / max`,
@@ -66,5 +69,5 @@ See composite models in `powerbi-data-and-refresh`.
 
 ## Keep the text minimal
 
-These blocks suit a page read in a meeting. Full KPI names as labels, no explanation lines, few or no
-tooltips. The owner's taste on this is in `visual-decisions.md` in `powerbi-report-design`.
+These blocks suit a page read in a meeting: full KPI names as labels, no explanation lines, few or no
+tooltips. The owner's taste is in `visual-decisions.md` in `powerbi-report-design`.

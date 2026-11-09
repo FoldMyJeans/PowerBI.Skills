@@ -1,22 +1,16 @@
 # Visual types and data binding
 
-A `visual.json` describes one visual: its type, its data bindings (query roles), and its
-formatting. This file covers the type catalog and how to bind fields to it.
-
-Complete copyable files live in `templates-grids.md` (table and matrix) and
-`templates-single-value.md` (legacy card, KPI, gauge, textbox, image). The new card visual and measure
-bound titles are in `cards-and-dynamic-text.md`. Formatting and the selector grammar are in
-`formatting-and-selectors.md`. Filters and slicer sync are in `filters-and-sync.md`.
+Type catalog and field binding. Complete files: `templates-grids.md` (table, matrix) and
+`templates-single-value.md` (legacy card, KPI, gauge, textbox, image). New card and measure bound
+titles: `cards-and-dynamic-text.md`. Selectors: `formatting-and-selectors.md`. Filters and sync:
+`filters-and-sync.md`.
 
 ## Visual type catalog
 
-The Confirmed column tells you how far to trust the role names. A yes means they are exact. A no
-means treat them as a starting guess.
-
-The distinction matters because nothing checks a role name. Desktop ignores one it does not
-recognize, with no error anywhere, and the result is a visual that renders empty and looks like
-a data problem. For a row marked no, build the visual in Desktop once, save, and read the
-`visual.json` back before trusting the names.
+Confirmed yes means the role names were read from a file Desktop wrote. No means a starting
+guess. Desktop silently ignores a role name it does not recognize, and the visual renders empty
+like a data problem. For a no row, build the visual in Desktop once, save, and read the
+`visual.json` back.
 
 | Visual | `visualType` | Main query roles | Confirmed |
 | --- | --- | --- | --- |
@@ -38,20 +32,21 @@ a data problem. For a row marked no, build the visual in Desktop once, save, and
 | Image | `image` | none, the source is a formatting object, see below | yes |
 | Scatter | `scatterChart` | `Category`, `X`, `Y`, `Size` (optional) | no |
 | Waterfall | `waterfallChart` | `Category`, `Y`, `Breakdown` (optional) | yes for `Category` and `Y`. `Breakdown` not yet seen in a saved file |
+| Gantt (preview, October 2026) | `ganttChart` | Task label, Start, End, progress measure, up to three category levels. Role names not documented | no |
+| Shape map (GA June 2026) | `shapeMap` | Location and a value. Role names not documented | no |
 
-Two roles are easy to miss on a cartesian visual:
+2026 notes on the catalog: the donut takes a centre value (`centerValue`, `value`, `label`,
+`centerBackground`, August 2026), and the July only keys `valueFontColor` and similar were removed.
+The card, button slicer and list slicer take `layout.showFixedSize` with `fixedHeight` and
+`fixedWidth` (April 2026) as the alternative to Fit to space (`autoGrid`).
 
-- `Tooltips` takes extra measure projections that appear on hover without occupying the chart.
-  Useful for putting a readable date on a chart whose axis shows a code.
+- `Tooltips` takes extra measure projections shown on hover, for example a readable date on a
+  chart whose axis shows a code.
 - Small multiples is a projection role on a cartesian chart, not a separate visual type.
-
-The combo chart is the one worth reading twice. Its roles are `Y` and `Y2`, plain positional
-names, and nothing in the JSON says column or line. `Y` draws as columns and `Y2` draws as the
-line. Putting a measure in the wrong one renders the chart with the two series swapped, which
-looks deliberate and is easy to miss in review.
-
-A visual can also be a group rather than a chart. In that case `visual` is replaced by
-`visualGroup`, and its children each carry `parentGroupName` pointing at the group's `name`.
+- Combo chart: `Y` draws as columns and `Y2` as the line, and nothing in the JSON says so. A
+  measure in the wrong one swaps the series, which looks deliberate and slips past review.
+- A group replaces `visual` with `visualGroup`. Each child carries `parentGroupName` set to the
+  group's `name`.
 
 ## Field references
 
@@ -64,14 +59,13 @@ A field reference is always one of these two shapes:
 { "Measure": { "Expression": { "SourceRef": { "Entity": "MeasureTableName" } }, "Property": "MeasureName" } }
 ```
 
-`Entity` and `Property` are the exact table and column or measure names in the semantic model,
-case sensitive. `queryRef` is conventionally `"Table.Field"`, `nativeQueryRef` is just the field
-name. Check the TMDL if unsure. A mismatch here parses fine and renders an empty visual.
+`Entity` and `Property` are exact model names, case sensitive. `queryRef` is `"Table.Field"`,
+`nativeQueryRef` is the field name. A mismatch parses fine and renders an empty visual.
 
 ## Letting the user choose the field
 
-A field parameter table in the model can drive a role, so one slicer re-cuts the chart. The
-`fieldParameters` block is a sibling of `projections` inside the role.
+A field parameter can drive a role, so one slicer re-cuts the chart. `fieldParameters` is a
+sibling of `projections` inside the role.
 
 ```json
 "Series": {
@@ -88,19 +82,17 @@ A field parameter table in the model can drive a role, so one slicer re-cuts the
 }
 ```
 
-`index` is where in the role the swappable field sits and `length` is how many slots it
-occupies. The `projections` entry is the currently selected field, so it still has to be a real
-field. For the field parameter table's TMDL, see the `powerbi-dax` skill.
-
-The same block works on a table. Put the projection of the parameter's first field in the
-`tableEx` `Values` role, add the `fieldParameters` entry with `index` 0 and `length` 1 next to
-it, and the slicer swaps which column the table shows. A table whose columns change this way
-needs `growToFit` column sizing, see `formatting-charts-and-tables.md`.
+- `index` is where the swappable field sits in the role, `length` how many slots it takes.
+- The `projections` entry is the currently selected field, so it must be a real field.
+- On a table: the parameter's first field in the `tableEx` `Values` role, plus the
+  `fieldParameters` entry with `index` 0 and `length` 1. A table whose columns change this way
+  needs `growToFit` column sizing, see `formatting-charts-and-tables.md`.
+- The field parameter table's TMDL is in the `powerbi-dax` skill.
 
 ## Worked example: a trend chart
 
-Replace the table and field names, and detect the `visualContainer` version rather than copying
-the one below (see `layout-and-schema-versions.md`).
+Replace the names, and detect the `visualContainer` version rather than copying this one (see
+`layout-and-schema-versions.md`).
 
 ```json
 {
@@ -154,19 +146,12 @@ the one below (see `layout-and-schema-versions.md`).
 }
 ```
 
-`drillFilterOtherVisuals` goes INSIDE `visual`, as a sibling of `visualType` and `query`, and is
-`true` on essentially every visual Desktop writes. Include it. Putting it at the file root
-instead is the easiest mistake to make here, and the schema does not define it there.
-
-### The same template covers every cartesian chart
-
-Column, bar and area charts are this file with a different `visualType` and the roles from the
-catalog. There is nothing else structurally different, so do not go looking for another shape.
-Swap `lineChart` for `clusteredColumnChart`, `columnChart`, `clusteredBarChart`, `barChart` or
-`areaChart`, keep `Category` and `Y`, and add a `Series` role if you want a legend.
-
-The one to read twice is the combo chart, because `Y` draws as columns and `Y2` draws as the
-line, and nothing in the JSON says so.
+- `drillFilterOtherVisuals` goes INSIDE `visual`, a sibling of `visualType` and `query`, and is
+  `true` on nearly every visual Desktop writes. The schema does not define it at the file root,
+  the easiest place to put it by mistake.
+- The same file covers every cartesian chart. Swap `lineChart` for `clusteredColumnChart`,
+  `columnChart`, `clusteredBarChart`, `barChart` or `areaChart`, keep `Category` and `Y`, and add
+  `Series` for a legend. Nothing else differs. The combo chart's `Y` and `Y2` are above.
 
 ## Worked example: a slicer
 
@@ -209,23 +194,19 @@ line, and nothing in the JSON says so.
 }
 ```
 
-Slicer specifics worth knowing:
-
-- `mode` is `'Dropdown'` or `'Basic'`. Dropdown is the right default in a header strip, because
-  it holds its height whatever the list length. Basic is the checkbox list.
+- `mode` is `'Dropdown'` or `'Basic'` (the checkbox list). Dropdown holds its height in a header
+  strip whatever the list length. Set it explicitly: on the Fluent 2 base theme a new slicer
+  defaults to Dropdown, on older ones it does not.
 - `orientation` is `1D` for horizontal and `0D` for vertical.
-- `selfFilterEnabled` turns on the search box. Add it once a dimension passes roughly 30 members.
-- Turn the container `title` off and set the slicer's own `header.text` instead. The label then
-  sits inside the control, which is how a 56 pixel tall slicer still says what it filters.
+- `selfFilterEnabled` turns on the search box. Add it past roughly 30 members.
+- Container `title` off, slicer `header.text` on. The label then sits inside the control, so a
+  56 pixel slicer still says what it filters.
 
 ## Matrix, table, and the analytical visuals
 
-- Matrix (`pivotTable`) uses `Rows`, `Columns`, `Values`. Its layout, subtotals, and grand totals
-  are formatting objects, not query roles.
-- Native sparklines live inside a table or matrix as an extra measure projection with a sparkline
-  formatting object. They are capped at 5 per visual and 52 points, and they limit a matrix to 25
-  columns.
-- The AI visuals, decomposition tree and key influencers, are Pro safe, their intelligence runs
-  in the engine rather than in Copilot. Their internal type and role names are less documented
-  and less stable than the core charts, so generate one in Desktop, save, and read its
-  `visual.json` before authoring one in code.
+- Matrix (`pivotTable`) layout, subtotals and grand totals are formatting objects, not roles.
+- Native sparklines are an extra measure projection in a table or matrix with a sparkline
+  formatting object. Capped at 5 per visual and 52 points, and they limit a matrix to 25 columns.
+- Decomposition tree and key influencers are Pro safe (they run in the engine, not Copilot). Their
+  type and role names are less documented and less stable, so generate one in Desktop and read
+  its `visual.json` first.

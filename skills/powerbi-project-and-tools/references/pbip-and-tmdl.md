@@ -1,24 +1,21 @@
 # PBIP and TMDL
 
-## What the PBIP format is
+## The format, and what 2026 changed
 
-A `.pbix` is one binary file. Report and model are zipped together and you cannot diff it, merge
-it, or edit it in a text editor.
+A Power BI Project (PBIP) is a pbix saved as a folder of text files, so git can diff and merge it.
+Save with File, Save as, Power BI Project. Save as converts a pbix to a pbip and back. PBIP and PBIR
+went GA in September 2026. If a build offers no project type or no TMDL `definition` folder, look
+under File, Options and settings, Options, Preview features.
 
-A Power BI Project (PBIP) is the same content saved as a folder of plain text files instead. The
-model and report metadata become human readable files in a simple folder tree. That makes them
-diffable in git, mergeable, and editable in VS Code or any text editor. Microsoft lists PBIP and
-PBIR as generally available, with detecting and reloading external changes still in preview
-(https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-external-editing). If your
-build does not offer the project type or a TMDL `definition` folder, look under File, Options and
-settings, Options, Preview features.
-
-You save a pbip with File, Save as, and pick the Power BI Project type. You can convert a pbix
-to a pbip and back through Save as in Desktop.
+PBIR is now the report format inside a `.pbix` too. Saving a PBIR-Legacy report (a single
+`report.json`) converts it silently, with no opt out. Desktop keeps the pre conversion copy for
+30 days under `%USERPROFILE%\AppData\Local\Microsoft\Power BI Desktop\TempSaves\Backups`, and the
+Service offers Restore as PBIR-Legacy for 28 days. `definition.pbir` `version` 4.0 or higher
+allows the `definition` folder.
 
 ## The folder layout
 
-A pbip for a project called `ABCSales` looks like this. Names are illustrative.
+Names are illustrative.
 
 ```text
 ABCSales.pbip                      pointer file, opening it opens the report and model
@@ -47,49 +44,36 @@ ABCSales.Report/                   the report
 .gitignore                         created by Desktop, ignores .pbi\cache.abf and localSettings.json
 ```
 
-What goes where in the model:
-
-- A regular loaded table's M query lives inside that table's file, in its `partition` block, under
-  `tables\<Table>.tmdl`.
-- `expressions.tmdl` holds the model level shared expressions. That means parameters, and any
-  query that is load disabled or shared as a staging query that other queries reference. These
-  are stored once at the model level, not inside a table.
+- A loaded table's M query lives in that table's `partition` block in `tables\<Table>.tmdl`.
+  Columns, hierarchies, and partitions all live in that one table file.
+- `expressions.tmdl` holds model level shared expressions: parameters, and load disabled or
+  staging queries that other queries reference.
 - `relationships.tmdl` holds all relationships, so a relationship change is one file to review.
-- Columns, hierarchies, and partitions of a table all live inside that one table file, not in
-  separate files.
-
-## TMDL is the source of truth
-
-TMDL (Tabular Model Definition Language) is a text format for the model, similar in feel to
-YAML. Indentation with a single tab per level denotes the object tree. The files in the
-`definition\` folder are what defines the model. The `cache.abf` in `.pbi\` is only a cached copy
-of the data from the last edit, and it is git ignored. When you fix the model, you edit the
-`.tmdl` files.
+- TMDL nests by indentation, one tab per level. `.pbi\cache.abf` is only cached data from the last
+  edit, and it is git ignored. Fix the model in the `.tmdl` files.
 
 ## Safe hand editing rules
 
-1. Back up first. Copy the whole project folder, or commit to git, so you can revert cleanly.
-2. Close Power BI Desktop before you edit. Desktop keeps the model in memory and rewrites the
-   TMDL files from memory when it saves or applies. Any edit you make while it is open will be
-   overwritten. Edit, save, then open Desktop.
+1. Back up first. Copy the project folder, or commit to git.
+2. Close Power BI Desktop before you edit. Desktop rewrites the TMDL from memory when it saves or
+   applies, so an edit made while it is open is overwritten.
 
-   Newer Desktop builds do detect on-disk changes and offer to apply them, which is a preview
-   feature. It does not change the rule. The prompt resolves a conflict after the fact, and the
-   version in Desktop's memory is the one that wins if you get it wrong. Closing first means
-   there is no conflict to resolve. An agent running the Desktop Bridge has a second branch, with
-   its own conditions, in `agent-verification.md`.
-3. Make minimal, targeted edits. One property or one measure at a time, then verify. A small diff
-   is easy to review and easy to revert.
-4. Preserve line endings and encoding. Desktop writes CRLF and UTF-8 without BOM. A tool that
-   rewrites the file as LF makes the whole file look changed in git and can confuse a merge. Set
-   git `autocrlf` so line endings stay consistent.
+   The preview switch "Detect and reload external PBIP changes" (August 2026) shows an Apply
+   external changes banner after an outside save. It does not change the rule. Applying reloads
+   the whole report or model, discards unsaved Desktop edits, and resets filters. While it is on
+   you may not edit `definition.pbir`, `report.json`, `mobileState.json` or
+   `semanticModelDiagramLayout.json` from outside, and a leftover `unappliedChanges.json` must be
+   applied first or expression edits are lost. Closing first means there is no conflict to
+   resolve. An agent running the Desktop Bridge has a second branch, with its own conditions, in
+   `agent-verification.md`.
+3. One property or one measure at a time, then verify.
+4. Preserve line endings and encoding. Desktop writes CRLF and UTF-8 without BOM. A rewrite as LF
+   makes the whole file look changed in git. Set git `autocrlf` so line endings stay consistent.
    Python in text mode reads CRLF as `\n`, so a check for `\r\n` is always false, and a rewrite
    can come back LF only. Read and write bytes, or open with `newline=''`. If a TMDL file you meant
    to leave alone differs only in line endings, restore the original instead of committing it.
-5. Respect the indentation. TMDL is whitespace significant. One tab per level. A stray space, or
-   a tab converted to spaces, breaks the parse.
-6. Reopen in Desktop to verify. If an edit is invalid, Desktop refuses to open the project and
-   points at the file and location of the error.
+5. One tab per level. A stray space, or a tab converted to spaces, breaks the parse.
+6. Reopen in Desktop. An invalid edit makes it refuse to open and point at the file and location.
 
 ## What a Desktop save does to files you wrote
 
@@ -105,8 +89,8 @@ of the data from the last edit, and it is git ignored. When you fix the model, y
 
 Two hand written shapes made Desktop refuse to open a project: a calculated column expression split
 over several lines, and a one line `formatStringDefinition` on a measure. The fenced block form of
-`formatStringDefinition` loaded. The safe habit is a calculated column on one line, a format string
-definition in the fenced form, and any other multi line shape copied from a file Desktop wrote.
+`formatStringDefinition` loaded. Write a calculated column on one line, a format string definition
+in the fenced form, and copy any other multi line shape from a file Desktop wrote.
 
 ## Query groups organize the model files
 
@@ -126,42 +110,32 @@ queryGroup 04_Model\Facts
 annotation __PBI_TimeIntelligenceEnabled = 0
 ```
 
-`__PBI_TimeIntelligenceEnabled = 0` is auto date/time turned off for this file, which is the
-single highest value default in a model. See the `powerbi-data-and-refresh` skill for why.
+`__PBI_TimeIntelligenceEnabled = 0` is auto date/time off for this file. See the
+`powerbi-data-and-refresh` skill for why it matters.
 
-A calculated partition must NOT carry a `queryGroup:` line. See
-`calculated-table-conversion.md`.
-
-## Converting a table between M and calculated
-
-You can flip a table between an import (M) partition and a calculated (DAX) partition by editing
-TMDL, and it is the light way to kill refresh fan out. It needs `.pbi\cache.abf` deleted first,
-plus two lineage tricks, or the model will not open. The full procedure is in
+A calculated partition must NOT carry a `queryGroup:` line. Flipping a table between M and
+calculated needs `.pbi\cache.abf` deleted and two lineage tricks. See
 `calculated-table-conversion.md`.
 
 ## Every lineageTag must be unique across the model
 
-Every table, column, measure, and hierarchy carries a `lineageTag`, the GUID that binds it to the
-report visuals and to relationships. That tag has to be unique across the whole model, not just
-within its own table file.
+Every table, column, measure, and hierarchy carries a `lineageTag`, the GUID that binds it to
+visuals and relationships. It must be unique across the whole model, not just its own table file.
 
-This bites when you hand author a new table by copying an existing table file as a starting
-point, because it is easy to rename everything and leave the tag block untouched. Desktop then
-refuses to open the project at all:
+This bites when you copy an existing table file to start a new one and leave the tag block
+untouched. Desktop then refuses to open the project:
 
 ```text
 Failed to add a deserialized Table object into the model - name: 'Dim_Date', detailed error:
 An object with lineage-tag '...' already exists in the collection.
 ```
 
-The trap is the table name in that message. It is the table that deserialized FIRST with the
-duplicated tag, not the new one you just added. So the error points at a file you never touched
-and sends you debugging an innocent table. Go by the tag in the message, not the name, and find
-both files that carry it.
+The table named is the one that deserialized FIRST with the duplicated tag, not the new one. So
+the error points at a file you never touched. Go by the tag in the message and find both files
+that carry it.
 
-Readable fake GUIDs are fine here, and they review better than real ones, for example
-`7d000001-0000-4000-8000-000000000001`. Just give each table its own prefix, `7b...` for one
-table and `7c...` for the next, so two hand authored tables can never collide.
+Readable fake GUIDs are fine, for example `7d000001-0000-4000-8000-000000000001`. Give each table
+its own prefix (`7b...`, `7c...`) so two hand authored tables can never collide.
 
 Check before you open Desktop. Anything this returns is a duplicate, empty output is clean:
 
@@ -172,36 +146,30 @@ Get-ChildItem .\ABCSales.SemanticModel\definition -Recurse -Filter *.tmdl |
   Group-Object | Where-Object Count -gt 1
 ```
 
-Report side ids follow a different rule, so do not go fixing those to match. The `name` on a
-filter in a `visual.json` only has to be unique inside that one visual's `filterConfig`. Desktop
-reuses the same id across visuals when you duplicate a visual, so duplicates there are normal.
+Report side ids follow a different rule, so do not fix those to match. A filter `name` in a
+`visual.json` only has to be unique inside that visual's `filterConfig`. Desktop reuses the same id
+when you duplicate a visual, so duplicates there are normal.
 
 ## Other traps
 
-- OneDrive. Keep the pbip repo out of a OneDrive or SharePoint synced folder. A git repo inside a
-  synced folder is a known way to corrupt the repo, because OneDrive and git both churn the many
-  small files under `.git`. Desktop also cannot save a pbip straight to OneDrive or SharePoint,
-  and saving into a locally synced folder can make the save fail. Keep the working repo on a plain
-  local path and push to the remote with git.
-- Windows path length. A pbip stores many nested files. The default Windows path limit is 260
-  characters. Long table names in a deep folder can push a file path past the limit and fail the
-  save. Keep the root folder path short.
-- The report side is the deep end of that limit. PBIR nests
-  `<project>.Report\definition\pages\<20 hex id>\visuals\<20 hex id>\visual.json`, which adds
-  roughly 70 characters beyond the project root before any file name. A project that saved fine
-  can fail to OPEN after being moved or copied to a deeper folder (a OneDrive backup folder is
-  the classic case). Desktop then shows "Issues were found", says it cannot read a visual.json,
-  and names the 260 character limit. The fix is to move the whole project folder to a short
-  local root, which also gets it out of OneDrive.
-- Restart to see external edits. Newer builds prompt to apply changes they detect on disk, but
-  a close and reopen after editing TMDL in VS Code is the path that cannot go wrong.
+- OneDrive. Keep the pbip repo out of a OneDrive or SharePoint synced folder. OneDrive and git both
+  churn the small files under `.git`, which can corrupt the repo. Desktop also cannot save a pbip
+  straight to OneDrive or SharePoint, and saving into a locally synced folder can make the save
+  fail. Work on a plain local path and push with git.
+- Windows path length. The default limit is 260 characters. PBIR nests
+  `<project>.Report\definition\pages\<20 hex id>\visuals\<20 hex id>\visual.json`, roughly 70
+  characters beyond the project root before any file name. A project that saved fine can fail to
+  OPEN after being moved to a deeper folder (a OneDrive backup folder is the classic case). Desktop
+  shows "Issues were found", says it cannot read a visual.json, and names the 260 character limit.
+  Move the whole project to a short local root. Long table names in a deep folder can also fail
+  the save, so keep the root path short from the start.
 - Do not hand edit `diagramLayout.json`, `semanticModelDiagramLayout.json`, `mobileState.json`, or a
   PBIR-Legacy `report.json`. Microsoft lists those as not supported for external editing. The one
-  exception is box positions in `diagramLayout.json`, which `references/model-diagram-layout.md`
-  covers along with its limits.
+  exception is box positions in `diagramLayout.json`, covered with its limits in
+  `model-diagram-layout.md`.
 
 ## See also
 
 - `external-tools.md`: the tools that read and write these files.
-- `licensing-cheatsheet.md`: the Pro versus Premium boundary.
+- `pro-vs-premium-facts.md`: the Pro versus Premium boundary.
 - `powerbi-doc-repo`: turning a TMDL export into a documented, redacted repo.

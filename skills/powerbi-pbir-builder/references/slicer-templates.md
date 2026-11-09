@@ -1,25 +1,20 @@
-# Slicer templates: classic, list, and button
+# Slicer templates: classic and button
 
-The `visual.json` shapes for the slicer family beyond the plain slicer in
-`visual-types-and-patterns.md`. Which slicer to use for which job is a design call, covered in
-`slicers-and-navigation.md` in the `powerbi-report-design` skill. Every shape below came from a
-file Desktop wrote or a value that rendered in Desktop, on visualContainer schema 2.11 to 2.13.
+Slicer shapes beyond the plain slicer in `visual-types-and-patterns.md`. Every shape came from a
+file Desktop wrote or a value that rendered, on visualContainer schema 2.11 to 2.13. These are
+styled options, not a required look. Which slicer fits which job is in `slicers-and-navigation.md`
+in the `powerbi-report-design` skill.
 
-All four types bind the field the same way, a `Values` projection, so a conversion keeps the
-old visual's `query`, `filterConfig`, `position` and alt text, and swaps `visualType` and
-`objects`.
-
-## Any checker must know all four types
-
-A layout checker and a test runner that tested `visualType == "slicer"` silently skipped every
-converted slicer, so the banned field and duplicate field checks passed on visuals they never
-read. Treat `slicer`, `listSlicer`, `advancedSlicerVisual` and `textSlicer` as slicers
-everywhere a script asks the question.
+- All four types bind a `Values` projection, so a conversion keeps the old `query`,
+  `filterConfig`, `position` and alt text, and swaps `visualType` and `objects`.
+- Any checker must treat `slicer`, `listSlicer`, `advancedSlicerVisual` and `textSlicer` as
+  slicers. A checker that tested `visualType == "slicer"` silently skipped every converted
+  slicer, so its banned field and duplicate field checks passed on visuals it never read.
 
 ## Classic slicer, underline dropdown
 
-A rounded box, a coloured open arrow, and a 3 px accent line along the bottom. It goes on each
-visual, in `visual.objects.dropdown`, for slicers whose `data.mode` is `'Dropdown'`.
+A rounded box, a coloured open arrow, and a 3 px accent line along the bottom. Per visual, in
+`visual.objects.dropdown`, on a slicer whose `data.mode` is `'Dropdown'`.
 
 ```json
 "dropdown": [{ "properties": {
@@ -36,11 +31,13 @@ visual, in `visual.objects.dropdown`, for slicers whose `data.mode` is `'Dropdow
 - `accentBarPosition` takes `Left`, `Right`, `Top` or `Bottom`. With `Left` the rounded corner
   clips the bar, so it looks cut off.
 - The same properties under `visualStyles.slicer["*"].dropdown` in a custom theme validate
-  against the schema. In one report Desktop ignored them, and an existing theme radius of 4 had
-  never shown. In another report the theme restyled every dropdown in one place. So set them in
-  the theme, render one page, and fall back to the per visual entry above if nothing changed.
-- The open list of a classic dropdown is always exactly as wide as the box. There is no setting
-  for it. For a wide list on a narrow box, use the list slicer below.
+  against the schema. One report ignored them and another restyled every dropdown in one place.
+  Both results may predate the August 2026 GA of the Dropdown section, so retest. Set them in the theme, render one page, and
+  fall back to the per visual entry above if nothing changed. The section also takes per corner
+  radii, `iconSize`, and fx on border, icon and accent colours. The hierarchy chevron colour is
+  `items.expandCollapseIconColor`.
+- The open list of a classic dropdown is always exactly as wide as the box, with no setting for
+  it. For a wide list on a narrow box, use the list slicer in `list-slicer-dropdown.md`.
 
 ### Other classic slicer objects that render
 
@@ -54,96 +51,29 @@ visual, in `visual.objects.dropdown`, for slicers whose `data.mode` is `'Dropdow
 
 - A Between slider: `objects.slider` with `show` true, `color`, `secondaryLineColor`,
   `handleFillColor`, `handleBorderColor` and `handleSize`. A `handleSize` of `16D` draws smaller
-  than the default handle, so mention it if grabbing matters. `numericInputStyle` has font
-  settings and no corner radius, so the two number boxes cannot be rounded.
+  than the default handle, so mention it if grabbing matters. With Responsive off, `handleWidth`
+  and `handleHeight` (September 2026) draw a rectangular handle instead. `numericInputStyle` has
+  font settings and no corner radius, so the two number boxes cannot be rounded.
+- Date picker style: `data.mode` `'RelativeDatePicker'` on a date column (GA August 2026). It
+  takes a relative rule (`relativeRange`, `relativeDuration`, `relativePeriod`), a calendar, and
+  `selection.singleDate`. The anchor and offset keys are not documented, so set those in Desktop
+  and read the file back.
 - Theme `visualStyles.slicer["*"].slider` with `show` false hides the slider on every Between
   slicer, except those that carry their own `objects.slider` `show` true. A per visual entry
   wins, so delete those to let the theme decide.
 - `items` takes `fontColor`, `background`, `outlineColor`, `textSize` and `padding`.
 - Tile layout: "Sep 2026" truncated at about 65 px per tile at 8 pt. About 84 px per tile fit.
 
-## List slicer in dropdown mode (preview)
+## List slicer in dropdown mode
 
-`listSlicer` with `data.dropdownMode` true is the only slicer with a setting for the open list
-size, `dropdownMenu.width` and `dropdownMenu.maxHeight`. A 128 px box opened a 320 x 420 list,
-so long names read in full. This is an October 2026 preview.
-
-Template that renders beside a classic dropdown and looks the same:
-
-```json
-{
-  "visualType": "listSlicer",
-  "objects": {
-    "data": [{ "properties": {
-      "dropdownMode": { "expr": { "Literal": { "Value": "true" } } } } }],
-    "general": [{ "properties": {
-      "selfFilterEnabled": { "expr": { "Literal": { "Value": "true" } } } } }],
-    "dropdownMenu": [{ "properties": {
-      "width":        { "expr": { "Literal": { "Value": "320D" } } },
-      "maxHeight":    { "expr": { "Literal": { "Value": "420D" } } },
-      "cornerRadius": { "expr": { "Literal": { "Value": "6D" } } } } }],
-    "dropdownButton": [{ "properties": {
-      "cornerRadius": { "expr": { "Literal": { "Value": "6D" } } },
-      "iconShow":     { "expr": { "Literal": { "Value": "true" } } },
-      "iconColor":    { "solid": { "color": { "expr": { "Literal": { "Value": "'#0072B2'" } } } } } } }],
-    "selectionBox": [{ "properties": {
-      "placeholderText":   { "expr": { "Literal": { "Value": "'All'" } } },
-      "borderShow":        { "expr": { "Literal": { "Value": "true" } } },
-      "borderColor":       { "solid": { "color": { "expr": { "Literal": { "Value": "'#D1D1D1'" } } } } },
-      "borderWidth":       { "expr": { "Literal": { "Value": "1D" } } },
-      "cornerRadius":      { "expr": { "Literal": { "Value": "6D" } } },
-      "fontSize":          { "expr": { "Literal": { "Value": "10D" } } },
-      "accentBarShow":     { "expr": { "Literal": { "Value": "true" } } },
-      "accentBarWidth":    { "expr": { "Literal": { "Value": "3D" } } },
-      "accentBarPosition": { "expr": { "Literal": { "Value": "'Bottom'" } } } } }]
-  },
-  "visualContainerObjects": {
-    "title": [{ "properties": {
-      "show":     { "expr": { "Literal": { "Value": "true" } } },
-      "text":     { "expr": { "Literal": { "Value": "'Owner'" } } },
-      "fontSize": { "expr": { "Literal": { "Value": "9D" } } } } }],
-    "subTitle":   [{ "properties": { "show": { "expr": { "Literal": { "Value": "false" } } } } }],
-    "border":     [{ "properties": { "show": { "expr": { "Literal": { "Value": "false" } } } } }],
-    "background": [{ "properties": { "show": { "expr": { "Literal": { "Value": "false" } } } } }],
-    "padding": [{ "properties": {
-      "top":    { "expr": { "Literal": { "Value": "0D" } } },
-      "bottom": { "expr": { "Literal": { "Value": "2D" } } },
-      "left":   { "expr": { "Literal": { "Value": "5D" } } },
-      "right":  { "expr": { "Literal": { "Value": "5D" } } } } }],
-    "spacing": [{ "properties": {
-      "customizeSpacing": { "expr": { "Literal": { "Value": "true" } } },
-      "spaceBelowTitle":  { "expr": { "Literal": { "Value": "7D" } } } } }]
-  }
-}
-```
-
-What each piece fixed, in the order it was found:
-
-1. The first render was a bordered card. New visuals pick up the theme's container border and
-   background. Container `border` and `background` off.
-2. The field name printed twice, pushing the box below a 56 px frame. `label.show` false did
-   nothing. The second line is the container subtitle, so `subTitle.show` false.
-3. No visible "All". The closed box is styled through `selectionBox`, not `value` or `outline`.
-   Top level `outline` and `accentBar` style the items in the open list instead.
-4. The box sat 5 px higher than a classic dropdown beside it, at the same 27 px height.
-   `spacing.spaceBelowTitleArea` had no effect. `spaceBelowTitle` 5 left it about 1 px high, 7
-   matched. Measure this from a render, eyeballing missed it.
-5. In a stacked column the boxes ran edge to edge, while classic boxes are inset about 5 px each
-   side. Container padding left 5 and right 5.
-6. `dropdownButton.iconSize` 14 made no visible difference. The arrow stays a little smaller
-   than the classic one.
-
-Preview caveats:
-
-- In another report on an old base theme (CY24SU10) the same mode rendered as a white box with a
-  "+1" pill, and was not used. Test it under the report's own base theme before converting.
-- If a Desktop or Service update changes how it draws, these are the visuals to check first.
+The template, the Fit to space row trap, the sizing rule and the conversion steps are in
+`list-slicer-dropdown.md`.
 
 ## Button slicer, `advancedSlicerVisual`
 
-GA since October 2025. Data role `Values`. This one is a month picker, three tiles in a row with
-an arrow to older months, single select, with a saved selection of the constant "Latest". The
-column behind it is in `time-intelligence.md` in the `powerbi-dax` skill.
+GA since October 2025. Role `Values`. This one is a month picker: three tiles in a row, an arrow
+to older months, single select, saved selection the constant "Latest". The column behind it is in
+`time-intelligence.md` in the `powerbi-dax` skill.
 
 ```json
 {
@@ -214,8 +144,8 @@ column behind it is in `time-intelligence.md` in the `powerbi-dax` skill.
 - The per state fill above, `fillCustom`, drew the selected colour. In another report the fill
   was set through `background` instead, and the selected button stayed black with white bold
   text. Drop selector entries Desktop ignores rather than leaving them in the file.
-- `overFlowStyle` 0 is paginated and `overFlowDirection` 1 is horizontal. Three tiles plus an
-  arrow replace a row of buttons plus a dropdown. The arrow takes the theme's foreground colour.
+- `overFlowStyle` 0 is paginated and `overFlowDirection` 1 is horizontal. The arrow takes the
+  theme's foreground colour.
 - Without `rowCount`, or under the old CY24SU10 base theme without the `padding` object above,
   tiles showed only outlines or thin bars, because the base theme padding pushed the text out.
 - `'rectangleRoundedByPixel'` with `rectangleRoundedCurve` takes pixels. `'rectangleRounded'`
