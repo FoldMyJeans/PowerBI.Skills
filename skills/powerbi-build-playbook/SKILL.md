@@ -30,7 +30,8 @@ doors.
 | Write or fix a measure | `powerbi-dax` |
 | What should the page look like, which chart, what colors | `powerbi-report-design` |
 | Write pages and visuals as JSON instead of clicking | `powerbi-pbir-builder` |
-| A chart Power BI does not have, a pbiviz, animation between states | `powerbi-custom-visuals` |
+| An unusual chart from a ready recipe (Deneb, SVG from DAX, beeswarm, waffle, gauge) | `powerbi-chart-recipes` |
+| Build your own visual (a pbiviz), animation between states | `powerbi-custom-visuals` |
 | Edit the model files, external tools, what needs Premium | `powerbi-project-and-tools` |
 | Document a finished model into a shareable repo | `powerbi-doc-repo` |
 

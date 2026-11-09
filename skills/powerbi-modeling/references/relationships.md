@@ -57,7 +57,8 @@ check:
 - `USERELATIONSHIP` errors when row level security is defined on the table involved, for example on
   the dimension named in the function. With RLS, check this before choosing the first option.
 
-DAX detail is in the `powerbi-dax` skill.
+When the relationship should not exist in the model at all, filter through one in a single measure
+instead (TREATAS, `virtual-relationships.md` in the `powerbi-dax` skill).
 
 ## When the one to many rule bends
 
