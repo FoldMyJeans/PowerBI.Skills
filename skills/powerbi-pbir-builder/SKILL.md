@@ -106,8 +106,9 @@ from `powerbi-report-design`, then get implemented here. The model behind the vi
 - `references/slicer-templates.md`: the classic underline dropdown, the date picker and slider,
   the button slicer with its state selectors, and the traps each one hit.
 - `references/list-slicer-dropdown.md`: the list slicer in dropdown mode, a wide open list from a
-  narrow box. Template, the Fit to space row trap, sizing from the data, and converting a classic
-  slicer.
+  narrow box. Template, the Fit to space row trap, font sizes from the theme, hierarchy fields,
+  sizing from the data (longest value or typical entry), measuring the shown list in DAX, and
+  converting a classic slicer.
 - `references/templates-grids.md`: complete `visual.json` files for a table and a matrix.
 - `references/templates-single-value.md`: complete files for the legacy card, KPI, gauge and
   textbox, plus the image visual, a page background picture, and an image bound to an SVG measure.

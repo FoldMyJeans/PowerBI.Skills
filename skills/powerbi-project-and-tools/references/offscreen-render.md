@@ -91,19 +91,26 @@ copy is installed.
 
 ## Keep the person's own Desktop minimized
 
-A minimized Desktop still answers DAX over ADOMD and UI Automation, so there is no reason to restore
-it. Keep it minimized while it loads with `ShowWindow(h, 7)` in the same 250 ms loop. Invoke buttons by
+A minimized Desktop still answers DAX over ADOMD, and usually UI Automation, so there is no reason to
+restore it. One opened minimized from launch exposed no UI Automation buttons at all, so check the tree
+has descendants before a plan depends on invoking one. Keep it minimized while it loads with `ShowWindow(h, 7)` in the same 250 ms loop. Invoke buttons by
 Name or AutomationId (`save`, "Refresh now"). To watch the refresh dialog, look for the pane whose name
 ends `FloatingDialog/KoBrowserDialog/KoBrowserDialog.htm - Web content`, not for table names, which the
 Data pane also shows.
 
 ## Closing the person's Desktop before an edit
 
-Close it with `CloseMainWindow`, not by killing the process, then wait up to 30 seconds. On a minimized
-window `CloseMainWindow` and `WindowPattern.Close` were sometimes ignored, and invoking the title bar
-"Close" button through UI Automation worked. A process still open after that is almost always an
-unsaved changes prompt. Ask the person to close it. Then compare the project with your backup by content
-before copying anything in, so nothing they changed since is overwritten.
+Plan the edit order on the assumption that the person closes Desktop, not you: read every value you
+need from the open model first, then ask them to close it, then write the files.
+
+Try `CloseMainWindow`, not killing the process, then wait up to 30 seconds. On a minimized window
+`CloseMainWindow` and `WindowPattern.Close` were sometimes ignored, and invoking the title bar "Close"
+button through UI Automation worked. On a Desktop opened minimized from launch even that failed. Its
+UI Automation tree had zero descendants, so there was no button to invoke, and `WM_CLOSE` and
+`WindowPattern.Close` were both ignored. `Stop-Process` was no way out either: the agent's permission
+rules blocked it, and a kill loses unsaved work anyway. A process still open after `CloseMainWindow` is
+often an unsaved changes prompt. Either way, ask the person to close it. Then compare the project with
+your backup by content before copying anything in, so nothing they changed since is overwritten.
 
 ## Small scripting traps
 
