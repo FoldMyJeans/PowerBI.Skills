@@ -27,7 +27,9 @@ The slicer family, as of November 2026:
 - List slicer, still preview. Its dropdown mode (October 2026, also preview) has a configurable
   open list width and height, removable selection pills, search, and Show selected first. The only
   way to open a wide list from a narrow box, so long names read in full. Render it under the
-  report's own base theme before converting a page of slicers.
+  report's own base theme before converting a page of slicers. It takes hierarchy fields. Size the
+  open list to the longest value or to the typical entry, and take its font sizes from the theme's
+  slicer header. Both rules are in `list-slicer-dropdown.md` in the `powerbi-pbir-builder` skill.
 - Fixed size layout (April 2026) on the card, button slicer and list slicer sets a pixel height or
   width per item, as an alternative to Fit to space.
 - Any slicer takes a pasted list of values from its context menu (February 2026).
