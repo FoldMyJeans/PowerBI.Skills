@@ -34,6 +34,10 @@ The slicer family, as of November 2026:
   width per item, as an alternative to Fit to space.
 - Any slicer takes a pasted list of values from its context menu (February 2026).
 - Input slicer, GA since February 2026, numeric columns since May 2026. The user types a value.
+  Use it instead of a list slicer on a free text or high cardinality column. A list of about 43k
+  values was rebuilt on every other slicer change and made slicers feel slow in the Service.
+  Check `DISTINCTCOUNT` per slicer field first. Setup is in `slicer-templates.md` in the
+  `powerbi-pbir-builder` skill.
 - Date picker, GA since August 2026, for a single date or a range from a calendar.
 
 There is no slicer style gallery. Style per visual or through the theme, and render a page to check
