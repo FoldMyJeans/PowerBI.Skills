@@ -69,6 +69,30 @@ A rounded box, a coloured open arrow, and a 3 px accent line along the bottom. P
 The template, the Fit to space row trap, the sizing rule and the conversion steps are in
 `list-slicer-dropdown.md`.
 
+## Input slicer, `textSlicer`
+
+GA since February 2026. The user types a term and the slicer filters the column. Use it for a free
+text or high cardinality column where a list would hold thousands of values (see the end of
+`list-slicer-dropdown.md`). These objects were written by script and rendered on Desktop (Nov 2026,
+Fluent2 CY26SU10 base theme). Desktop has not saved a `textSlicer` file to read back, so treat the
+shape as written and rendered, not as seen in Desktop's own output.
+
+- Query role `Values` with a single column. Keep the old `filterConfig` and alt text.
+- `slicerSettings`: `multiselect` false, so one term at a time.
+- `dropdown`: `filterMode` `'Filter_Contains_Any'`. Other values include `Contains_All`,
+  `Does_Not_Contain_Any` and `Starts_With_Any`. The search is a case insensitive contains.
+- `inputTextBox`: `placeholder`, `placeholderFontSize`, `border`, `containerCornerRadius`,
+  `padding`. `accentBarShow`, `accentBarColor`, `accentBarWidth` and `accentBarPosition` are
+  accepted, but no accent bar drew.
+- `inputText`: `fontSize`, the chip `background`, `pillCornerRadius`, `dismissSize`.
+- `applyButton`: `iconSize`, `padding`.
+- `filterOperator`: `showText` false and `iconSize`. A small operator chevron still shows on the
+  left, and it lets the reader pick Contains or Starts with.
+
+Sizing beside list slicer dropdowns: in a 56 px frame with a 9 pt title, container padding bottom 9
+lined the box up with the dropdowns next to it. At 104 px wide the placeholder "Search" wrapped, so
+use 144.
+
 ## Button slicer, `advancedSlicerVisual`
 
 GA since October 2025. Role `Values`. This one is a month picker: three tiles in a row, an arrow

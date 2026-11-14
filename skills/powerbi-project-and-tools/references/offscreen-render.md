@@ -57,6 +57,32 @@ Small misalignments do not show to the eye. To catch a 5 px offset between two s
 one pixel column per slicer in the render, convert to page units with the canvas scale, and compare box
 top and bottom against each visual's `y`.
 
+Further UI Automation findings on Desktop (Nov 2026), all without the mouse or keys. Never call
+`SetFocus`.
+
+- Each slicer is a Group named "<title> Slicer...". The dropdown toggle inside it is a Button with
+  class `dropdownSlicerToggle`. In edit mode the first `ExpandCollapse` only selects the visual, and a
+  second one opens the list.
+- On an Input slicer (`textSlicer`), set the Edit control with `ValuePattern.SetValue`, then Invoke
+  the Button named "Apply button".
+
+## Show a slicer with picks, from a copy
+
+To see how picked values draw, write fake saved selections into the copy, not into the person's
+project. In the slicer's `visual.json`, `objects.general[0].properties.filter` takes
+`{ "filter": { "Version": 2, "From": [...], "Where": [{ "Condition": { "In": ... } }] } }`, the same
+shape as the saved selection in `filters-and-sync.md` in the `powerbi-pbir-builder` skill. Render the
+copy as above. A window made larger than the monitor (3200 x 1800) gives a sharper canvas than 1920 x
+1080.
+
+## Time the queries a report runs
+
+Before rewriting DAX for a slow report, time it. Connect over ADOMD to Desktop's local `msmdsrv` port
+(see below), run a `SUMMARIZECOLUMNS` at the grain each visual uses, time each one, and compare.
+Report the measured numbers. On a small import model every measure answered in under 100 ms, and
+the slowness was a list slicer over a column with about 43k values. Check `DISTINCTCOUNT` of each
+slicer field alongside the timings.
+
 ## Refresh and save with no clicks
 
 Desktop runs its own Analysis Services engine, `msmdsrv.exe`, as a child process.

@@ -25,7 +25,7 @@ like a data problem. For a no row, build the visual in Desktop once, save, and r
 | Slicer | `slicer` | `Values` | yes |
 | List slicer (preview) | `listSlicer` | `Values`, the classic slicer's query carried over unchanged | yes |
 | Button slicer | `advancedSlicerVisual` | `Values` | yes |
-| Input slicer | `textSlicer` | `Values` assumed, not seen in a saved file | no |
+| Input slicer | `textSlicer` | `Values`, one column. Written by script and rendered on Desktop, not yet saved by Desktop, see `slicer-templates.md` | rendered, not saved |
 | Donut or pie | `donutChart`, `pieChart` | `Category`, `Y` | yes |
 | Gauge | `gauge` | `Y` (the value), `TargetValue` | yes |
 | KPI | `kpi` | `Indicator`, `TrendLine` | yes |

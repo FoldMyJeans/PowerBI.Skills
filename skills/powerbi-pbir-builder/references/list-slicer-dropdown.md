@@ -132,6 +132,26 @@ as in Font sizes from the theme below.
 - `dropdownButton.iconSize` 14 made no visible difference. The arrow stays a little smaller than the
   classic one.
 
+## Compact pills (the picked values)
+
+With the defaults a pick draws as a large chip with a large dismiss cross. In a box about 104 px
+wide even one pick collapsed to "+1" and the box grew taller. This set fixed it, rendered on
+Desktop with the Fluent2 CY26SU10 base theme.
+
+- `pills`: `fontSize` 8, background on in a light tint, border off, `cornerRadius` 4,
+  `individualPadding` true with top 0, bottom 0, left 4, right 2, `dismissSize` 8, `dismissGap` 2.
+- `selectionBox`: `individualPadding` true with top 4, bottom 4, left 4, right 0. Top and bottom at
+  0 squashed the placeholder onto the accent bar.
+- `dropdownButton`: `paddingUniform` 2, `horizontalGap` 0.
+
+In a 104 px box a single short pick reads in full, two short picks read "Name +1", and long or many
+picks still read "+N". The schema's `pills` card also has `backgroundColor` and `backgroundShow`,
+`borderColor` and `borderShow`, `dismissColor`, `dismissPosition`, `layoutDirection` and per side
+padding keys. Take the exact side key names from the newest theme schema.
+
+`selectedOnly` with `show` true adds a "Show selected first" toggle row at the top of the open list.
+No property turns the toggle on by default.
+
 ## Font sizes from the theme
 
 - Title and closed box: read `visualStyles.slicer.*.header.textSize` in the report's theme and set
@@ -207,6 +227,16 @@ CALCULATETABLE (
   result gives the child row count as well.
 - A page or report filter on the same table narrows the list too, so add it.
 - Read the row count and each value's length from the result, then apply the sizing rule above.
+
+## High cardinality fields: use an Input slicer
+
+A free text column with about 43k distinct values in a list slicer was the real cause of slicers
+that felt slow and buggy in the Service. The list is rebuilt every time another slicer on the page
+changes, and the list slicer is still preview. On a small import model every measure answered in
+under 100 ms, so the DAX was not the problem. Before rewriting measures, run `DISTINCTCOUNT` on
+each slicer's field. For a column with thousands of values, swap to an Input slicer (`textSlicer`,
+`slicer-templates.md`). Timing method: `offscreen-render.md` in the `powerbi-project-and-tools`
+skill.
 
 ## Base theme
 
